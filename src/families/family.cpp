@@ -1,6 +1,6 @@
-#include "../../include/families/family.hpp"
+#include "families/family.hpp"
 
-Family::Family(std::string transform) : _transform_name(transform) {
+Family::Family(std::string transform) : _transform_name{transform} {
     _transform = transform_define(transform);
     _itransform = itransform_define(transform);
     _itransform_name = itransform_name_define(transform);
