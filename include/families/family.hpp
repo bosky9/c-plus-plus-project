@@ -1,18 +1,20 @@
 #pragma once
-#include "../headers.hpp";
+#include "../headers.hpp"
 
 class Family {
 public:
-    char* _transform_name;
+    std::string _transform_name;
     std::function<double (double)> _transform;
-    char* _itransform_name;
+    std::string _itransform_name;
     std::function<double (double)> _itransform;
+    
+    Family(std::string transform = "");
+
 private:
-    Family(char* transform="");
     static double logit(double x);
     static double ilogit(double x);
 
-    static std::function<double (double)> transform_define(char* transform);
-    static std::function<double (double)> itransform_define(char* transform);
-    static char* itransform_name_define(char* transform);
+    static std::function<double (double)> transform_define(std::string transform);
+    static std::function<double (double)> itransform_define(std::string transform);
+    static std::string itransform_name_define(std::string transform);
 };

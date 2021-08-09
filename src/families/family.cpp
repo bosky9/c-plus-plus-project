@@ -1,8 +1,6 @@
-#include "../../include/families/family.hpp";
+#include "../../include/families/family.hpp"
 
-
-
-Family::Family(char* transform="") : _transform_name(transform) {
+Family::Family(std::string transform) : _transform_name(transform) {
     _transform = transform_define(transform);
     _itransform = itransform_define(transform);
     _itransform_name = itransform_name_define(transform);
@@ -16,7 +14,7 @@ double Family::ilogit(double x) {
     return 1 / (1 + exp(-x));
 }
 
-std::function<double (double)> Family::transform_define(char* transform) {
+std::function<double (double)> Family::transform_define(std::string transform) {
     if (transform == "tanh")
         return [](double x){ return tanh(x); };
     else if (transform == "exp")
@@ -29,7 +27,7 @@ std::function<double (double)> Family::transform_define(char* transform) {
         return NULL;
 }
 
-std::function<double (double)> Family::itransform_define(char* transform) {
+std::function<double (double)> Family::itransform_define(std::string transform) {
     if (transform == "tanh")
         return [](double x){ return atanh(x); };
     else if (transform == "exp")
@@ -42,7 +40,7 @@ std::function<double (double)> Family::itransform_define(char* transform) {
         return NULL;
 }
 
-char* Family::itransform_name_define(char* transform) {
+std::string Family::itransform_name_define(std::string transform) {
     if (transform == "tanh")
         return "arctanh";
     else if (transform == "exp")

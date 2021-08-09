@@ -1,5 +1,6 @@
 #pragma once
-#include "../headers.hpp";
+#include "../headers.hpp"
+
 class Normal {
 private:
     float mu0;
