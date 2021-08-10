@@ -1,4 +1,5 @@
 #pragma once
+
 #include "../headers.hpp"
 #include "family.hpp"
 
@@ -15,6 +16,16 @@ private:
     // gradient_only won't be used (no GAS models)
 
 public:
+
+    // Necessary for "build_latent_variables()" function
+    struct lv_to_build {
+        std::string name;
+        //Flat
+        Normal* n = new Normal{0, 3};
+        double zero = 0;
+        ~lv_to_build() {delete n;}
+    };
+
     /**
      * @brief Constructor for Normal distribution
      * @param mu (double): mean for the Normal distribution
