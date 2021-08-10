@@ -65,6 +65,25 @@ double Normal::logpdf(double mu) {
     return -log(sigma0) - (0.5 * std::pow(mu - mu0, 2)) / std::pow(sigma0, 2);
 }
 
+std::vector<double> Normal::markov_blanket(std::vector<double> y, std::vector<double> mean, double scale, double shape, double skewness) {
+    // TODO
+}
+
+FamilyAttributes Normal::setup() {
+    return {"Normal", [](double x){ return x; }, true, false, false, [](double x){ return x; }, true};
+}
+
+std::vector<double> Normal::neg_loglikelihood(std::vector<double> y, std::vector<double> mean, double scale, double shape, double skewness) {
+    // TODO
+}
+
+double Normal::pdf(double mu) {
+    if (!transform.empty()) {
+        mu = _transform(mu);
+    }
+    return (1.0/sigma0) * exp(-((0.5 * std::pow(mu - mu0, 2)) / std::pow(sigma0, 2)));
+}
+
 void Normal::vi_change_param(int index, double value) {
     if (index == 0)
         mu0 = value;
