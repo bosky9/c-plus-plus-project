@@ -1,0 +1,3 @@
+/home/ettorec/CLionProjects/c-plus-plus-project/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/ettorec/CLionProjects/c-plus-plus-project/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/ettorec/CLionProjects/c-plus-plus-project/cmake-build-debug/CMakeFiles/c_plus_plus_project.dir
