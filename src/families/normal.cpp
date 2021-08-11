@@ -2,6 +2,7 @@
 
 #include <random>
 #include <chrono>
+#include <cassert>
 
 Normal::Normal(double mu, double sigma, std::string transform) : Family(transform), mu0{mu}, sigma0{sigma},
     param_no{2}, covariance_prior{false} {}
@@ -66,15 +67,32 @@ double Normal::logpdf(double mu) {
 }
 
 std::vector<double> Normal::markov_blanket(std::vector<double> y, std::vector<double> mean, double scale, double shape, double skewness) {
-    // TODO
+    std::vector<double> result;
+    if (mean.size() == 1) {
+        for (auto elem : y) {
+            result.push_back(-log(scale) - (0.5 * std::pow(elem - mean.at(0), 2)) / std::pow(scale, 2));
+        }
+    } else {
+        assert(y.size() == mean.size());
+        for (size_t i = 0; i < y.size(); i++) {
+            result.push_back(-log(scale) - (0.5 * std::pow(y.at(i) - mean.at(i), 2)) / std::pow(scale, 2));
+        }
+    }
+    return result;
 }
 
 FamilyAttributes Normal::setup() {
     return {"Normal", [](double x){ return x; }, true, false, false, [](double x){ return x; }, true};
 }
 
-std::vector<double> Normal::neg_loglikelihood(std::vector<double> y, std::vector<double> mean, double scale, double shape, double skewness) {
-    // TODO
+double Normal::neg_loglikelihood(std::vector<double> y, std::vector<double> mean, double scale, double shape, double skewness) {
+    assert(!y.empty());
+    double result = 0;
+    std::vector<double> logpdf = Normal::markov_blanket(y, mean, scale, shape, skewness);
+    for (auto elem : logpdf) {
+        result += elem;
+    }
+    return result;
 }
 
 double Normal::pdf(double mu) {

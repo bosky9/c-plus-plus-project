@@ -126,7 +126,7 @@ public:
      * @param skewness (double): skewness parameter for the Normal distribution
      * @return Negative loglikelihood of the Normal family
      */
-    static std::vector<double> neg_loglikelihood(std::vector<double> y, std::vector<double> mean, double scale, double shape, double skewness);
+    static double neg_loglikelihood(std::vector<double> y, std::vector<double> mean, double scale, double shape, double skewness);
 
     /**
      * @brief PDF for Normal prior
