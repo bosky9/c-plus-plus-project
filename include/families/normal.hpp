@@ -7,6 +7,7 @@
 
 #include "../headers.hpp"
 #include "family.hpp"
+#include "flat.hpp""
 
 /**
  * @brief Normal distribution for time series
@@ -26,7 +27,7 @@ public:
     // Necessary for "build_latent_variables()" function
     struct lv_to_build {
         std::string name = "Normal scale";
-        //Flat
+        Flat flat{"exp"} ;
         std::unique_ptr<Normal> n {new Normal(0.0, 3.0)};
         double zero = 0;
     };

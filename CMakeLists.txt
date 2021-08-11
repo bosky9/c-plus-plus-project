@@ -8,4 +8,4 @@ include_directories(include)
 add_executable(c_plus_plus_project
         src/families/family.cpp
         src/families/normal.cpp
-        src/tests.cpp)
+        src/tests.cpp src/families/flat.cpp)

@@ -153,6 +153,30 @@ src/families/family.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/c_plus_plus_project.dir/build.make CMakeFiles/c_plus_plus_project.dir/src/families/family.cpp.s
 .PHONY : src/families/family.cpp.s
 
+src/families/flat.o: src/families/flat.cpp.o
+.PHONY : src/families/flat.o
+
+# target to build an object file
+src/families/flat.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/c_plus_plus_project.dir/build.make CMakeFiles/c_plus_plus_project.dir/src/families/flat.cpp.o
+.PHONY : src/families/flat.cpp.o
+
+src/families/flat.i: src/families/flat.cpp.i
+.PHONY : src/families/flat.i
+
+# target to preprocess a source file
+src/families/flat.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/c_plus_plus_project.dir/build.make CMakeFiles/c_plus_plus_project.dir/src/families/flat.cpp.i
+.PHONY : src/families/flat.cpp.i
+
+src/families/flat.s: src/families/flat.cpp.s
+.PHONY : src/families/flat.s
+
+# target to generate assembly for a file
+src/families/flat.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/c_plus_plus_project.dir/build.make CMakeFiles/c_plus_plus_project.dir/src/families/flat.cpp.s
+.PHONY : src/families/flat.cpp.s
+
 src/families/normal.o: src/families/normal.cpp.o
 .PHONY : src/families/normal.o
 
@@ -213,6 +237,9 @@ help:
 	@echo "... src/families/family.o"
 	@echo "... src/families/family.i"
 	@echo "... src/families/family.s"
+	@echo "... src/families/flat.o"
+	@echo "... src/families/flat.i"
+	@echo "... src/families/flat.s"
 	@echo "... src/families/normal.o"
 	@echo "... src/families/normal.i"
 	@echo "... src/families/normal.s"

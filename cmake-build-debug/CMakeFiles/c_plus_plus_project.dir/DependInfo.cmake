@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
   "/home/ettorec/CLionProjects/c-plus-plus-project/src/families/family.cpp" "/home/ettorec/CLionProjects/c-plus-plus-project/cmake-build-debug/CMakeFiles/c_plus_plus_project.dir/src/families/family.cpp.o"
+  "/home/ettorec/CLionProjects/c-plus-plus-project/src/families/flat.cpp" "/home/ettorec/CLionProjects/c-plus-plus-project/cmake-build-debug/CMakeFiles/c_plus_plus_project.dir/src/families/flat.cpp.o"
   "/home/ettorec/CLionProjects/c-plus-plus-project/src/families/normal.cpp" "/home/ettorec/CLionProjects/c-plus-plus-project/cmake-build-debug/CMakeFiles/c_plus_plus_project.dir/src/families/normal.cpp.o"
   "/home/ettorec/CLionProjects/c-plus-plus-project/src/tests.cpp" "/home/ettorec/CLionProjects/c-plus-plus-project/cmake-build-debug/CMakeFiles/c_plus_plus_project.dir/src/tests.cpp.o"
   )

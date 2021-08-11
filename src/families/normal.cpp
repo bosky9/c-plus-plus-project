@@ -53,7 +53,7 @@ std::vector<double> Normal::draw_variable_local(int size) {
     std::normal_distribution<double> distribution(mu0, sigma0);
     std::vector<double> vars;
     if (size > 0) {
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++)
             vars.push_back(distribution(generator));
     }
     return vars;
@@ -71,7 +71,8 @@ std::vector<double> Normal::markov_blanket(const std::vector<double> &y, const s
     if (mean.size() == 1) {
         for (auto elem : y)
             result.push_back(-log(scale) - (0.5 * std::pow(elem - mean.at(0), 2)) / std::pow(scale, 2));
-    } else {
+    }
+    else {
         assert(y.size() == mean.size());
         for (size_t i {0}; i < y.size(); i++)
             result.push_back(-log(scale) - (0.5 * std::pow(y.at(i) - mean.at(i), 2)) / std::pow(scale, 2));
@@ -88,7 +89,7 @@ double Normal::neg_loglikelihood(const std::vector<double> &y, const std::vector
     assert(!y.empty());
     double result = 0;
     std::vector<double> logpdf = Normal::markov_blanket(y, mean, scale, shape, skewness);
-    for (auto elem : logpdf) {
+    for (auto elem : logpdf)
         result += elem;
     return result;
 }
