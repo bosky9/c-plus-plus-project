@@ -1,8 +1,8 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <cmath>
 #include <functional>
 #include <iostream>
-#include <string>
-#include <Eigen/Core>
 #include <list>
+#include <string>
