@@ -63,9 +63,9 @@ std::function<double(double)> Family::transform_define(const std::string& transf
         return [](double x) { return ilogit(x); };
     else if (transform.empty())
         return [](double x) { return x; };
-    //@TODO: non sarebbe meglio riportare la funzione costante come sopra?
+    //@TODO: Ritornare la funzione costante come sopra? O nullptr?
     else
-        return nullptr;
+        return [](double x) { return x; };
 }
 
 std::function<double(double)> Family::itransform_define(const std::string& transform) {
@@ -77,8 +77,9 @@ std::function<double(double)> Family::itransform_define(const std::string& trans
         return [](double x) { return logit(x); };
     else if (transform.empty())
         return [](double x) { return x; };
+    //@TODO: Ritornare la funzione costante come sopra? O nullptr?
     else
-        return nullptr;
+        return [](double x) { return x; };
 }
 
 std::string Family::itransform_name_define(const std::string& transform) {
@@ -90,6 +91,7 @@ std::string Family::itransform_name_define(const std::string& transform) {
         return "ilogit";
     else if (transform.empty())
         return "";
+    //TODO: Ritornare NULL o stringa vuota?
     else
-        return NULL;
+        return "";
 }
