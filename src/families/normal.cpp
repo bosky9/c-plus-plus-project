@@ -70,13 +70,14 @@ double Normal::logpdf(double mu) {
 std::vector<double> Normal::markov_blanket(const std::vector<double>& y, const std::vector<double>& mean, double scale,
                                            double shape, double skewness) {
     std::vector<double> result;
+    const double ONE_OVER_SQRT_2PI = 0.39894228040143267793994605993438;
     if (mean.size() == 1) {
         for (auto elem : y)
-            result.push_back(-log(scale) - (0.5 * std::pow(elem - mean.at(0), 2)) / std::pow(scale, 2));
+            result.push_back(log((ONE_OVER_SQRT_2PI/scale) * exp(-0.5*pow((elem-mean.at(0))/scale,2.0))));
     } else {
         assert(y.size() == mean.size());
         for (size_t i{0}; i < y.size(); i++)
-            result.push_back(-log(scale) - (0.5 * std::pow(y.at(i) - mean.at(i), 2)) / std::pow(scale, 2));
+            result.push_back(log((ONE_OVER_SQRT_2PI/scale) * exp(-0.5*pow((y.at(i)-mean.at(i))/scale,2.0))));
     }
     return result;
 }

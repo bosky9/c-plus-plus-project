@@ -34,15 +34,16 @@ int main() {
     var = n.draw_variable_local(2);
     cout << "draw_variable_local: " << var[0] << " " << var[1] << endl;
 
-    cout << "logpdf: " << n.logpdf(1) << endl;
+    cout << "logpdf: " << n.logpdf(5) << endl;
 
-    var = Normal::markov_blanket(v, v, 1, 0, 0);
-    cout << "markov_blanket: " << var[0] << " " << var[1] << endl;
+    vector<double> mean {4, 1, 4};
+    var = Normal::markov_blanket(v, mean, 1, 0, 0);
+    cout << "markov_blanket: " << var[0] << " " << var[1] << " " << var[2] << endl;
 
     FamilyAttributes fa = Normal::setup();
     cout << "setup: " << fa.name << " " << fa.scale << endl;//...
 
-    cout << "neg_loglikelihood: " << Normal::neg_loglikelihood(v, v, 1, 0, 0) << endl;
+    cout << "neg_loglikelihood: " << Normal::neg_loglikelihood(v, mean, 1, 0, 0) << endl;
 
     cout << "pdf: " << n.pdf(1) << endl;
 
