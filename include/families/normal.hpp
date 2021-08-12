@@ -1,13 +1,13 @@
 #pragma once
 
-#include <random>
-#include <chrono>
 #include <cassert>
+#include <chrono>
 #include <memory>
+#include <random>
 
 #include "../headers.hpp"
 #include "family.hpp"
-#include "flat.hpp""
+#include "flat.hpp"
 
 /**
  * @brief Normal distribution for time series
@@ -22,13 +22,12 @@ private:
     // gradient_only won't be used (no GAS models)
 
 public:
-
     //@TODO: add Flat return value
     // Necessary for "build_latent_variables()" function
     struct lv_to_build {
         std::string name = "Normal scale";
-        Flat flat{"exp"} ;
-        std::unique_ptr<Normal> n {new Normal(0.0, 3.0)};
+        Flat flat{"exp"};
+        std::unique_ptr<Normal> n{new Normal(0.0, 3.0)};
         double zero = 0;
     };
 
@@ -39,7 +38,7 @@ public:
      * @param transform Whether to apply a transformation for the location latent variable
      *  (e.g. "exp" or "logit")
      */
-    Normal(double mu = 0.0, double sigma = 1.0, std::string transform = "");
+    Normal(double mu = 0.0, double sigma = 1.0, const std::string& transform = "");
 
     /**
      * @brief Creates approximating Gaussian state space model for the Normal measurement density
@@ -50,13 +49,13 @@ public:
      * @param Q Not actually used
      * @param h_approx Variance of the measurement density
      * @param data Univariate time series data (define the size of the created matrices)
-     * * @return An array consisting of two Eigen::MatrixXd:
+     * * @return A pointer to an array consisting of two Eigen::MatrixXd:
      *  - H: approximating measurement variance matrix
      *  - mu: approximating measurement constants
      */
-    Eigen::MatrixXd *approximating_model(const std::vector<double> &beta, const Eigen::MatrixXd &T,
-                                         const Eigen::MatrixXd &Z, const Eigen::MatrixXd &R, const Eigen::MatrixXd &Q,
-                                         double h_approx, const std::vector<double> &data);
+    Eigen::MatrixXd* approximating_model(const std::vector<double>& beta, const Eigen::MatrixXd& T,
+                                         const Eigen::MatrixXd& Z, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q,
+                                         double h_approx, const std::vector<double>& data);
 
     /**
      * @brief Creates approximating Gaussian state space model for the Normal measurement density.
@@ -69,15 +68,14 @@ public:
      * @param data Univariate time series data (define the size of the created matrices)
      * @param X Not actually used
      * @param state_no Not actually used
-     * @return An array consisting of two Eigen::MatrixXd:
+     * @return A pointer to an array consisting of two Eigen::MatrixXd:
      *  - H: approximating measurement variance matrix
      *  - mu: approximating measurement constants
      */
-    Eigen::MatrixXd *approximating_model_reg(const std::vector<double> &beta, const Eigen::MatrixXd &T,
-                                             const Eigen::MatrixXd &Z, const Eigen::MatrixXd &R,
-                                             const Eigen::MatrixXd &Q,
-                                             double h_approx, const std::vector<double> &data,
-                                             const std::vector<double> &X, int state_no);
+    Eigen::MatrixXd* approximating_model_reg(const std::vector<double>& beta, const Eigen::MatrixXd& T,
+                                             const Eigen::MatrixXd& Z, const Eigen::MatrixXd& R,
+                                             const Eigen::MatrixXd& Q, double h_approx, const std::vector<double>& data,
+                                             const std::vector<double>& X, int state_no);
 
     /**
      * @brief Builds additional latent variables for this family in a probabilistic model
@@ -94,15 +92,14 @@ public:
      * @param nsims Number of draws to take from the distribution
      * @return Random draws from the distribution
      */
-    std::vector<double> draw_variable(double loc, double scale, double shape,
-                                      double skewness, int nsims);
+    std::vector<double> draw_variable(double loc, double scale, double shape, double skewness, int nsims);
 
     /**
      * @brief Wrapper function for changing latent variables for variational inference
      * @param size How many simulations to perform
      * @return Array of Normal random variable
      */
-    std::vector<double> draw_variable_local(int size);
+    std::vector<double> draw_variable_local(int size) const;
 
     /**
      * @brief Log PDF for Normal prior
@@ -120,9 +117,8 @@ public:
      * @param skewness Skewness parameter for the Normal distribution
      * @return Markov blanket of the Normal family
      */
-    static std::vector<double>
-    markov_blanket(const std::vector<double> &y, const std::vector<double> &mean, double scale,
-                   double shape, double skewness);
+    static std::vector<double> markov_blanket(const std::vector<double>& y, const std::vector<double>& mean,
+                                              double scale, double shape, double skewness);
 
     /**
      * @brief Returns the attributes of this family if using in a probabilistic model
@@ -139,7 +135,7 @@ public:
      * @param skewness Skewness parameter for the Normal distribution
      * @return Negative loglikelihood of the Normal family
      */
-    static double neg_loglikelihood(const std::vector<double> &y, const std::vector<double> &mean, double scale,
+    static double neg_loglikelihood(const std::vector<double>& y, const std::vector<double>& mean, double scale,
                                     double shape, double skewness);
 
     /**
@@ -161,7 +157,7 @@ public:
      * @param index 0 or 1 depending on which latent variable
      * @return The appropriate indexed parameter
      */
-    double vi_return_param(int index);
+    double vi_return_param(int index) const;
 
     /**
      * @brief Return the gradient of the location latent variable mu
@@ -169,7 +165,7 @@ public:
      * @param value A random variable
      * @return The gradient of the location latent variable mu at x
      */
-    double vi_loc_score(double x);
+    double vi_loc_score(double x) const;
 
     /**
      * @brief Return the score of the scale, where scale = exp(x)
@@ -177,7 +173,7 @@ public:
      * @param value A random variable
      * @return The gradient of the scale latent variable at x
      */
-    double vi_scale_score(double x);
+    double vi_scale_score(double x) const;
 
     /**
      * @brief Wrapper function for selecting appropriate score
@@ -185,5 +181,5 @@ public:
      * @param index 0 or 1 depending on which latent variable
      * @return The gradient of the scale latent variable at x
      */
-    double vi_score(double x, int index);
+    double vi_score(double x, int index) const;
 };

@@ -6,19 +6,19 @@ using namespace std;
 
 int main() {
     // Tests for Family
-    Family f {"exp"};
+    Family f{"exp"};
 
     cout << f._transform(5) << endl;
     cout << f._itransform(f._transform(5)) << endl;
 
 
     // Test for Normal
-    Normal n {2, 3};
+    Normal n{2, 3};
 
-    vector<double> ve {};
-    vector<double> v {1, 2, 3};
-    Eigen::MatrixXd M {};
-    Eigen::MatrixXd *H_mu = n.approximating_model(ve, M, M, M, M, 2, v);
+    vector<double> ve{};
+    vector<double> v{1, 2, 3};
+    Eigen::MatrixXd M{};
+    Eigen::MatrixXd* H_mu = n.approximating_model(ve, M, M, M, M, 2, v);
     cout << "approximating_model: " << H_mu << endl;
 
     H_mu = n.approximating_model_reg(ve, M, M, M, M, 2, v, ve, 0);

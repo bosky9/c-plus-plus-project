@@ -5,7 +5,5 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(include)
 
-add_executable(c_plus_plus_project
-        src/families/family.cpp
-        src/families/normal.cpp
-        src/tests.cpp src/families/flat.cpp)
+file(GLOB_RECURSE FAMILIES ${PROJECT_SOURCE_DIR}/src/families/*.cpp)
+add_executable(c_plus_plus_project ${FAMILIES} src/tests.cpp)
