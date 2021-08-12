@@ -14,15 +14,13 @@
  */
 class Normal : Family {
 private:
-    double mu0;
-    double sigma0;
-    std::string transform;
-    short int param_no;
-    bool covariance_prior;
+    double _mu0;
+    double _sigma0;
+    short int _param_no;
+    bool _covariance_prior;
     // gradient_only won't be used (no GAS models)
 
 public:
-    //@TODO: add Flat return value
     // Necessary for "build_latent_variables()" function
     struct lv_to_build {
         std::string name = "Normal scale";
@@ -39,6 +37,30 @@ public:
      *  (e.g. "exp" or "logit")
      */
     Normal(double mu = 0.0, double sigma = 1.0, const std::string& transform = "");
+
+    /**
+     * @brief Copy constructor for Normal distribution
+     * @param normal A Normal object
+     */
+    Normal(const Normal& normal);
+
+    /**
+     * @brief Move constructor for Normal distribution
+     * @param normal A Normal object
+     */
+    Normal(Normal&& normal);
+
+    /**
+     * @brief Assignment operator for Normal distribution
+     * @param normal A Normal object
+     */
+    Normal& operator=(const Normal& normal);
+
+    /**
+     * @brief Move assignment operator for Normal distribution
+     * @param normal A Normal object
+     */
+    Normal& operator=(Normal&& normal);
 
     /**
      * @brief Creates approximating Gaussian state space model for the Normal measurement density

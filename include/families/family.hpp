@@ -12,7 +12,31 @@ public:
      * @brief Constructor for Family
      * @param transform Whether to apply a transformation (e.g. "exp" or "logit")
      */
-    Family(const std::string &transform = "");
+    Family(const std::string& transform = "");
+
+    /**
+     * @brief Copy constructor for Family
+     * @param family A Family object
+     */
+    Family(const Family& family);
+
+    /**
+     * @brief Move constructor for Family
+     * @param family A Family object
+     */
+    Family(Family&& family);
+
+    /**
+     * @brief Assignment operator for Family
+     * @param family A Family object
+     */
+    Family& operator=(const Family& family);
+
+    /**
+     * @brief Move assignment operator for Family
+     * @param family A Family object
+     */
+    Family& operator=(Family&& family);
 
 private:
     /**
@@ -32,21 +56,21 @@ private:
      * @details Return the function associated with the transform
      * @param transform Whether to apply a transformation (e.g. "exp" or "logit")
      */
-    static std::function<double(double)> transform_define(const std::string &transform);
+    static std::function<double(double)> transform_define(const std::string& transform);
 
     /**
      * @brief Define the transform selected by the user with its inverse
      * @details Return the inverse function associated with the transform
      * @param transform Whether to apply a transformation (e.g. "exp" or "logit")
      */
-    static std::function<double(double)> itransform_define(const std::string &transform);
+    static std::function<double(double)> itransform_define(const std::string& transform);
 
     /**
      * @brief Define any transformation performed
      * @details Used for model results table
      * @param transform Whether to apply a transformation (e.g. "exp" or "logit")
      */
-    static std::string itransform_name_define(const std::string &transform);
+    static std::string itransform_name_define(const std::string& transform);
 };
 
 /**

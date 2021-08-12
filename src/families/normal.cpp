@@ -2,7 +2,49 @@
 
 
 Normal::Normal(double mu, double sigma, const std::string& transform)
-    : Family{transform}, mu0{mu}, sigma0{sigma}, param_no{2}, covariance_prior{false} {}
+    : Family{transform}, _mu0{mu}, _sigma0{sigma}, _param_no{2}, _covariance_prior{false} {}
+
+Normal::Normal(const Normal& normal) : Family(normal) {
+    _mu0              = normal._mu0;
+    _sigma0           = normal._sigma0;
+    _param_no         = normal._param_no;
+    _covariance_prior = normal._covariance_prior;
+}
+
+Normal::Normal(Normal&& normal) : Family(std::move(normal)) {
+    _mu0                     = normal._mu0;
+    _sigma0                  = normal._sigma0;
+    _param_no                = normal._param_no;
+    _covariance_prior        = normal._covariance_prior;
+    normal._mu0              = 0;
+    normal._sigma0           = 0;
+    normal._param_no         = 0;
+    normal._covariance_prior = false;
+}
+
+Normal& Normal::operator=(const Normal& normal) {
+    if (this == &normal)
+        return *this;
+    Family::operator  =(normal);
+    _mu0              = normal._mu0;
+    _sigma0           = normal._sigma0;
+    _param_no         = normal._param_no;
+    _covariance_prior = normal._covariance_prior;
+    return *this;
+}
+
+Normal& Normal::operator=(Normal&& normal) {
+    _mu0                     = normal._mu0;
+    _sigma0                  = normal._sigma0;
+    _param_no                = normal._param_no;
+    _covariance_prior        = normal._covariance_prior;
+    normal._mu0              = 0;
+    normal._sigma0           = 0;
+    normal._param_no         = 0;
+    normal._covariance_prior = false;
+    Family::operator         =(std::move(normal));
+    return *this;
+}
 
 Eigen::MatrixXd* Normal::approximating_model(const std::vector<double>& beta, const Eigen::MatrixXd& T,
                                              const Eigen::MatrixXd& Z, const Eigen::MatrixXd& R,
@@ -52,7 +94,7 @@ std::vector<double> Normal::draw_variable(double loc, double scale, double shape
 std::vector<double> Normal::draw_variable_local(int size) const {
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine generator(seed);
-    std::normal_distribution<double> distribution{mu0, sigma0};
+    std::normal_distribution<double> distribution{_mu0, _sigma0};
     std::vector<double> vars;
     if (size > 0) {
         for (size_t i{0}; i < size; i++)
@@ -62,9 +104,9 @@ std::vector<double> Normal::draw_variable_local(int size) const {
 }
 
 double Normal::logpdf(double mu) {
-    if (!transform.empty())
+    if (!_transform_name.empty())
         mu = _transform(mu);
-    return -log(sigma0) - (0.5 * std::pow(mu - mu0, 2)) / std::pow(sigma0, 2);
+    return -log(_sigma0) - (0.5 * std::pow(mu - _mu0, 2)) / std::pow(_sigma0, 2);
 }
 
 std::vector<double> Normal::markov_blanket(const std::vector<double>& y, const std::vector<double>& mean, double scale,
@@ -73,11 +115,11 @@ std::vector<double> Normal::markov_blanket(const std::vector<double>& y, const s
     const double ONE_OVER_SQRT_2PI = 0.39894228040143267793994605993438;
     if (mean.size() == 1) {
         for (auto elem : y)
-            result.push_back(log((ONE_OVER_SQRT_2PI/scale) * exp(-0.5*pow((elem-mean.at(0))/scale,2.0))));
+            result.push_back(log((ONE_OVER_SQRT_2PI / scale) * exp(-0.5 * pow((elem - mean.at(0)) / scale, 2.0))));
     } else {
         assert(y.size() == mean.size());
         for (size_t i{0}; i < y.size(); i++)
-            result.push_back(log((ONE_OVER_SQRT_2PI/scale) * exp(-0.5*pow((y.at(i)-mean.at(i))/scale,2.0))));
+            result.push_back(log((ONE_OVER_SQRT_2PI / scale) * exp(-0.5 * pow((y.at(i) - mean.at(i)) / scale, 2.0))));
     }
     return result;
 }
@@ -97,31 +139,31 @@ double Normal::neg_loglikelihood(const std::vector<double>& y, const std::vector
 }
 
 double Normal::pdf(double mu) {
-    if (!transform.empty())
+    if (!_transform_name.empty())
         mu = _transform(mu);
-    return (1.0 / sigma0) * exp(-((0.5 * std::pow(mu - mu0, 2)) / std::pow(sigma0, 2)));
+    return (1.0 / _sigma0) * exp(-((0.5 * std::pow(mu - _mu0, 2)) / std::pow(_sigma0, 2)));
 }
 
 void Normal::vi_change_param(int index, double value) {
     if (index == 0)
-        mu0 = value;
+        _mu0 = value;
     else if (index == 1)
-        sigma0 = exp(value);
+        _sigma0 = exp(value);
 }
 
 double Normal::vi_return_param(int index) const {
     if (index == 0)
-        return mu0;
+        return _mu0;
     else if (index == 1)
-        return log(sigma0);
+        return log(_sigma0);
 }
 
 double Normal::vi_loc_score(double x) const {
-    return (x - mu0) / pow(sigma0, 2);
+    return (x - _mu0) / pow(_sigma0, 2);
 }
 
 double Normal::vi_scale_score(double x) const {
-    return exp(-2 * log(sigma0)) * pow(x - mu0, 2) - 1;
+    return exp(-2 * log(_sigma0)) * pow(x - _mu0, 2) - 1;
 }
 
 double Normal::vi_score(double x, int index) const {

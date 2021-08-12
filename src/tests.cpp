@@ -11,8 +11,11 @@ int main() {
     cout << f._transform(5) << endl;
     cout << f._itransform(f._transform(5)) << endl;
 
+    // Tests for Flat
+    Flat flat{"exp"};
+    cout << flat.logpdf(0) << endl;
 
-    // Test for Normal
+    // Tests for Normal
     Normal n{2, 3};
 
     vector<double> ve{};
@@ -36,7 +39,7 @@ int main() {
 
     cout << "logpdf: " << n.logpdf(5) << endl;
 
-    vector<double> mean {4, 1, 4};
+    vector<double> mean{4, 1, 4};
     var = Normal::markov_blanket(v, mean, 1, 0, 0);
     cout << "markov_blanket: " << var[0] << " " << var[1] << " " << var[2] << endl;
 
@@ -50,4 +53,11 @@ int main() {
     n.vi_change_param(0, 2);
     cout << "vi_change_param + vi_return_param: " << n.vi_return_param(0) << endl;
     cout << "vi_score: " << n.vi_score(2, 0) << " " << n.vi_score(2, 1) << endl;
+
+    Normal n2{n};
+    Normal n3;
+    n3 = n;
+    Normal n4{std::move(n)};
+    Normal n5;
+    n5 = std::move(n2);
 }
