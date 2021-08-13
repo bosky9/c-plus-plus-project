@@ -15,7 +15,13 @@ add_executable(main)
 target_sources(main PRIVATE ${FAMILIES} src/main.cpp)
 
 # TESTS
-add_subdirectory(lib/Catch2)
+Include(FetchContent)
+FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v3.0.0-preview3
+)
+FetchContent_MakeAvailable(Catch2)
 add_executable(tests)
 file(GLOB_RECURSE TESTS_LIST ${PROJECT_SOURCE_DIR}/test/*.cpp)
 target_sources(tests PRIVATE ${FAMILIES} ${TESTS_LIST})
