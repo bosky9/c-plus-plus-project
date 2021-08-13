@@ -3,6 +3,10 @@
 
 class Family {
 public:
+    static const std::string TRANSFORM_EXP;
+    static const std::string TRANSFORM_TANH;
+    static const std::string TRANSFORM_LOGIT;
+
     std::string _transform_name;
     std::function<double(double)> _transform;
     std::string _itransform_name;
@@ -72,6 +76,10 @@ private:
      */
     static std::string itransform_name_define(const std::string& transform);
 };
+
+const std::string Family::TRANSFORM_EXP = "exp";
+const std::string Family::TRANSFORM_TANH = "tanh";
+const std::string Family::TRANSFORM_LOGIT = "logit";
 
 /**
  * @brief Struct for attributes returned by families
