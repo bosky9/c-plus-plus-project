@@ -77,10 +77,6 @@ private:
     static std::string itransform_name_define(const std::string& transform);
 };
 
-const std::string Family::TRANSFORM_EXP = "exp";
-const std::string Family::TRANSFORM_TANH = "tanh";
-const std::string Family::TRANSFORM_LOGIT = "logit";
-
 /**
  * @brief Struct for attributes returned by families
  */

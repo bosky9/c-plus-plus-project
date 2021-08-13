@@ -1,5 +1,9 @@
 #include "families/family.hpp"
 
+const std::string Family::TRANSFORM_EXP = "exp";
+const std::string Family::TRANSFORM_TANH = "tanh";
+const std::string Family::TRANSFORM_LOGIT = "logit";
+
 Family::Family(const std::string& transform) : _transform_name{transform} {
     _transform       = transform_define(transform);
     _itransform      = itransform_define(transform);
