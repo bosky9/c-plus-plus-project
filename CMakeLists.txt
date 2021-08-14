@@ -9,11 +9,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 # INCLUDES
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-# MAIN
-file(GLOB_RECURSE FAMILIES ${PROJECT_SOURCE_DIR}/src/families/*.cpp)
-add_executable(main)
-target_sources(main PRIVATE ${FAMILIES} src/main.cpp)
-
 # TESTS
 Include(FetchContent)
 FetchContent_Declare(
@@ -23,6 +18,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 add_executable(tests)
+file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE TESTS_LIST ${PROJECT_SOURCE_DIR}/test/*.cpp)
-target_sources(tests PRIVATE ${FAMILIES} ${TESTS_LIST})
+target_sources(tests PRIVATE ${SRCS} ${TESTS_LIST})
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
