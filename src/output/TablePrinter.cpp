@@ -9,19 +9,20 @@ TablePrinter::TablePrinter(const std::list<std::tuple<std::string, std::string, 
         ss << "{" << std::get<1>(f) << "}:{" << std::get<2>(f) << "}" << sep;
         _fmt.append(ss.str());
 
-        _head = std::map<std::string, std::string>{ {std::get<1>(f), std::get<0>(f)} };
+        // try_emplace should append a new key:value pair. If key already exists, no insert
+        _head.try_emplace(std::get<1>(f), std::get<0>(f));
 
         if (ul!="") {
             std::stringstream ulss;
-            for (int i = 0; i<std::get<2>(f); i++)
+            for (int i = 0; i < std::get<2>(f); i++)
                 ulss << ul;
-            _ul = std::map<std::string, std::string>{ {std::get<1>(f), ulss.str()} };
+            _ul.try_emplace(std::get<1>(f), ulss.str());
         }
         else
             // map to the empty string
-            _ul = std::map<std::string, std::string>{ {std::get<1>(f), ul} };
+            _ul.try_emplace(std::get<1>(f), ul);
 
-        _width = std::map<std::string, int>{ {std::get<1>(f), std::get<2>(f)} };
+        _width.try_emplace(std::get<1>(f), std::get<2>(f));
     }
 
 }
