@@ -32,12 +32,12 @@ struct CheckedDataMv {
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedData* data_check(std::vector<T>& data) {
+std::unique_ptr<CheckedData> data_check(std::vector<T>& data) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
 
-    CheckedData* checked_data = new CheckedData();
+    std::unique_ptr<CheckedData> checked_data(new CheckedData());
     checked_data->transformed_data.reset(new std::vector<double>{data});
     checked_data->data_index.reset(new std::vector<size_t>(data.size()));
     std::iota(checked_data->data_index->begin(), checked_data->data_index->end(), 0);
@@ -53,12 +53,12 @@ CheckedData* data_check(std::vector<T>& data) {
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedData* data_check(std::vector<std::vector<T>>& data, size_t target) {
+std::unique_ptr<CheckedData> data_check(std::vector<std::vector<T>>& data, size_t target) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
 
-    CheckedData* checked_data = new CheckedData();
+    std::unique_ptr<CheckedData> checked_data(new CheckedData());
 
     if (target == NULL) {
         checked_data->transformed_data.reset(new std::vector<double>{data[0]});
@@ -80,12 +80,12 @@ CheckedData* data_check(std::vector<std::vector<T>>& data, size_t target) {
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedDataMv* mv_data_check(std::vector<T>& data) {
-    static_assert(std::is_same_v<T, std::vector<double>> || std::is_same_v<T, std::vector<float>>,
+std::unique_ptr<CheckedDataMv> mv_data_check(std::vector<std::vector<T>>& data) {
+    static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
 
-    CheckedDataMv* checked_data = new CheckedDataMv();
+    std::unique_ptr<CheckedDataMv> checked_data(new CheckedDataMv());
     checked_data->transformed_data =
             std::make_unique<std::vector<std::vector<double>>>(std::vector<std::vector<double>>{data});
     checked_data->data_index = std::make_unique<std::vector<size_t>>(data[0].size());
