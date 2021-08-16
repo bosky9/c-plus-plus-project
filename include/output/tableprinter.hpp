@@ -4,6 +4,29 @@
 #include <map>
 #include <sstream>
 #include <cstdio>
+#include <iomanip>
+
+//@Todo: find a better way to implement key
+
+template< typename T >
+struct is_map_str_int{
+    static const bool value = false;
+};
+
+template<>
+struct is_map_str_int<std::map<std::basic_string<char>, int>>{
+    static const bool value = true;
+};
+
+template< typename T >
+struct is_map_str_str{
+    static const bool value = false;
+};
+
+template<>
+struct is_map_str_str<std::map<std::string, std::string>>{
+    static const bool value = true;
+};
 
 class TablePrinter {
 private:
@@ -22,8 +45,12 @@ public:
     */
     TablePrinter(const std::list<std::tuple<std::string, std::string, int>>& fmt, std::string sep=" ", std::string ul="");
 
-    std::string* row();
+    template<typename T, std::enable_if_t<is_map_str_int<T>::value, int> = 0>
+    std::string row(const T& data); //SFINAE
 
-    std::string** _call_();
+    template<typename T, std::enable_if_t<is_map_str_str<T>::value, int> = 0>
+    std::string row(const T& data); //SFINAE
+
+    std::list<std::string> _call_(const std::list<std::map<std::string /*key*/, int>>& dataList);
 
 };
