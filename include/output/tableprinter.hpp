@@ -14,7 +14,7 @@ struct is_map_str_int{
 };
 
 template<>
-struct is_map_str_int<std::map<std::basic_string<char>, int>>{
+struct is_map_str_int<std::map<std::basic_string<char>, double>>{
     static const bool value = true;
 };
 
@@ -43,7 +43,7 @@ public:
     @param sep: string, separation between columns
     @param ul: string, character to underline column label, or None for no underlining
     */
-    TablePrinter(const std::list<std::tuple<std::string, std::string, int>>& fmt, std::string sep=" ", std::string ul="");
+    TablePrinter(const std::list<std::tuple<std::string, std::string, int>>& fmt, const std::string& sep=" ", const std::string& ul="");
 
     template<typename T, std::enable_if_t<is_map_str_int<T>::value, int> = 0>
     std::string row(const T& data); //SFINAE
@@ -51,6 +51,6 @@ public:
     template<typename T, std::enable_if_t<is_map_str_str<T>::value, int> = 0>
     std::string row(const T& data); //SFINAE
 
-    std::list<std::string> _call_(const std::list<std::map<std::string /*key*/, int>>& dataList);
+    std::list<std::string> _call_(const std::list<std::map<std::string /*key*/, double>>& dataList);
 
 };
