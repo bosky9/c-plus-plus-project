@@ -2,7 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 
-TEST_CASE("Create a TablePrinter", "[TablePrinter]") {
+TEST_CASE("Init and use a TablePrinter", "[TablePrinter]") {
     std::list<std::tuple<std::string, std::string, int>> fmt;
     fmt.emplace_back("1", "key1", 5);
     fmt.emplace_back("1", "key2", 4);

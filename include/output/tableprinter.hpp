@@ -38,13 +38,22 @@ public:
     /**
     @param fmt: list of tuple(heading, key, width)
     heading: str, column label
-    key: dictionary key to value to print
+    key: str (arbitrary), dictionary key to value to print
     width: int, column width in chars
     @param sep: string, separation between columns
     @param ul: string, character to underline column label, or None for no underlining
     */
-    TablePrinter(const std::list<std::tuple<std::string, std::string, int>>& fmt, const std::string& sep=" ", const std::string& ul="");
+    TablePrinter(const std::list<std::tuple<std::string, std::string, int>>& fmt,
+                 const std::string& sep=" ",
+                 const std::string& ul="");
 
+    /**
+     * \brief Appends every value of data map in a string; the value is taken using the @var _width key.
+     * \brief Width of every string is given by @var _width value.
+     * @tparam T: could be a map of str:double or a map of str:str
+     * @param data: a map of keys (str) and values (double)
+     * @return string, where all the values are appended together
+     */
     template<typename T, std::enable_if_t<is_map_str_int<T>::value, int> = 0>
     std::string row(const T& data); //SFINAE
 
