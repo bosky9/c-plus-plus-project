@@ -12,7 +12,7 @@ private:
     double _learning_rate;
     double _ewma;
     static double _epsilon;
-    int _t = 1;
+    unsigned int _t = 1;
 public:
     /**
      * @brief RMSProp constructor
