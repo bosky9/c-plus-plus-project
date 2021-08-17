@@ -48,6 +48,14 @@ private:
     static double _epsilon;
     int _t = 1;
 public:
+    /**
+     * @brief ADAM constructor
+     * @param starting_parameters
+     * @param starting_variance
+     * @param learning_rate
+     * @param ewma1 Exponentially-Weighted Moving Average
+     * @param ewma2 Exponentially-Weighted Moving Average
+     */
     ADAM(const std::vector<double>& starting_parameters, double starting_variance, double learning_rate,
          double ewma1, double ewma2);
 

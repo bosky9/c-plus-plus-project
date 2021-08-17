@@ -9,7 +9,14 @@ RMSProp::RMSProp(const std::vector<double>& starting_parameters, double starting
 
 std::vector<double> RMSProp::update(double gradient) {
     _variance = _ewma * _variance + (1 - _ewma) * pow(gradient, 2);
-    
+    if (_t > 5) {
+        double add_to_param = _learning_rate + (_learning_rate*15.0*(pow(0.99, _t))) * (gradient/ sqrt(_variance + _epsilon));
+        std::transform(_parameters.begin(), _parameters.end(), _parameters.begin(),
+                       [add_to_param](double val){return val + add_to_param});
+    }
+
+    _t += 1;
+    return _parameters;
 };
 
 
