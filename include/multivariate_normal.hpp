@@ -1,8 +1,10 @@
-class Mvn
-{
+#include <Eigen/Eigenvalues>
+
+#include "headers.hpp"
+
+class Mvn {
 public:
-    Mvn(const Eigen::VectorXd& mu,
-        const Eigen::MatrixXd& s);
+    Mvn(const Eigen::VectorXd& mu, const Eigen::MatrixXd& s);
     ~Mvn();
     double pdf(const Eigen::VectorXd& x) const;
     Eigen::VectorXd sample(unsigned int nr_iterations = 20) const;
