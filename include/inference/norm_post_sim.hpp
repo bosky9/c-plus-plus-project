@@ -25,7 +25,7 @@ const int N5 = NSIMS * 5 / 100;
  */
 constexpr bool NSIMS_ODD() {
     return static_cast<bool>(NSIMS % 2);
-};
+}
 
 
 /**
@@ -47,11 +47,11 @@ struct NormPostSimData {
  */
 NormPostSimData norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& cov_matrix) {
     Mvn mul_norm{modes, cov_matrix};
-    int modes_len = modes.size();
+    Eigen::Index modes_len = modes.size();
     Eigen::Matrix<double, NSIMS, Eigen::Dynamic> phi =
             Eigen::Matrix<double, NSIMS, Eigen::Dynamic>::Zero(NSIMS, modes_len);
 
-    for (size_t i{0}; i < NSIMS; i++) {
+    for (Eigen::Index i{0}; i < NSIMS; i++) {
         phi.row(i) = mul_norm.sample(); // Incollo un vettore di lunghezza modes.size() in ogni riga
     }
 
