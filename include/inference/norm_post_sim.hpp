@@ -8,6 +8,15 @@
  */
 const int NSIMS = 30000;
 
+/**
+ * @brief 95-th percentile of simulations
+ */
+const int N95 = NSIMS * 95 / 100;
+
+/**
+ * @brief 5-th percentile of simulations
+ */
+const int N5 = NSIMS * 5 / 100;
 // Chiedere al prof
 // 1 dispari    (true)
 // 0 pari       (false)
@@ -18,19 +27,6 @@ constexpr bool NSIMS_ODD() {
     return static_cast<bool>(NSIMS % 2);
 };
 
-/**
- * @brief Compile time function that returns the index representing the 95 percentile
- */
-constexpr int NSIMS_95(int nsims) {
-    return static_cast<int>(nsims / (100 / 95));
-};
-
-/**
- * @brief Compile time function that returns the index representing the 5 percentile
- */
-constexpr int NSIMS_5(int nsims) {
-    return static_cast<int>(nsims / (100 / 5));
-};
 
 /**
  * @brief Data returned by norm_post_sim function
@@ -40,7 +36,7 @@ struct NormPostSimData {
     std::vector<double> mean_est;
     std::vector<double> median_est;
     std::vector<double> upper_95_est;
-    std::vector<double> lower_95_est;
+    std::vector<double> lower_5_est;
 };
 
 /**
@@ -81,8 +77,8 @@ NormPostSimData norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixX
         else
             data.median_est.push_back((col_sort[NSIMS / 2] + col_sort[NSIMS / 2 - 1]) / 2);
 
-        data.upper_95_est.push_back((col_sort[NSIMS_95(NSIMS)]));
-        data.lower_95_est.push_back((col_sort[NSIMS_5(NSIMS)]));
+        data.upper_95_est.push_back((col_sort[N95]));
+        data.lower_5_est.push_back((col_sort[N5]));
     }
 
     return data;
