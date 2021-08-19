@@ -6,7 +6,7 @@
 /**
  * @brief Number of simulations
  */
-const size_t NSIMS = 30000;
+const int NSIMS = 30000;
 
 // Chiedere al prof
 // 1 dispari    (true)
@@ -21,15 +21,15 @@ constexpr bool NSIMS_ODD() {
 /**
  * @brief Compile time function that returns the index representing the 95 percentile
  */
-constexpr size_t NSIMS_95() {
-    return NSIMS * 95 / 100;
+constexpr int NSIMS_95(int nsims) {
+    return static_cast<int>(nsims / (100 / 95));
 };
 
 /**
  * @brief Compile time function that returns the index representing the 5 percentile
  */
-constexpr size_t NSIMS_5() {
-    return NSIMS * 5 / 100;
+constexpr int NSIMS_5(int nsims) {
+    return static_cast<int>(nsims / (100 / 5));
 };
 
 /**
@@ -51,28 +51,38 @@ struct NormPostSimData {
  */
 NormPostSimData norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& cov_matrix) {
     Mvn mul_norm{modes, cov_matrix};
+    int modes_len = modes.size();
     Eigen::Matrix<double, NSIMS, Eigen::Dynamic> phi =
-            Eigen::Matrix<double, NSIMS, Eigen::Dynamic>::Zero(NSIMS, modes.size());
+            Eigen::Matrix<double, NSIMS, Eigen::Dynamic>::Zero(NSIMS, modes_len);
 
     for (size_t i{0}; i < NSIMS; i++) {
-        phi[i] = mul_norm.sample(); // Incollo un vettore di lunghezza len(modes)
+        phi.row(i) = mul_norm.sample(); // Incollo un vettore di lunghezza modes.size() in ogni riga
     }
 
     NormPostSimData data{};
     data.chain = phi.transpose();
 
-    data.mean_est = dynamic_cast<std::vector<double>>(phi.colwise().mean());
+    Eigen::VectorXd mean_vector = phi.colwise().mean();
+    data.mean_est.resize(mean_vector.size());
+    Eigen::VectorXd::Map(&data.mean_est[0], mean_vector.size()) = mean_vector;
 
-    for (auto col : phi.colwise()) {
-        auto col_sort = std::sort(dynamic_cast<std::vector<double>>(col));
+    /*for (int i = 0; i < modes_len; i++)
+        data.mean_est.push_back(mean_vector[i]); */
+
+    //data.mean_est = dynamic_cast<std::vector<double>>(phi.colwise().mean());
+
+    for (int i = 0; i < modes_len; i++) {
+        std::vector<double> col_sort(NSIMS);
+        Eigen::VectorXd::Map(&col_sort[0], NSIMS) = phi.col(i);
+        std::sort(col_sort.begin(), col_sort.end());
 
         if (NSIMS_ODD)
             data.median_est.push_back(col_sort[NSIMS / 2]);
         else
-            data.median_est.push_back((col_sort[NSIMS / 2] + col_sort.at[NSIMS / 2 - 1]) / 2);
+            data.median_est.push_back((col_sort[NSIMS / 2] + col_sort[NSIMS / 2 - 1]) / 2);
 
-        data.upper_95_est.push_back((col_sort[NSIMS_95]));
-        data.lower_95_est.push_back((col_sort[NSIMS_5]));
+        data.upper_95_est.push_back((col_sort[NSIMS_95(NSIMS)]));
+        data.lower_95_est.push_back((col_sort[NSIMS_5(NSIMS)]));
     }
 
     return data;

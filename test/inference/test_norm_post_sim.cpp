@@ -4,7 +4,8 @@
 
 TEST_CASE("norm_post_sim", "[norm_post_sim]") {
     Eigen::VectorXd modes = Eigen::VectorXd::Zero(3);
-    Eigen::MatrixXd cov_matrix{Eigen::MatrixXd::Identity(2, 2)};
+    Eigen::MatrixXd cov_matrix{Eigen::MatrixXd::Identity(3, 3)};
     NormPostSimData data = norm_post_sim(modes, cov_matrix);
-    //REQUIRE(data.chain == Eigen::Matrix<double, Eigen::Dynamic, NSIMS>::Zero(2, 2));
+    REQUIRE(data.chain.cols() == 30000);
+    REQUIRE(data.chain.rows() == 3);
 }

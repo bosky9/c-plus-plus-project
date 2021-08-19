@@ -12,7 +12,7 @@ std::vector<double> RMSProp::update(double gradient) {
     if (_t > 5) {
         double add_to_param = _learning_rate + (_learning_rate*15.0*(pow(0.99, _t))) * (gradient/ sqrt(_variance + _epsilon));
         std::transform(_parameters.begin(), _parameters.end(), _parameters.begin(),
-                       [add_to_param](double val){return val + add_to_param});
+                       [add_to_param](double val){return val + add_to_param;});
     }
 
     _t += 1;
@@ -36,7 +36,7 @@ std::vector<double> ADAM::update(double gradient) {
     if (_t > 5) {
         double add_to_param = _learning_rate + (_learning_rate*15.0*(pow(0.99, _t))) * (f_gradient_hat/(sqrt(variance_hat)+_epsilon));
         std::transform(_parameters.begin(), _parameters.end(), _parameters.begin(),
-                       [add_to_param](double val){return val + add_to_param});
+                       [add_to_param](double val){return val + add_to_param;});
     }
     _t += 1;
     return _parameters;
