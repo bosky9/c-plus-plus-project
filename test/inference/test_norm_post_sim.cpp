@@ -22,7 +22,7 @@ TEST_CASE("norm_post_sim check normal distribution", "[norm_post_sim]") {
     Eigen::MatrixXd cov_matrix{Eigen::MatrixXd::Identity(size, size)};
     NormPostSimData data = norm_post_sim(modes, cov_matrix);
 
-    for (int i = 0; i < size; i ++){
+    for (int i = 0; i < size; i++){
         REQUIRE( (data.mean_est[i] > -0.1) & (data.mean_est[i] < 0.1));
         REQUIRE( (data.median_est[i] > -0.2) & (data.median_est[i] < 0.2));
         REQUIRE( (data.upper_95_est[i] > 1));
