@@ -6,6 +6,12 @@
 
 #include "headers.hpp"
 
+/**
+ * @brief Calculate the sample autocovariance of two arrays (stationarity assumed)
+ * @param x Array of data
+ * @param lag Index to split the array into two arrays with equal sizes
+ * @return The sample autocovariance of the two arrays
+ */
 template<typename T>
 T cov(const std::vector<T>& x, size_t lag = 0) {
     static_assert(std::is_floating_point<T>::value, "cov accepts only float,double types");
@@ -19,6 +25,12 @@ T cov(const std::vector<T>& x, size_t lag = 0) {
     return inner / (T) x1.size();
 }
 
+/**
+ * @brief Calculate the sample autocorrelation function of an array (stationarity assumed)
+ * @param x Array of data
+ * @param lag Index to split the array into two arrays with equal sizes
+ * @return The sample autocorrelation function of the array x
+ */
 template<typename T>
 T acf(const std::vector<T>& x, size_t lag = 0) {
     static_assert(std::is_floating_point<T>::value, "acf accepts only float,double types");
