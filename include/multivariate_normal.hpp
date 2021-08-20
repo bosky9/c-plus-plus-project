@@ -1,7 +1,7 @@
-#define _USE_MATH_DEFINES
+#pragma once
 
-#include <cmath>
 #include <Eigen/Eigenvalues>
+#include <cmath>
 
 class Mvn {
 public:

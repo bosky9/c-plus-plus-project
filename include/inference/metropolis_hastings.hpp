@@ -1,52 +1,46 @@
 #pragma once
 
-#include <Eigen/Core>
+#include <optional>
 
+#include "headers.hpp"
 #include "sample.hpp"
 
 /**
- * @brief RANDOM-WALK METROPOLIS-HASTINGS MCMC
+ * @brief Random-walk Metropolis-Hastings MCMC
  */
 class MetropolisHastings {
 private:
-    /// A posterior function
-    std::function<double(Eigen::VectorXd)> posterior;
+    std::function<double(Eigen::VectorXd)> _posterior; ///< A posterior function
+    double _scale;                                     ///< The scale for the random walk
+    int _nsims;                                        ///< The number of iterations to perform
+    Eigen::VectorXd _initials;                         ///< Where to start the MCMC chain
+    Eigen::Index _param_no;                            ///< Number of paramters
+    int _thinning;               ///< By how much to thin the chains (2 means drop every other point)
+    bool _warm_up_period;        ///< Whether to discard first half of the chain as 'warm-up'
+    bool _quiet_progress;        ///< Whether to print progress to console or stay quiet
+    Eigen::MatrixXd _phi;        ///< Matrix of...
+    Eigen::MatrixXd _cov_matrix; ///< A covariance matrix for the random walk
+    // TODO: TSM model; ///< A model object (for use in SPDK sampling)
 
-    /// The scale for the random walk
-    double scale;
-
-    /// The number of iterations to perform
-    int nsims;
-
-    /// Where to start the MCMC chain
-    Eigen::VectorXd initials;
-
-    /// (optional) A covariance matrix for the random walk
-    Eigen::MatrixXd cov_matrix;
-
-    /// By how much to thin the chains (2 means drop every other point)
-    int thinning;
-
-    /// Whether to discard first half of the chain as 'warm-up'
-    bool warm_up_period;
-
-    /// A model object (for use in SPDK sampling)
-    // TODO: TSM model_object;
-
-    /// Whether to print progress to console or stay quiet
-    bool quiet_progress;
 public:
-    MetropolisHastings(std::function<double(Eigen::VectorXd)> posterior,
-                       double scale,
-                       int nsims,
-                       Eigen::VectorXd& initials,
-                       // TODO: La reference non può essere nullptr
-                       Eigen::MatrixXd& cov_matrix = nullptr,
-                       int thinning = 2,
-                       bool warm_up_period = true,
-                       // TODO: TSM model_object = nullptr,
-                       bool quiet_progress = false
-    );
+    /**
+     * @brief Constructor for MetropolisHastings
+     * @param posterior A posterior function
+     * @param scale The scale for the random walk
+     * @param nsims The number of iterations to perform
+     * @param initials Where to start the MCMC chain
+     * @param cov_matrix A covariance matrix for the random walk (optional)
+     * @param thinning By how much to thin the chains (2 means drop every other point)
+     * @param warm_up_period Whether to discard first half of the chain as 'warm-up'
+     * // TODO: TSM model_object (model_object); A model object (for use in SPDK sampling)
+     * @param quiet_progress Whether to print progress to console or stay quiet
+     */
+    MetropolisHastings(std::function<double(Eigen::VectorXd)>& posterior, double scale, int nsims,
+                       const Eigen::VectorXd& initials, const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
+                       int thinning = 2, bool warm_up_period = true, // TODO: TSM model_object = nullptr,
+                       bool quiet_progress = false);
+
+    // TODO: copy/move constructor/assignment
 
     /**
      * @brief Tunes scale for M-H algorithm
