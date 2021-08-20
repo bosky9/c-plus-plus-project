@@ -1,6 +1,7 @@
-#include <Eigen/Eigenvalues>
+#define _USE_MATH_DEFINES
 
-#include "headers.hpp"
+#include <cmath>
+#include <Eigen/Eigenvalues>
 
 class Mvn {
 public:
