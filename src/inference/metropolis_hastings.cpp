@@ -69,8 +69,9 @@ Sample MetropolisHastings::sample() {
     }
 
     // Remove warm-up and thin
-    _phi = _phi(seq(_nsims/2, last), all)(seq(0,last,_thinning), all);
+    _phi = _phi(Eigen::seq(_nsims/2, Eigen::last), Eigen::all)(Eigen::seq(0,Eigen::last,_thinning), Eigen::all);
     // TODO: controlla, transpose() non deve modificare _phi (anche in norm_post_sim.hpp)
+    // Non lo fa, quella è la funzione transposeInPlace()
     Eigen::MatrixXd chain = _phi.transpose();
 
     std::vector<double> mean_est(_phi.cols());
@@ -83,7 +84,7 @@ Sample MetropolisHastings::sample() {
     std::vector<double> lower_5_est;
     for (size_t i{0}; i < _param_no; i++) {
         std::vector<double> col_sort(_phi.rows());
-        Eigen::VectorXd::Map(&col_sort[0], NSIMS) = _phi.col(i);
+        Eigen::VectorXd::Map(&col_sort[0], _nsims) = _phi.col(i);
         std::sort(col_sort.begin(), col_sort.end());
 
         if (static_cast<bool>(_phi.rows() % 2))
