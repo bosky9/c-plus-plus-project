@@ -57,7 +57,7 @@ Sample MetropolisHastings::sample() {
         Eigen::VectorXd crit{Eigen::VectorXd::Random(sims_to_do)};
         Mvn post{Eigen::VectorXd::Zero(_param_no), _cov_matrix};
         Eigen::MatrixXd rnums;
-        for (size_t i{0}; i < sims_to_do; i++) {
+        for (Eigen::Index i{0}; i < sims_to_do; i++) {
             rnums.row(i) = post.sample() * _scale;
         }
         metropolis_sampler(sims_to_do, _phi, _posterior, a_rate, rnums, crit);
@@ -82,7 +82,7 @@ Sample MetropolisHastings::sample() {
     std::vector<double> median_est;
     std::vector<double> upper_95_est;
     std::vector<double> lower_5_est;
-    for (size_t i{0}; i < _param_no; i++) {
+    for (Eigen::Index i{0}; i < _param_no; i++) {
         std::vector<double> col_sort(_phi.rows());
         Eigen::VectorXd::Map(&col_sort[0], _nsims) = _phi.col(i);
         std::sort(col_sort.begin(), col_sort.end());
