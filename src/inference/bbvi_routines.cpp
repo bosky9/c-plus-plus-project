@@ -4,6 +4,10 @@ std::vector<double> alpha_recursion(std::vector<double>& alpha0, Eigen::MatrixXd
         int param_no) {
     size_t lambda_i;
     for(; lambda_i < param_no; lambda_i++) {
+        /*
+         * the original file picks the covariance
+         * of two vectors xy
+         */
         Eigen::MatrixXd centered = mat.rowwise() - mat.colwise().mean();
         Eigen::MatrixXd cov = (centered.adjoint() * centered) / double(mat.rows() - 1);
         alpha0[lambda_i] =
