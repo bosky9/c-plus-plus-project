@@ -32,7 +32,7 @@ public:
      * @param cov_matrix A covariance matrix for the random walk (optional)
      * @param thinning By how much to thin the chains (2 means drop every other point)
      * @param warm_up_period Whether to discard first half of the chain as 'warm-up'
-     * // TODO: TSM model_object (model_object); A model object (for use in SPDK sampling)
+     * // TODO: TSM model_object A model object (for use in SPDK sampling)
      * @param quiet_progress Whether to print progress to console or stay quiet
      */
     MetropolisHastings(std::function<double(Eigen::VectorXd)>& posterior, double scale, int nsims,
@@ -40,7 +40,25 @@ public:
                        int thinning = 2, bool warm_up_period = true, // TODO: TSM model_object = nullptr,
                        bool quiet_progress = false);
 
-    // TODO: copy/move constructor/assignment
+    MetropolisHastings(const MetropolisHastings& mh);
+
+    /**
+     * @brief Move constructor for MetropolisHastings
+     * @param mh A MetropolisHastings object
+     */
+    MetropolisHastings(MetropolisHastings&& mh);
+
+    /**
+     * @brief Assignment operator for MetropolisHastings
+     * @param mh A MetropolisHastings object
+     */
+    MetropolisHastings& operator=(const MetropolisHastings& mh);
+
+    /**
+     * @brief Move assignment operator for MetropolisHastings
+     * @param mh A MetropolisHastings object
+     */
+    MetropolisHastings& operator=(MetropolisHastings&& mh);
 
     /**
      * @brief Tunes scale for M-H algorithm

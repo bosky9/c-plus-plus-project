@@ -18,8 +18,89 @@ MetropolisHastings::MetropolisHastings(std::function<double(Eigen::VectorXd)>& p
     _cov_matrix = cov_matrix.value_or(Eigen::MatrixXd::Identity(_param_no, _param_no));
     _cov_matrix.array().colwise() *= _initials.cwiseAbs().array();
 
-    // if (model_object == nullptr)
+    // TODO if (model_object == nullptr)
     //  _model = model_object;
+}
+
+MetropolisHastings::MetropolisHastings(const MetropolisHastings& mh) {
+    _posterior      = mh._posterior;
+    _scale          = mh._scale;
+    _nsims          = mh._nsims;
+    _initials       = mh._initials;
+    _param_no       = mh._param_no;
+    _thinning       = mh._thinning;
+    _warm_up_period = mh._warm_up_period;
+    _quiet_progress = mh._quiet_progress;
+    _phi            = mh._phi;
+    _cov_matrix     = mh._cov_matrix;
+    // TODO _model = mh._model;
+}
+
+MetropolisHastings::MetropolisHastings(MetropolisHastings&& mh) {
+    _posterior      = mh._posterior;
+    _scale          = mh._scale;
+    _nsims          = mh._nsims;
+    _initials       = mh._initials;
+    _param_no       = mh._param_no;
+    _thinning       = mh._thinning;
+    _warm_up_period = mh._warm_up_period;
+    _quiet_progress = mh._quiet_progress;
+    _phi            = mh._phi;
+    _cov_matrix     = mh._cov_matrix;
+    // TODO _model = mh._model;
+    mh._posterior      = {};
+    mh._scale          = 0.0;
+    mh._nsims          = 0;
+    mh._initials       = Eigen::VectorXd();
+    mh._param_no       = 0;
+    mh._thinning       = 0;
+    mh._warm_up_period = false;
+    mh._quiet_progress = false;
+    mh._phi            = Eigen::MatrixXd();
+    mh._cov_matrix     = Eigen::MatrixXd();
+    // TODO _model = TSM();
+}
+
+MetropolisHastings& MetropolisHastings::operator=(const MetropolisHastings& mh) {
+    if (this == &mh)
+        return *this;
+    _posterior      = mh._posterior;
+    _scale          = mh._scale;
+    _nsims          = mh._nsims;
+    _initials       = mh._initials;
+    _param_no       = mh._param_no;
+    _thinning       = mh._thinning;
+    _warm_up_period = mh._warm_up_period;
+    _quiet_progress = mh._quiet_progress;
+    _phi            = mh._phi;
+    _cov_matrix     = mh._cov_matrix;
+    return *this;
+}
+
+MetropolisHastings& MetropolisHastings::operator=(MetropolisHastings&& mh) {
+    _posterior      = mh._posterior;
+    _scale          = mh._scale;
+    _nsims          = mh._nsims;
+    _initials       = mh._initials;
+    _param_no       = mh._param_no;
+    _thinning       = mh._thinning;
+    _warm_up_period = mh._warm_up_period;
+    _quiet_progress = mh._quiet_progress;
+    _phi            = mh._phi;
+    _cov_matrix     = mh._cov_matrix;
+    // TODO _model = mh._model;
+    mh._posterior      = {};
+    mh._scale          = 0.0;
+    mh._nsims          = 0;
+    mh._initials       = Eigen::VectorXd();
+    mh._param_no       = 0;
+    mh._thinning       = 0;
+    mh._warm_up_period = false;
+    mh._quiet_progress = false;
+    mh._phi            = Eigen::MatrixXd();
+    mh._cov_matrix     = Eigen::MatrixXd();
+    // TODO _model = TSM();
+    return *this;
 }
 
 double MetropolisHastings::tune_scale(double acceptance, double scale) {
