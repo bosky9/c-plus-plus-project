@@ -3,7 +3,7 @@
 Mvn::Mvn(const Eigen::VectorXd& mu, const Eigen::MatrixXd& s) : _mean{mu}, _sigma{s} {}
 
 double Mvn::pdf(const Eigen::VectorXd& x) const {
-    double n        = x.rows();
+    double n        = static_cast<double>(x.rows());
     double sqrt2pi  = std::sqrt(2 * M_PI);
     double quadform = (x - _mean).transpose() * _sigma.inverse() * (x - _mean);
     double norm     = std::pow(sqrt2pi, -n) * std::pow(_sigma.determinant(), -0.5);
@@ -12,13 +12,13 @@ double Mvn::pdf(const Eigen::VectorXd& x) const {
 }
 
 Eigen::VectorXd Mvn::sample(unsigned int nr_iterations) const {
-    size_t n = _mean.rows();
+    Eigen::Index n = _mean.rows();
 
     // Generate x from the N(0, I) distribution
     Eigen::VectorXd x(n);
     Eigen::VectorXd sum(n);
     sum.setZero();
-    for (unsigned int i = 0; i < nr_iterations; i++) {
+    for (size_t i = 0; i < nr_iterations; i++) {
         x.setRandom();
         x   = 0.5 * (x + Eigen::VectorXd::Ones(n));
         sum = sum + x;

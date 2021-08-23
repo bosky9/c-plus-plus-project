@@ -1,7 +1,7 @@
 #include "inference/metropolis_hastings.hpp"
 
-#include "multivariate_normal.hpp"
 #include "inference/metropolis_sampler.hpp"
+#include "multivariate_normal.hpp"
 
 MetropolisHastings::MetropolisHastings(std::function<double(Eigen::VectorXd)>& posterior, double scale, int nsims,
                                        const Eigen::VectorXd& initials,
@@ -14,7 +14,9 @@ MetropolisHastings::MetropolisHastings(std::function<double(Eigen::VectorXd)>& p
 
     _phi        = Eigen::MatrixXd::Zero(_nsims, _param_no);
     _phi.row(0) = _initials;
-    _cov_matrix = cov_matrix.value_or(Eigen::MatrixXd::Identity(_param_no, _param_no) * _initials.cwiseAbs());
+
+    _cov_matrix = cov_matrix.value_or(Eigen::MatrixXd::Identity(_param_no, _param_no));
+    _cov_matrix.array().colwise() *= _initials.cwiseAbs().array();
 
     // if (model_object == nullptr)
     //  _model = model_object;
@@ -38,19 +40,19 @@ double MetropolisHastings::tune_scale(double acceptance, double scale) {
 
 Sample MetropolisHastings::sample() {
     double acceptance = 1.0;
-    bool finish = true;
+    bool finish       = true;
 
     while ((acceptance < 0.234 or acceptance > 0.4) or finish) {
         // If acceptance is in range, proceed to sample, else continue tuning
         int sims_to_do;
         if (!(acceptance < 0.234 or acceptance > 0.4)) {
-                finish = false;
-                if (!_quiet_progress) {
-                    std::cout << "\nTuning complete! Now sampling.";
-                }
-                sims_to_do = _nsims;
+            finish = false;
+            if (!_quiet_progress) {
+                std::cout << "\nTuning complete! Now sampling.";
+            }
+            sims_to_do = _nsims;
         } else {
-            sims_to_do = _nsims/2;
+            sims_to_do = _nsims / 2;
         }
         // Holds data on acceptance rates and uniform random numbers
         Eigen::VectorXd a_rate{Eigen::VectorXd::Zero(sims_to_do)};
@@ -61,15 +63,15 @@ Sample MetropolisHastings::sample() {
             rnums.row(i) = post.sample() * _scale;
         }
         metropolis_sampler(sims_to_do, _phi, _posterior, a_rate, rnums, crit);
-        acceptance = a_rate.sum()/a_rate.size();
-        _scale = tune_scale(acceptance, _scale);
+        acceptance = a_rate.sum() / static_cast<double>(a_rate.size());
+        _scale     = tune_scale(acceptance, _scale);
         if (!_quiet_progress) {
             std::cout << "Acceptance rate of Metropolis-Hastings is " << acceptance;
         }
     }
 
     // Remove warm-up and thin
-    _phi = _phi(Eigen::seq(_nsims/2, Eigen::last), Eigen::all)(Eigen::seq(0,Eigen::last,_thinning), Eigen::all);
+    _phi = _phi(Eigen::seq(_nsims / 2, Eigen::last), Eigen::all)(Eigen::seq(0, Eigen::last, _thinning), Eigen::all);
     // TODO: controlla, transpose() non deve modificare _phi (anche in norm_post_sim.hpp)
     // Non lo fa, quella è la funzione transposeInPlace()
     Eigen::MatrixXd chain = _phi.transpose();

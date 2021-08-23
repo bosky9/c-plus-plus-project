@@ -13,6 +13,7 @@ private:
     double _ewma;
     static double _epsilon;
     unsigned int _t = 1;
+
 public:
     /**
      * @brief RMSProp constructor
@@ -23,6 +24,8 @@ public:
      */
     RMSProp(const std::vector<double>& starting_parameters, double starting_variance, double learning_rate,
             double ewma);
+
+    // TODO: copy/move constructor/assignment
 
     /**
      * @brief
@@ -47,6 +50,7 @@ private:
     double _ewma_2;
     static double _epsilon;
     int _t = 1;
+
 public:
     /**
      * @brief ADAM constructor
@@ -56,8 +60,10 @@ public:
      * @param ewma1 Exponentially-Weighted Moving Average
      * @param ewma2 Exponentially-Weighted Moving Average
      */
-    ADAM(const std::vector<double>& starting_parameters, double starting_variance, double learning_rate,
-         double ewma1, double ewma2);
+    ADAM(const std::vector<double>& starting_parameters, double starting_variance, double learning_rate, double ewma1,
+         double ewma2);
+
+    // TODO: copy/move constructor/assignment
 
     /**
      * @brief
@@ -68,4 +74,4 @@ public:
 };
 
 double RMSProp::_epsilon = pow(10.0, -8);
-double ADAM::_epsilon = pow(10.0, -8);
+double ADAM::_epsilon    = pow(10.0, -8);
