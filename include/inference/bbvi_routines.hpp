@@ -1,5 +1,7 @@
 #include "headers.hpp"
 
+double covariance(const Eigen::VectorXd& x, const Eigen::VectorXd& y);
+
 /**
  * @brief This function is used inside the BBVI classes
  * @param alpha0
