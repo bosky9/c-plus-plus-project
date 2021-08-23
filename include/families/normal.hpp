@@ -204,4 +204,6 @@ public:
      * @return The gradient of the scale latent variable at x
      */
     double vi_score(double x, int index) const;
+
+    short int get_param_no() const;
 };

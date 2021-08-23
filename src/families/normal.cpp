@@ -173,3 +173,7 @@ double Normal::vi_score(double x, int index) const {
     else if (index == 1)
         return vi_scale_score(x);
 }
+
+short int Normal::get_param_no() const {
+    return _param_no;
+}
