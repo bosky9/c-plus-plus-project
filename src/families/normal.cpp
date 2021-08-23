@@ -111,6 +111,7 @@ double Normal::logpdf(double mu) {
 
 std::vector<double> Normal::markov_blanket(const std::vector<double>& y, const std::vector<double>& mean, double scale,
                                            double shape, double skewness) {
+    // TODO: Use Mvn::logpdf()
     std::vector<double> result;
     const double ONE_OVER_SQRT_2PI = 0.39894228040143267793994605993438;
     if (mean.size() == 1) {
