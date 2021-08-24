@@ -41,6 +41,14 @@ public:
     Flat& operator=(Flat&& flat);
 
     /**
+     * @brief Equal operator for Flat
+     * @param flat1 First object
+     * @param flat2 Second object
+     * @return If the two objects are equal
+     */
+    friend bool operator==(const Flat& flat1, const Flat& flat2);
+
+    /**
      * @brief Log PDF for Flat prior
      * @param mu Latent variable for which the prior is being formed over
      * @return log(p(mu))
@@ -48,4 +56,4 @@ public:
     double logpdf(double mu);
 };
 
-#endif// C_PLUS_PLUS_PROJECT_FLAT_H
+#endif // C_PLUS_PLUS_PROJECT_FLAT_H

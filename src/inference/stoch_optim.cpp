@@ -61,8 +61,7 @@ std::vector<double> RMSProp::update(double gradient) {
 
     _t += 1;
     return _parameters;
-};
-
+}
 
 ADAM::ADAM(const std::vector<double>& starting_parameters, double starting_variance, double learning_rate, double ewma1,
            double ewma2)

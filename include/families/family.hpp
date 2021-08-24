@@ -42,6 +42,14 @@ public:
      */
     Family& operator=(Family&& family);
 
+    /**
+     * @brief Check if Family objects are equal
+     * @param family1 First object
+     * @param family2 Second object
+     * @return If the two objects are equal
+     */
+    friend bool is_equal(const Family& family1, const Family& family2);
+
 private:
     /**
      * @brief Apply the logit transformation

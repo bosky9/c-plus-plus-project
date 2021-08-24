@@ -17,7 +17,7 @@ FetchContent_Declare(
         GIT_TAG v3.0.0-preview3
 )
 FetchContent_MakeAvailable(Catch2)
-add_executable(tests src/inference/metropolis_sampler.cpp src/inference/bbvi_routines.cpp)
+add_executable(tests)
 file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE TESTS_LIST ${PROJECT_SOURCE_DIR}/test/*.cpp)
 target_sources(tests PRIVATE ${SRCS} ${TESTS_LIST})

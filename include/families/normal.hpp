@@ -63,6 +63,14 @@ public:
     Normal& operator=(Normal&& normal);
 
     /**
+     * @brief Equal operator for Normal
+     * @param normal1 First object
+     * @param normal2 Second object
+     * @return If the two objects are equal
+     */
+    friend bool operator==(const Normal& normal1, const Normal& normal2);
+
+    /**
      * @brief Creates approximating Gaussian state space model for the Normal measurement density
      * @param beta Not actually used
      * @param T Not actually used

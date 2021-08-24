@@ -26,6 +26,10 @@ Flat& Flat::operator=(Flat&& flat) {
     return *this;
 }
 
+bool operator==(const Flat& flat1, const Flat& flat2) {
+    return is_equal(flat1, flat2) && flat1._covariance_prior == flat2._covariance_prior;
+}
+
 double Flat::logpdf(double mu) {
     return 0.0;
 }

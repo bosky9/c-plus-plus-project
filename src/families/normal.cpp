@@ -46,6 +46,17 @@ Normal& Normal::operator=(Normal&& normal) {
     return *this;
 }
 
+/**
+ * @brief Equal operator for Normal
+ * @param family1 First object
+ * @param family2 Second object
+ * @return If the two objects are equal
+ */
+bool operator==(const Normal& normal1, const Normal& normal2) {
+    return is_equal(normal1, normal2) && normal1._mu0 == normal2._mu0 && normal1._sigma0 == normal2._sigma0 &&
+           normal1._param_no == normal2._param_no && normal1._covariance_prior == normal2._covariance_prior;
+}
+
 Eigen::MatrixXd* Normal::approximating_model(const std::vector<double>& beta, const Eigen::MatrixXd& T,
                                              const Eigen::MatrixXd& Z, const Eigen::MatrixXd& R,
                                              const Eigen::MatrixXd& Q, double h_approx,

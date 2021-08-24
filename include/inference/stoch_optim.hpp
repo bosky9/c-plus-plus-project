@@ -117,5 +117,4 @@ public:
     std::vector<double> update(double gradient);
 };
 
-double RMSProp::_epsilon = pow(10.0, -8);
-double ADAM::_epsilon    = pow(10.0, -8);
+inline double StochOptim::_epsilon = pow(10, -8);

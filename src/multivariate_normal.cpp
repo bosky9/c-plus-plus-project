@@ -42,19 +42,17 @@ Eigen::VectorXd Mvn::sample(unsigned int nr_iterations) const {
 }
 
 Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& means, const Eigen::VectorXd& scales) {
-    assert(
-            (means.size() == 1 && (scales.size() == 1 || x.size() == 1 || x.size() == scales.size()))
-            || (scales.size() == 1 && (x.size() == 1 || x.size() == means.size()))
-            || (means.size() == scales.size() && (x.size() == 1 || x.size() == means.size()))
-            );
-    size_t size = std::max({x.size(),means.size(),scales.size()});
+    assert((means.size() == 1 && (scales.size() == 1 || x.size() == 1 || x.size() == scales.size())) ||
+           (scales.size() == 1 && (x.size() == 1 || x.size() == means.size())) ||
+           (means.size() == scales.size() && (x.size() == 1 || x.size() == means.size())));
+    size_t size = std::max({x.size(), means.size(), scales.size()});
     Eigen::VectorXd result(size);
     const double ONE_OVER_SQRT_2PI = 0.39894228040143267793994605993438;
     for (Eigen::Index i{0}; i < size; i++) {
         double x_val = x.size() == 1 ? x(0) : x(i);
-        double mean = means.size() == 1 ? means(0) : means(i);
+        double mean  = means.size() == 1 ? means(0) : means(i);
         double scale = scales.size() == 1 ? scales(0) : scales(i);
-        result(i) = log((ONE_OVER_SQRT_2PI / scale) * exp(-0.5 * pow((x_val - mean) / scale, 2.0)));
+        result(i)    = log((ONE_OVER_SQRT_2PI / scale) * exp(-0.5 * pow((x_val - mean) / scale, 2.0)));
     }
     return result;
 }
