@@ -123,10 +123,10 @@ Sample MetropolisHastings::sample() {
     double acceptance = 1.0;
     bool finish       = true;
 
-    while ((acceptance < 0.234 or acceptance > 0.4) or finish) {
+    while ((acceptance < 0.234 || acceptance > 0.4) || finish) {
         // If acceptance is in range, proceed to sample, else continue tuning
         int sims_to_do;
-        if (!(acceptance < 0.234 or acceptance > 0.4)) {
+        if (!(acceptance < 0.234 || acceptance > 0.4)) {
             finish = false;
             if (!_quiet_progress) {
                 std::cout << "\nTuning complete! Now sampling.";

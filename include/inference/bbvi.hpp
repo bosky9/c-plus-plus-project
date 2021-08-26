@@ -1,16 +1,18 @@
 #pragma once
 
 #include "families/normal.hpp"
-#include "inference/bbvi_routines.hpp"
 #include "headers.hpp"
+#include "inference/bbvi_routines.hpp"
+#include "inference/stoch_optim.hpp"
+#include "multivariate_normal.hpp"
 
 struct BBVIReturnData {
     std::vector<Normal> q;
     Eigen::VectorXd final_means;
     Eigen::VectorXd final_ses;
     Eigen::VectorXd elbo_records;
-    Eigen::MatrixXd stored_means = nullptr;
-    Eigen::VectorXd stored_predictive_likelihood = nullptr;
+    Eigen::MatrixXd stored_means                 = Eigen::MatrixXd();
+    Eigen::VectorXd stored_predictive_likelihood = Eigen::MatrixXd();
 };
 
 /**
@@ -19,15 +21,18 @@ struct BBVIReturnData {
 class BBVI {
 private:
     std::function<double(Eigen::VectorXd)> _neg_posterior; ///< Posterior function
-    std::vector<Normal> _q; ///< List holding the distribution objects
-    int _sims; ///< Number of Monte Carlo sims for the gradient
-    Eigen::VectorXd _approx_param_no;
-    bool _printer;
-    int _iterations; ///< How many iterations to run
-    bool _record_elbo; ///< Whether to record the ELBO at every iteration
-    bool _quiet_progress; ///< Whether to print progress or stay quiet
-    std::string _optimizer;
-    double _learning_rate;
+    std::vector<Normal> _q;                                ///< List holding the distribution objects
+    int _sims;                                             ///< Number of Monte Carlo sims for the gradient
+    Eigen::VectorXd _approx_param_no;                      ///<
+    bool _printer;                                         ///<
+    int _iterations;                                       ///< How many iterations to run
+    bool _record_elbo;                                     ///< Whether to record the ELBO at every iteration
+    bool _quiet_progress;                                  ///< Whether to print progress or stay quiet
+    std::string _optimizer;                                ///<
+    double _learning_rate;                                 ///<
+    // @TODO: chiedere a Busato (e considera unique pointer)
+    StochOptim* _optim = new StochOptim(Eigen::Vector<double, 1>{3.0}, 0, 0); ///<
+
 public:
     /**
      * @brief Constructor for BBVI
@@ -40,14 +45,12 @@ public:
      * @param record_elbo
      * @param quiet_progress
      */
-    BBVI(std::function<double(Eigen::VectorXd)> neg_posterior,
-         std::vector<Normal>& q,
-         int sims,
-         std::string optimizer = "RMSProp",
-         int iterations = 1000,
-         double learning_rate = 0.001,
-         bool record_elbo = false,
-         bool quiet_progress = false);
+    BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Normal>& q, int sims,
+         std::string optimizer = "RMSProp", int iterations = 1000, double learning_rate = 0.001,
+         bool record_elbo = false, bool quiet_progress = false);
+
+
+    virtual ~BBVI();
 
     /**
      * @brief Utility function for changing the approximate distribution parameters
@@ -73,19 +76,13 @@ public:
      * @param z
      * @return
      */
-    virtual double cv_gradient(Eigen::VectorXd& z, bool initial = false);
+    virtual Eigen::VectorXd cv_gradient(Eigen::MatrixXd& z, bool initial = false);
 
     /**
      * @brief Draw parameters from a mean-field normal family
      * @return
      */
-    Eigen::MatrixXd draw_normal();
-
-    /**
-     * @brief Draw parameters from a mean-field normal family
-     * @return
-     */
-    Eigen::MatrixXd draw_normal_initial();
+    Eigen::MatrixXd draw_normal(bool initial = false);
 
     /**
      * @brief Draw parameters from the approximating distributions
@@ -97,41 +94,35 @@ public:
      * @brief Gets the mean and scales for normal approximating parameters
      * @return
      */
-    std::pair <Eigen::VectorXd,Eigen::VectorXd> get_means_and_scales_from_q();
+    std::pair<Eigen::VectorXd, Eigen::VectorXd> get_means_and_scales_from_q();
 
     /**
      * @brief Gets the mean and scales for normal approximating parameters
      * @return
      */
-    std::pair <Eigen::VectorXd,Eigen::VectorXd> get_means_and_scales();
+    std::pair<Eigen::VectorXd, Eigen::VectorXd> get_means_and_scales();
 
     /**
      * @brief The gradients of the approximating distributions
      * @param z
      * @return
      */
-    Eigen::MatrixXd grad_log_q(Eigen::VectorXd& z);
+    // In Python ritorna una matrice, ma poi assegna un double ad ogni riga (?)
+    Eigen::MatrixXd grad_log_q(Eigen::MatrixXd& z);
 
     /**
      * @brief The unnormalized log posterior components (the quantity we want to approximate)
      * @param z
      * @return
      */
-    virtual Eigen::VectorXd log_p(Eigen::VectorXd& z);
+    virtual Eigen::VectorXd log_p(Eigen::MatrixXd& z);
 
     /**
      * @brief The mean-field normal log posterior components (the quantity we want to approximate)
      * @param z
      * @return
      */
-    virtual Eigen::VectorXd normal_log_q(Eigen::VectorXd& z);
-
-    /**
-     * @brief The mean-field normal log posterior components (the quantity we want to approximate)
-     * @param z
-     * @return
-     */
-    virtual Eigen::VectorXd normal_log_q_initial(Eigen::VectorXd& z);
+    virtual Eigen::VectorXd normal_log_q(Eigen::MatrixXd& z, bool initial = false);
 
     /**
      * @brief Prints the current ELBO at every decile of total iterations
@@ -160,11 +151,13 @@ public:
      */
     virtual BBVIReturnData run_and_store();
 
+    std::vector<Normal> get_q() const;
 };
 
 class CBBVI : BBVI {
 private:
     std::function<double(double)> _log_p_blanket;
+
 public:
     /**
      * @brief Constructor for CBBVI
@@ -178,29 +171,30 @@ public:
      * @param quiet_progress
      */
     CBBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::function<double(double)> log_p_blanket, int sims,
-        std::string optimizer = "RMSProp", int iterations = 300000, learning_rate = 0.001, record_elbo = false,
-        quiet_progress = false);
+          std::string optimizer = "RMSProp", int iterations = 300000, double learning_rate = 0.001,
+          bool record_elbo = false, bool quiet_progress = false);
 
     /**
      * @brief Returns the unnormalized log posterior components (the quantity we want to approximate)
      * @param z
      * @return
      */
-    Eigen::VectorXd log_p(Eigen::VectorXd z) override;
+    Eigen::VectorXd log_p(Eigen::VectorXd& z) override;
 
     /**
-     * @brief The unnormalized log posterior components for mean-field normal family (the quantity we want to approximate)
+     * @brief The unnormalized log posterior components for mean-field normal family (the quantity we want to
+     * approximate)
      * @param z
      * @return
      */
-    Eigen::VectorXd normal_log_q(Eigen::VectorXd z) override;
+    Eigen::VectorXd normal_log_q(Eigen::VectorXd& z, bool initial = false) override;
 
     /**
      * @brief The control variate augmented Monte Carlo gradient estimate
      * @param z
      * @return
      */
-    double cv_gradient(Eigen::VectorXd z, bool initial = false) override;
+    double cv_gradient(Eigen::MatrixXd& z, bool initial = false) override;
 };
 
 /**
@@ -208,10 +202,11 @@ public:
  */
 class BBVIM : BBVI {
 private:
-    std::function<double(Eigen::VectorXd) _full_neg_posterior;
+    std::function<double(Eigen::VectorXd)> _full_neg_posterior;
     std::vector<int> _approx_param_no;
     bool _printer;
     int _mini_batch;
+
 public:
     /**
      * @brief Contructor for BBCVIM
@@ -225,9 +220,10 @@ public:
      * @param record_elbo
      * @param quiet_progress
      */
-    BBVIM(std::function<double(Eigen::VectorXd)> neg_posterior, std::function<double(Eigen::VectorXd)> full_neg_posterior,
-          int sims, std::string optimizer = "RMSProp", int iterations = 1000, learning_rate = 0.001, int mini_batch = 2,
-          record_elbo = false, quiet_progress = false);
+    BBVIM(std::function<double(Eigen::VectorXd)> neg_posterior,
+          std::function<double(Eigen::VectorXd)> full_neg_posterior, int sims, std::string optimizer = "RMSProp",
+          int iterations = 1000, double learning_rate = 0.001, int mini_batch = 2, bool record_elbo = false,
+          bool quiet_progress = false);
 
     /**
      * @brief The unnormalized log posterior components (the quantity we want to approximate)

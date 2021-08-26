@@ -1,5 +1,6 @@
 #include "families/normal.hpp"
 
+#include "multivariate_normal.hpp"
 
 Normal::Normal(double mu, double sigma, const std::string& transform)
     : Family{transform}, _mu0{mu}, _sigma0{sigma}, _param_no{2}, _covariance_prior{false} {}
@@ -44,6 +45,17 @@ Normal& Normal::operator=(Normal&& normal) {
     normal._covariance_prior = false;
     Family::operator         =(std::move(normal));
     return *this;
+}
+
+/**
+ * @brief Equal operator for Normal
+ * @param family1 First object
+ * @param family2 Second object
+ * @return If the two objects are equal
+ */
+bool operator==(const Normal& normal1, const Normal& normal2) {
+    return is_equal(normal1, normal2) && normal1._mu0 == normal2._mu0 && normal1._sigma0 == normal2._sigma0 &&
+           normal1._param_no == normal2._param_no && normal1._covariance_prior == normal2._covariance_prior;
 }
 
 Eigen::MatrixXd* Normal::approximating_model(const std::vector<double>& beta, const Eigen::MatrixXd& T,
@@ -91,16 +103,8 @@ std::vector<double> Normal::draw_variable(double loc, double scale, double shape
     return sims;
 }
 
-std::vector<double> Normal::draw_variable_local(int size) const {
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine generator(seed);
-    std::normal_distribution<double> distribution{_mu0, _sigma0};
-    std::vector<double> vars;
-    if (size > 0) {
-        for (size_t i{0}; i < size; i++)
-            vars.push_back(distribution(generator));
-    }
-    return vars;
+Eigen::VectorXd Normal::draw_variable_local(size_t size) const {
+    return Mvn::random(_mu0, _sigma0, size);
 }
 
 double Normal::logpdf(double mu) {
@@ -109,34 +113,19 @@ double Normal::logpdf(double mu) {
     return -log(_sigma0) - (0.5 * std::pow(mu - _mu0, 2)) / std::pow(_sigma0, 2);
 }
 
-std::vector<double> Normal::markov_blanket(const std::vector<double>& y, const std::vector<double>& mean, double scale,
-                                           double shape, double skewness) {
-    // TODO: Use Mvn::logpdf()
-    std::vector<double> result;
-    const double ONE_OVER_SQRT_2PI = 0.39894228040143267793994605993438;
-    if (mean.size() == 1) {
-        for (auto elem : y)
-            result.push_back(log((ONE_OVER_SQRT_2PI / scale) * exp(-0.5 * pow((elem - mean.at(0)) / scale, 2.0))));
-    } else {
-        assert(y.size() == mean.size());
-        for (size_t i{0}; i < y.size(); i++)
-            result.push_back(log((ONE_OVER_SQRT_2PI / scale) * exp(-0.5 * pow((y.at(i) - mean.at(i)) / scale, 2.0))));
-    }
-    return result;
+Eigen::VectorXd Normal::markov_blanket(const Eigen::VectorXd& y, const Eigen::VectorXd& means, double scale,
+                                       double shape, double skewness) {
+    return Mvn::logpdf(y, means, Eigen::Vector<double, 1>{scale});
 }
 
 FamilyAttributes Normal::setup() {
     return {"Normal", [](double x) { return x; }, true, false, false, [](double x) { return x; }, true};
 }
 
-double Normal::neg_loglikelihood(const std::vector<double>& y, const std::vector<double>& mean, double scale,
-                                 double shape, double skewness) {
-    assert(!y.empty());
-    double result{0};
-    std::vector<double> logpdf{Normal::markov_blanket(y, mean, scale, shape, skewness)};
-    for (auto elem : logpdf)
-        result += elem;
-    return result;
+double Normal::neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale, double shape,
+                                 double skewness) {
+    assert(y.size() > 0);
+    return Normal::markov_blanket(y, mean, scale, shape, skewness).sum();
 }
 
 double Normal::pdf(double mu) {
@@ -159,21 +148,34 @@ double Normal::vi_return_param(int index) const {
         return log(_sigma0);
 }
 
-double Normal::vi_loc_score(double x) const {
+short int Normal::get_param_no() const {
+    return _param_no;
+}
+
+// vi_loc_score DEFINITION AND SPECIALIZATIONS -------------------------------------------------------------------------
+
+template<typename T>
+T Normal::vi_loc_score(const T& x) const {
     return (x - _mu0) / pow(_sigma0, 2);
 }
 
-double Normal::vi_scale_score(double x) const {
+template double Normal::vi_loc_score<double>(const double&) const;
+
+template<>
+Eigen::VectorXd Normal::vi_loc_score<Eigen::VectorXd>(const Eigen::VectorXd& x) const {
+    return (x.array() - _mu0) / pow(_sigma0, 2);
+}
+
+// vi_scale_score DEFINITION AND SPECIALIZATIONS -----------------------------------------------------------------------
+
+template<typename T>
+T Normal::vi_scale_score(const T& x) const {
     return exp(-2 * log(_sigma0)) * pow(x - _mu0, 2) - 1;
 }
 
-double Normal::vi_score(double x, int index) const {
-    if (index == 0)
-        return vi_loc_score(x);
-    else if (index == 1)
-        return vi_scale_score(x);
-}
+template double Normal::vi_scale_score<double>(const double&) const;
 
-short int Normal::get_param_no() const {
-    return _param_no;
+template<>
+Eigen::VectorXd Normal::vi_scale_score<Eigen::VectorXd>(const Eigen::VectorXd& x) const {
+    return exp(-2 * log(_sigma0)) * pow(x.array() - _mu0, 2) - 1;
 }

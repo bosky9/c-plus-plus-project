@@ -1,7 +1,7 @@
 #include "families/family.hpp"
 
-const std::string Family::TRANSFORM_EXP = "exp";
-const std::string Family::TRANSFORM_TANH = "tanh";
+const std::string Family::TRANSFORM_EXP   = "exp";
+const std::string Family::TRANSFORM_TANH  = "tanh";
 const std::string Family::TRANSFORM_LOGIT = "logit";
 
 Family::Family(const std::string& transform) : _transform_name{transform} {
@@ -50,6 +50,10 @@ Family& Family::operator=(Family&& family) {
     return *this;
 }
 
+bool is_equal(const Family& family1, const Family& family2) {
+    return family1._transform_name == family2._transform_name && family1._itransform_name == family2._itransform_name;
+}
+
 double Family::logit(double x) {
     return log(x) - log(1 - x);
 }
@@ -95,7 +99,7 @@ std::string Family::itransform_name_define(const std::string& transform) {
         return "ilogit";
     else if (transform.empty())
         return "";
-    //TODO: Ritornare NULL o stringa vuota?
+    // TODO: Ritornare NULL o stringa vuota?
     else
         return "";
 }

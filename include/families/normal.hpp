@@ -63,6 +63,14 @@ public:
     Normal& operator=(Normal&& normal);
 
     /**
+     * @brief Equal operator for Normal
+     * @param normal1 First object
+     * @param normal2 Second object
+     * @return If the two objects are equal
+     */
+    friend bool operator==(const Normal& normal1, const Normal& normal2);
+
+    /**
      * @brief Creates approximating Gaussian state space model for the Normal measurement density
      * @param beta Not actually used
      * @param T Not actually used
@@ -121,7 +129,7 @@ public:
      * @param size How many simulations to perform
      * @return Array of Normal random variable
      */
-    std::vector<double> draw_variable_local(int size) const;
+    Eigen::VectorXd draw_variable_local(size_t size) const;
 
     /**
      * @brief Log PDF for Normal prior
@@ -139,8 +147,8 @@ public:
      * @param skewness Skewness parameter for the Normal distribution
      * @return Markov blanket of the Normal family
      */
-    static std::vector<double> markov_blanket(const std::vector<double>& y, const std::vector<double>& mean,
-                                              double scale, double shape, double skewness);
+    static Eigen::VectorXd markov_blanket(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale,
+                                          double shape, double skewness);
 
     /**
      * @brief Returns the attributes of this family if using in a probabilistic model
@@ -157,8 +165,8 @@ public:
      * @param skewness Skewness parameter for the Normal distribution
      * @return Negative loglikelihood of the Normal family
      */
-    static double neg_loglikelihood(const std::vector<double>& y, const std::vector<double>& mean, double scale,
-                                    double shape, double skewness);
+    static double neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale, double shape,
+                                    double skewness);
 
     /**
      * @brief PDF for Normal prior
@@ -181,29 +189,41 @@ public:
      */
     double vi_return_param(int index) const;
 
-    /**
-     * @brief Return the gradient of the location latent variable mu
-     *  (used for variational inference)
-     * @param value A random variable
-     * @return The gradient of the location latent variable mu at x
-     */
-    double vi_loc_score(double x) const;
-
-    /**
-     * @brief Return the score of the scale, where scale = exp(x)
-     *  (used for variational inference)
-     * @param value A random variable
-     * @return The gradient of the scale latent variable at x
-     */
-    double vi_scale_score(double x) const;
-
-    /**
-     * @brief Wrapper function for selecting appropriate score
-     * @param value A random variable
-     * @param index 0 or 1 depending on which latent variable
-     * @return The gradient of the scale latent variable at x
-     */
-    double vi_score(double x, int index) const;
-
     short int get_param_no() const;
+
+    /**
+    * @brief Return the gradient of the location latent variable mu
+    *  (used for variational inference)
+    *  (python code works with both a single float and a vector of floats)
+    * @param x A vector of random variables
+    * @return The gradient of the location latent variable mu at x, for each variable
+    */
+    template<typename T>
+    T vi_loc_score(const T& x) const;
+
+    /**
+    * @brief Return the score of the scale, where scale = exp(x)
+    *  (used for variational inference)
+    *  (python code works with both a single float and a vector of floats)
+    * @param x A random variable, or a vector of random variables
+    * @return The gradient of the scale latent variable at x, for each variable
+    */
+    // @Todo: chiedere a Busato
+    template<typename T>
+    T vi_scale_score(const T& x) const;
+
+    /**
+    * @brief Wrapper function for selecting appropriate score
+    * @param x A random variable, or a vector of random variables
+    * @param index 0 or 1 depending on which latent variable
+    * @return The gradient of the scale latent variable at x
+    */
+    template<typename T>
+    T vi_score(const T& x, size_t index) const {
+        static_assert(std::is_same_v<T, double> || std::is_same_v<T, Eigen::VectorXd>);
+        if (index == 0)
+            return vi_loc_score(x);
+        else if (index == 1)
+            return vi_scale_score(x);
+    }
 };
