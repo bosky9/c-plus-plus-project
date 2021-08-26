@@ -63,7 +63,7 @@ public:
      * @param z
      * @return
      */
-    double create_normal_logq(Eigen::MatrixXd& z);
+    double create_normal_logq(Eigen::VectorXd& z);
 
     /**
      * @brief Obtains an array with the current parameters
@@ -76,7 +76,7 @@ public:
      * @param z
      * @return
      */
-    virtual double cv_gradient(Eigen::VectorXd& z, bool initial = false);
+    virtual Eigen::VectorXd cv_gradient(Eigen::MatrixXd& z, bool initial = false);
 
     /**
      * @brief Draw parameters from a mean-field normal family
@@ -108,21 +108,21 @@ public:
      * @return
      */
     // In Python ritorna una matrice, ma poi assegna un double ad ogni riga (?)
-    Eigen::MatrixXd grad_log_q(Eigen::VectorXd& z);
+    Eigen::MatrixXd grad_log_q(Eigen::MatrixXd& z);
 
     /**
      * @brief The unnormalized log posterior components (the quantity we want to approximate)
      * @param z
      * @return
      */
-    virtual Eigen::VectorXd log_p(Eigen::VectorXd& z);
+    virtual Eigen::VectorXd log_p(Eigen::MatrixXd& z);
 
     /**
      * @brief The mean-field normal log posterior components (the quantity we want to approximate)
      * @param z
      * @return
      */
-    virtual Eigen::VectorXd normal_log_q(Eigen::VectorXd& z, bool initial = false);
+    virtual Eigen::VectorXd normal_log_q(Eigen::MatrixXd& z, bool initial = false);
 
     /**
      * @brief Prints the current ELBO at every decile of total iterations
@@ -194,7 +194,7 @@ public:
      * @param z
      * @return
      */
-    double cv_gradient(Eigen::VectorXd& z, bool initial = false) override;
+    double cv_gradient(Eigen::MatrixXd& z, bool initial = false) override;
 };
 
 /**

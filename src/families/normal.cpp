@@ -148,21 +148,34 @@ double Normal::vi_return_param(int index) const {
         return log(_sigma0);
 }
 
-double Normal::vi_loc_score(double x) const {
+short int Normal::get_param_no() const {
+    return _param_no;
+}
+
+// vi_loc_score DEFINITION AND SPECIALIZATIONS -------------------------------------------------------------------------
+
+template<typename T>
+T Normal::vi_loc_score(const T& x) const {
     return (x - _mu0) / pow(_sigma0, 2);
 }
 
-double Normal::vi_scale_score(double x) const {
+template double Normal::vi_loc_score<double>(const double&) const;
+
+template<>
+Eigen::VectorXd Normal::vi_loc_score<Eigen::VectorXd>(const Eigen::VectorXd& x) const {
+    return (x.array() - _mu0) / pow(_sigma0, 2);
+}
+
+// vi_scale_score DEFINITION AND SPECIALIZATIONS -----------------------------------------------------------------------
+
+template<typename T>
+T Normal::vi_scale_score(const T& x) const {
     return exp(-2 * log(_sigma0)) * pow(x - _mu0, 2) - 1;
 }
 
-double Normal::vi_score(double x, int index) const {
-    if (index == 0)
-        return vi_loc_score(x);
-    else if (index == 1)
-        return vi_scale_score(x);
-}
+template double Normal::vi_scale_score<double>(const double&) const;
 
-short int Normal::get_param_no() const {
-    return _param_no;
+template<>
+Eigen::VectorXd Normal::vi_scale_score<Eigen::VectorXd>(const Eigen::VectorXd& x) const {
+    return exp(-2 * log(_sigma0)) * pow(x.array() - _mu0, 2) - 1;
 }

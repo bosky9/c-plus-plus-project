@@ -189,29 +189,41 @@ public:
      */
     double vi_return_param(int index) const;
 
-    /**
-     * @brief Return the gradient of the location latent variable mu
-     *  (used for variational inference)
-     * @param value A random variable
-     * @return The gradient of the location latent variable mu at x
-     */
-    double vi_loc_score(double x) const;
-
-    /**
-     * @brief Return the score of the scale, where scale = exp(x)
-     *  (used for variational inference)
-     * @param value A random variable
-     * @return The gradient of the scale latent variable at x
-     */
-    double vi_scale_score(double x) const;
-
-    /**
-     * @brief Wrapper function for selecting appropriate score
-     * @param value A random variable
-     * @param index 0 or 1 depending on which latent variable
-     * @return The gradient of the scale latent variable at x
-     */
-    double vi_score(double x, int index) const;
-
     short int get_param_no() const;
+
+    /**
+    * @brief Return the gradient of the location latent variable mu
+    *  (used for variational inference)
+    *  (python code works with both a single float and a vector of floats)
+    * @param x A vector of random variables
+    * @return The gradient of the location latent variable mu at x, for each variable
+    */
+    template<typename T>
+    T vi_loc_score(const T& x) const;
+
+    /**
+    * @brief Return the score of the scale, where scale = exp(x)
+    *  (used for variational inference)
+    *  (python code works with both a single float and a vector of floats)
+    * @param x A random variable, or a vector of random variables
+    * @return The gradient of the scale latent variable at x, for each variable
+    */
+    // @Todo: chiedere a Busato
+    template<typename T>
+    T vi_scale_score(const T& x) const;
+
+    /**
+    * @brief Wrapper function for selecting appropriate score
+    * @param x A random variable, or a vector of random variables
+    * @param index 0 or 1 depending on which latent variable
+    * @return The gradient of the scale latent variable at x
+    */
+    template<typename T>
+    T vi_score(const T& x, size_t index) const {
+        static_assert(std::is_same_v<T, double> || std::is_same_v<T, Eigen::VectorXd>);
+        if (index == 0)
+            return vi_loc_score(x);
+        else if (index == 1)
+            return vi_scale_score(x);
+    }
 };

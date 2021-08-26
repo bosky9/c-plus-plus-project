@@ -12,11 +12,11 @@
  * @param lag Index to split the array into two arrays with equal sizes
  * @return The sample autocovariance of the two arrays
  */
-template<typename T>
-T cov(const std::vector<T>& x, size_t lag = 0) {
-    static_assert(std::is_floating_point<T>::value, "cov accepts only float,double types");
+template<typename T, int N>
+T cov(const Eigen::Vector<T,N>& x, size_t lag = 0) {
+    static_assert(std::is_floating_point<T>::value, "cov accepts only vector of float or double");
     assert(lag < x.size());
-    const T mean = accumulate(x.begin(), x.end(), 0.0) / x.size();
+    const T mean = std::accumulate(x.begin(), x.end(), (T) 0) / x.size();
     std::vector<T> x1, x2;
     std::transform(x.begin() + lag, x.end(), std::back_inserter(x1), [mean](T val) { return val - mean; });
     std::transform(x.begin(), x.end() - lag, std::back_inserter(x2), [mean](T val) { return val - mean; });
@@ -31,9 +31,9 @@ T cov(const std::vector<T>& x, size_t lag = 0) {
  * @param lag Index to split the array into two arrays with equal sizes
  * @return The sample autocorrelation function of the array x
  */
-template<typename T>
-T acf(const std::vector<T>& x, size_t lag = 0) {
-    static_assert(std::is_floating_point<T>::value, "acf accepts only float,double types");
+template<typename T, int N>
+T acf(const Eigen::Vector<T,N>& x, size_t lag = 0) {
+    static_assert(std::is_floating_point<T>::value, "acf accepts only vector of float or double");
     return cov(x, lag) / cov(x);
 }
 

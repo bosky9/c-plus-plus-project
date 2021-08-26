@@ -8,14 +8,14 @@
 class StochOptim {
 protected:
     Eigen::VectorXd _parameters;
-    double _variance;
+    Eigen::VectorXd _variances;
     double _learning_rate;
     static double _epsilon;
     int _t = 1;
 
 public:
-    StochOptim(const Eigen::VectorXd& starting_parameters, double starting_variance, double learning_rate);
-    virtual Eigen::VectorXd update(double gradient);
+    StochOptim(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances, double learning_rate);
+    virtual Eigen::VectorXd update(Eigen::VectorXd& gradient);
     [[nodiscard]] Eigen::VectorXd get_parameters() const;
 };
 
@@ -34,7 +34,7 @@ public:
      * @param learning_rate
      * @param ewma Exponentially-Weighted Moving Average
      */
-    RMSProp(const Eigen::VectorXd& starting_parameters, double starting_variance, double learning_rate, double ewma);
+    RMSProp(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances, double learning_rate, double ewma);
 
     /**
      * @brief Copy constructor for RMSProp
@@ -65,7 +65,7 @@ public:
      * @param gradient
      * @return
      */
-    Eigen::VectorXd update(double gradient) override;
+    Eigen::VectorXd update(Eigen::VectorXd& gradient) override;
 };
 
 /**
@@ -88,7 +88,7 @@ public:
      * @param ewma1 Exponentially-Weighted Moving Average
      * @param ewma2 Exponentially-Weighted Moving Average
      */
-    ADAM(const Eigen::VectorXd& starting_parameters, double starting_variance, double learning_rate, double ewma1,
+    ADAM(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances, double learning_rate, double ewma1,
          double ewma2);
 
     /**
@@ -120,7 +120,7 @@ public:
      * @param gradient
      * @return
      */
-    Eigen::VectorXd update(double gradient) override;
+    Eigen::VectorXd update(Eigen::VectorXd& gradient) override;
 };
 
 inline double StochOptim::_epsilon = pow(10, -8);

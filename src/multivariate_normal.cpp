@@ -64,6 +64,7 @@ Eigen::MatrixXd Mvn::logpdf(const Eigen::MatrixXd& x, const Eigen::VectorXd& mea
     Eigen::MatrixXd res(x.rows(), x.cols());
     for (int i = 0; i < x.rows(); i++)
         res.row(i) = logpdf(static_cast<Eigen::VectorXd>(x.row(i)), means, scales);
+    return res;
 }
 
 Eigen::MatrixXd Mvn::logpdf(const Eigen::MatrixXd& x, const Eigen::MatrixXd& means, const Eigen::MatrixXd& scales) {
@@ -71,6 +72,7 @@ Eigen::MatrixXd Mvn::logpdf(const Eigen::MatrixXd& x, const Eigen::MatrixXd& mea
     for (int i = 0; i < x.rows(); i++)
         res.row(i) = logpdf(static_cast<Eigen::VectorXd>(x.row(i)), static_cast<Eigen::VectorXd>(means.row(i)),
                             static_cast<Eigen::VectorXd>(scales.row(i)));
+    return res;
 }
 
 Eigen::VectorXd Mvn::random(double mean, double scale, size_t n) {
