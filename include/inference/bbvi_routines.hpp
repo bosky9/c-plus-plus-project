@@ -23,11 +23,10 @@ Eigen::VectorXd log_p_posterior(Eigen::MatrixXd& z, const std::function<double(E
 
 /**
  * @brief This function is used inside the BBVI classes
- * @param alpha0
- * @param grad_log_q
- * @param gradient
- * @param param_no
- * @return
+ * @param z A matrix from which to extract the vectors (rows) used in neg_posterior
+ * @param neg_posterior A function which takes a vector (Eigen::VectorXd) and an integer, and returns a double
+ * @param mini_batch An integer
+ * @return An array of doubles (using std::move())
  */
 Eigen::VectorXd mb_log_p_posterior(Eigen::MatrixXd& z, const std::function<double(Eigen::VectorXd, int)>& neg_posterior,
                                    int mini_batch);

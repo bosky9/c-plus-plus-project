@@ -49,6 +49,9 @@ public:
          std::string optimizer = "RMSProp", int iterations = 1000, double learning_rate = 0.001,
          bool record_elbo = false, bool quiet_progress = false);
 
+
+    virtual ~BBVI();
+
     /**
      * @brief Utility function for changing the approximate distribution parameters
      * @param params
@@ -60,7 +63,7 @@ public:
      * @param z
      * @return
      */
-    double create_normal_logq(Eigen::VectorXd& z);
+    double create_normal_logq(Eigen::MatrixXd& z);
 
     /**
      * @brief Obtains an array with the current parameters
@@ -119,14 +122,7 @@ public:
      * @param z
      * @return
      */
-    virtual Eigen::VectorXd normal_log_q(Eigen::VectorXd& z);
-
-    /**
-     * @brief The mean-field normal log posterior components (the quantity we want to approximate)
-     * @param z
-     * @return
-     */
-    virtual Eigen::VectorXd normal_log_q_initial(Eigen::VectorXd& z);
+    virtual Eigen::VectorXd normal_log_q(Eigen::VectorXd& z, bool initial = false);
 
     /**
      * @brief Prints the current ELBO at every decile of total iterations

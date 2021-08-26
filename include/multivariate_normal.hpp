@@ -14,6 +14,7 @@ public:
     [[nodiscard]] double pdf(const Eigen::VectorXd& x) const;
     [[nodiscard]] Eigen::VectorXd sample(unsigned int nr_iterations = 20) const;
 
+    // @Todo: consider a template approach
     /**
      * @brief Compute the logpdf of a normal distribution (like scipy.stats.norm.logpdf)
      * @param x Vector of indexes

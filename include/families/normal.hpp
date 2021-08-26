@@ -129,7 +129,7 @@ public:
      * @param size How many simulations to perform
      * @return Array of Normal random variable
      */
-    std::vector<double> draw_variable_local(int size) const;
+    Eigen::VectorXd draw_variable_local(size_t size) const;
 
     /**
      * @brief Log PDF for Normal prior
@@ -147,8 +147,8 @@ public:
      * @param skewness Skewness parameter for the Normal distribution
      * @return Markov blanket of the Normal family
      */
-    static std::vector<double> markov_blanket(const std::vector<double>& y, const std::vector<double>& mean,
-                                              double scale, double shape, double skewness);
+    static Eigen::VectorXd markov_blanket(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale,
+                                          double shape, double skewness);
 
     /**
      * @brief Returns the attributes of this family if using in a probabilistic model
@@ -165,8 +165,8 @@ public:
      * @param skewness Skewness parameter for the Normal distribution
      * @return Negative loglikelihood of the Normal family
      */
-    static double neg_loglikelihood(const std::vector<double>& y, const std::vector<double>& mean, double scale,
-                                    double shape, double skewness);
+    static double neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale, double shape,
+                                    double skewness);
 
     /**
      * @brief PDF for Normal prior

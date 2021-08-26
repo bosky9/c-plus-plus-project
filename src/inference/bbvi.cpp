@@ -1,5 +1,6 @@
 #include "inference/bbvi.hpp"
 
+#include "inference/bbvi_routines.hpp"
 #include "multivariate_normal.hpp"
 
 BBVI::BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Normal>& q, int sims,
@@ -12,6 +13,10 @@ BBVI::BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Nor
     }
 }
 
+BBVI::~BBVI() {
+    delete _optim;
+}
+
 void BBVI::change_parameters(std::vector<double>& params) {
     size_t no_of_params = 0;
     for (size_t core_param = 0; core_param < _q.size(); core_param++) {
@@ -22,7 +27,7 @@ void BBVI::change_parameters(std::vector<double>& params) {
     }
 }
 
-double BBVI::create_normal_logq(Eigen::VectorXd& z) {
+double BBVI::create_normal_logq(Eigen::MatrixXd& z) {
     auto means_scales = BBVI::get_means_and_scales();
     return Mvn::logpdf(z, means_scales.first, means_scales.second).sum();
 }

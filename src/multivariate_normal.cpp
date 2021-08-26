@@ -1,5 +1,8 @@
 #include "multivariate_normal.hpp"
 
+#include <chrono>
+#include <random>
+
 Mvn::Mvn(const Eigen::VectorXd& mu, const Eigen::MatrixXd& s) : _mean{mu}, _sigma{s} {}
 
 double Mvn::pdf(const Eigen::VectorXd& x) const {
@@ -55,4 +58,28 @@ Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& mea
         result(i)    = log((ONE_OVER_SQRT_2PI / scale) * exp(-0.5 * pow((x_val - mean) / scale, 2.0)));
     }
     return result;
+}
+
+Eigen::MatrixXd Mvn::logpdf(const Eigen::MatrixXd& x, const Eigen::VectorXd& means, const Eigen::VectorXd& scales) {
+    Eigen::MatrixXd res(x.rows(), x.cols());
+    for (int i = 0; i < x.rows(); i++)
+        res.row(i) = logpdf(static_cast<Eigen::VectorXd>(x.row(i)), means, scales);
+}
+
+Eigen::MatrixXd Mvn::logpdf(const Eigen::MatrixXd& x, const Eigen::MatrixXd& means, const Eigen::MatrixXd& scales) {
+    Eigen::MatrixXd res(x.rows(), x.cols());
+    for (int i = 0; i < x.rows(); i++)
+        res.row(i) = logpdf(static_cast<Eigen::VectorXd>(x.row(i)), static_cast<Eigen::VectorXd>(means.row(i)),
+                            static_cast<Eigen::VectorXd>(scales.row(i)));
+}
+
+Eigen::VectorXd Mvn::random(double mean, double scale, size_t n) {
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator(seed);
+    std::normal_distribution<double> distribution{mean, scale};
+    Eigen::VectorXd rands(n);
+    for (Eigen::Index i{0}; i < n; i++) {
+        rands(i) = distribution(generator);
+    }
+    return rands;
 }
