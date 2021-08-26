@@ -3,7 +3,7 @@
 Mvn::Mvn(const Eigen::VectorXd& mu, const Eigen::MatrixXd& s) : _mean{mu}, _sigma{s} {}
 
 double Mvn::pdf(const Eigen::VectorXd& x) const {
-    double n        = x.rows();
+    double n        = static_cast<double>(x.rows());
     double sqrt2pi  = std::sqrt(2 * M_PI);
     double quadform = (x - _mean).transpose() * _sigma.inverse() * (x - _mean);
     double norm     = std::pow(sqrt2pi, -n) * std::pow(_sigma.determinant(), -0.5);
@@ -12,13 +12,13 @@ double Mvn::pdf(const Eigen::VectorXd& x) const {
 }
 
 Eigen::VectorXd Mvn::sample(unsigned int nr_iterations) const {
-    size_t n = _mean.rows();
+    Eigen::Index n = _mean.rows();
 
     // Generate x from the N(0, I) distribution
     Eigen::VectorXd x(n);
     Eigen::VectorXd sum(n);
     sum.setZero();
-    for (unsigned int i = 0; i < nr_iterations; i++) {
+    for (size_t i = 0; i < nr_iterations; i++) {
         x.setRandom();
         x   = 0.5 * (x + Eigen::VectorXd::Ones(n));
         sum = sum + x;
@@ -39,4 +39,22 @@ Eigen::VectorXd Mvn::sample(unsigned int nr_iterations) const {
     Eigen::MatrixXd Q                = eigenvectors * sqrt_eigenvalues;
 
     return Q * x + _mean;
+}
+
+Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& means, const Eigen::VectorXd& scales) {
+    assert(
+            (means.size() == 1 && (scales.size() == 1 || x.size() == 1 || x.size() == scales.size()))
+            || (scales.size() == 1 && (x.size() == 1 || x.size() == means.size()))
+            || (means.size() == scales.size() && (x.size() == 1 || x.size() == means.size()))
+            );
+    size_t size = std::max({x.size(),means.size(),scales.size()});
+    Eigen::VectorXd result(size);
+    const double ONE_OVER_SQRT_2PI = 0.39894228040143267793994605993438;
+    for (Eigen::Index i{0}; i < size; i++) {
+        double x_val = x.size() == 1 ? x(0) : x(i);
+        double mean = means.size() == 1 ? means(0) : means(i);
+        double scale = scales.size() == 1 ? scales(0) : scales(i);
+        result(i) = log((ONE_OVER_SQRT_2PI / scale) * exp(-0.5 * pow((x_val - mean) / scale, 2.0)));
+    }
+    return result;
 }

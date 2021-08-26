@@ -36,7 +36,7 @@ public:
      * @param transform Whether to apply a transformation for the location latent variable
      *  (e.g. "exp" or "logit")
      */
-    Normal(double mu = 0.0, double sigma = 1.0, const std::string& transform = "");
+    explicit Normal(double mu = 0.0, double sigma = 1.0, const std::string& transform = "");
 
     /**
      * @brief Copy constructor for Normal distribution
@@ -204,4 +204,6 @@ public:
      * @return The gradient of the scale latent variable at x
      */
     double vi_score(double x, int index) const;
+
+    short int get_param_no() const;
 };

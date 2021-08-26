@@ -2,6 +2,7 @@
 #include <multivariate_normal.hpp>
 
 #include "headers.hpp"
+#include "sample.hpp"
 
 /**
  * @brief Number of simulations
@@ -25,19 +26,7 @@ const int N5 = NSIMS * 5 / 100;
  */
 constexpr bool NSIMS_ODD() {
     return static_cast<bool>(NSIMS % 2);
-};
-
-
-/**
- * @brief Data returned by norm_post_sim function
- */
-struct NormPostSimData {
-    Eigen::Matrix<double, Eigen::Dynamic, NSIMS> chain;
-    std::vector<double> mean_est;
-    std::vector<double> median_est;
-    std::vector<double> upper_95_est;
-    std::vector<double> lower_5_est;
-};
+}
 
 /**
  * @brief
@@ -45,17 +34,17 @@ struct NormPostSimData {
  * @param cov_matrix Covariances matrix
  * @return A NormPostSimData structure
  */
-NormPostSimData norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& cov_matrix) {
+Sample norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& cov_matrix) {
     Mvn mul_norm{modes, cov_matrix};
-    int modes_len = modes.size();
+    Eigen::Index modes_len = modes.size();
     Eigen::Matrix<double, NSIMS, Eigen::Dynamic> phi =
             Eigen::Matrix<double, NSIMS, Eigen::Dynamic>::Zero(NSIMS, modes_len);
 
-    for (size_t i{0}; i < NSIMS; i++) {
+    for (Eigen::Index i{0}; i < NSIMS; i++) {
         phi.row(i) = mul_norm.sample(); // Incollo un vettore di lunghezza modes.size() in ogni riga
     }
 
-    NormPostSimData data{};
+    Sample data{};
     data.chain = phi.transpose();
 
     Eigen::VectorXd mean_vector = phi.colwise().mean();
