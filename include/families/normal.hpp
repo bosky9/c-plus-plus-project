@@ -12,11 +12,11 @@
 /**
  * @brief Normal distribution for time series
  */
-class Normal : Family {
+class Normal : public Family {
 private:
     double _mu0;
     double _sigma0;
-    short int _param_no;
+    short unsigned int _param_no;
     bool _covariance_prior;
     // gradient_only won't be used (no GAS models)
 
@@ -48,7 +48,7 @@ public:
      * @brief Move constructor for Normal distribution
      * @param normal A Normal object
      */
-    Normal(Normal&& normal);
+    Normal(Normal&& normal) noexcept;
 
     /**
      * @brief Assignment operator for Normal distribution
@@ -60,7 +60,7 @@ public:
      * @brief Move assignment operator for Normal distribution
      * @param normal A Normal object
      */
-    Normal& operator=(Normal&& normal);
+    Normal& operator=(Normal&& normal) noexcept;
 
     /**
      * @brief Equal operator for Normal
@@ -83,9 +83,10 @@ public:
      *  - H: approximating measurement variance matrix
      *  - mu: approximating measurement constants
      */
-    Eigen::MatrixXd* approximating_model(const std::vector<double>& beta, const Eigen::MatrixXd& T,
-                                         const Eigen::MatrixXd& Z, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q,
-                                         double h_approx, const std::vector<double>& data);
+    static std::pair<Eigen::MatrixXd, Eigen::MatrixXd>
+    approximating_model(const Eigen::VectorXd& beta, const Eigen::MatrixXd& T, const Eigen::MatrixXd& Z,
+                        const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q, double h_approx,
+                        const Eigen::VectorXd& data);
 
     /**
      * @brief Creates approximating Gaussian state space model for the Normal measurement density.
@@ -102,10 +103,10 @@ public:
      *  - H: approximating measurement variance matrix
      *  - mu: approximating measurement constants
      */
-    Eigen::MatrixXd* approximating_model_reg(const std::vector<double>& beta, const Eigen::MatrixXd& T,
-                                             const Eigen::MatrixXd& Z, const Eigen::MatrixXd& R,
-                                             const Eigen::MatrixXd& Q, double h_approx, const std::vector<double>& data,
-                                             const std::vector<double>& X, int state_no);
+    static std::pair<Eigen::MatrixXd, Eigen::MatrixXd>
+    approximating_model_reg(const Eigen::VectorXd& beta, const Eigen::MatrixXd& T, const Eigen::MatrixXd& Z,
+                            const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q, double h_approx,
+                            const Eigen::VectorXd& data, const Eigen::VectorXd& X, int state_no);
 
     /**
      * @brief Builds additional latent variables for this family in a probabilistic model
@@ -122,14 +123,14 @@ public:
      * @param nsims Number of draws to take from the distribution
      * @return Random draws from the distribution
      */
-    std::vector<double> draw_variable(double loc, double scale, double shape, double skewness, int nsims);
+    static Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness, int nsims);
 
     /**
      * @brief Wrapper function for changing latent variables for variational inference
      * @param size How many simulations to perform
      * @return Array of Normal random variable
      */
-    Eigen::VectorXd draw_variable_local(size_t size) const;
+    [[nodiscard]] Eigen::VectorXd draw_variable_local(size_t size) const;
 
     /**
      * @brief Log PDF for Normal prior
@@ -187,37 +188,47 @@ public:
      * @param index 0 or 1 depending on which latent variable
      * @return The appropriate indexed parameter
      */
-    double vi_return_param(int index) const;
-
-    short int get_param_no() const;
+    [[nodiscard]] double vi_return_param(int index) const;
 
     /**
-    * @brief Return the gradient of the location latent variable mu
-    *  (used for variational inference)
-    *  (python code works with both a single float and a vector of floats)
-    * @param x A vector of random variables
-    * @return The gradient of the location latent variable mu at x, for each variable
-    */
+     * @brief Return the number of parameters
+     * @return The number of parameters
+     */
+    [[nodiscard]] short unsigned int get_param_no() const;
+
+    /**
+     * @brief Return the covariance prior
+     * @return The covariance prior
+     */
+    [[nodiscard]] bool get_covariance_prior() const;
+
+    /**
+     * @brief Return the gradient of the location latent variable mu
+     *  (used for variational inference)
+     *  (python code works with both a single float and a vector of floats)
+     * @param x A vector of random variables
+     * @return The gradient of the location latent variable mu at x, for each variable
+     */
     template<typename T>
     T vi_loc_score(const T& x) const;
 
     /**
-    * @brief Return the score of the scale, where scale = exp(x)
-    *  (used for variational inference)
-    *  (python code works with both a single float and a vector of floats)
-    * @param x A random variable, or a vector of random variables
-    * @return The gradient of the scale latent variable at x, for each variable
-    */
+     * @brief Return the score of the scale, where scale = exp(x)
+     *  (used for variational inference)
+     *  (python code works with both a single float and a vector of floats)
+     * @param x A random variable, or a vector of random variables
+     * @return The gradient of the scale latent variable at x, for each variable
+     */
     // @Todo: chiedere a Busato
     template<typename T>
     T vi_scale_score(const T& x) const;
 
     /**
-    * @brief Wrapper function for selecting appropriate score
-    * @param x A random variable, or a vector of random variables
-    * @param index 0 or 1 depending on which latent variable
-    * @return The gradient of the scale latent variable at x
-    */
+     * @brief Wrapper function for selecting appropriate score
+     * @param x A random variable, or a vector of random variables
+     * @param index 0 or 1 depending on which latent variable
+     * @return The gradient of the scale latent variable at x
+     */
     template<typename T>
     T vi_score(const T& x, size_t index) const {
         static_assert(std::is_same_v<T, double> || std::is_same_v<T, Eigen::VectorXd>);

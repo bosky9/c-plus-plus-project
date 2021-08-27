@@ -17,7 +17,7 @@ Family::Family(const Family& family) {
     _itransform      = family._itransform;
 }
 
-Family::Family(Family&& family) {
+Family::Family(Family&& family) noexcept {
     _transform_name  = family._transform_name;
     _transform       = family._transform;
     _itransform_name = family._itransform_name;
@@ -38,7 +38,7 @@ Family& Family::operator=(const Family& family) {
     return *this;
 }
 
-Family& Family::operator=(Family&& family) {
+Family& Family::operator=(Family&& family) noexcept {
     _transform_name  = family._transform_name;
     _transform       = family._transform;
     _itransform_name = family._itransform_name;
@@ -102,4 +102,20 @@ std::string Family::itransform_name_define(const std::string& transform) {
     // TODO: Ritornare NULL o stringa vuota?
     else
         return "";
+}
+
+std::string Family::get_transform_name() const {
+    return _transform_name;
+}
+
+std::function<double(double)> Family::get_transform() const {
+    return _transform;
+}
+
+std::string Family::get_itransform_name() const {
+    return _itransform_name;
+}
+
+std::function<double(double)> Family::get_itransform() const {
+    return _itransform;
 }

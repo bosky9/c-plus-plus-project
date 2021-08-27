@@ -6,7 +6,7 @@ Flat::Flat(const Flat& flat) : Family(flat) {
     _covariance_prior = flat._covariance_prior;
 }
 
-Flat::Flat(Flat&& flat) : Family(std::move(flat)) {
+Flat::Flat(Flat&& flat) noexcept : Family(std::move(flat)) {
     _covariance_prior      = flat._covariance_prior;
     flat._covariance_prior = false;
 }
@@ -19,7 +19,7 @@ Flat& Flat::operator=(const Flat& flat) {
     return *this;
 }
 
-Flat& Flat::operator=(Flat&& flat) {
+Flat& Flat::operator=(Flat&& flat) noexcept {
     _covariance_prior      = flat._covariance_prior;
     flat._covariance_prior = false;
     Family::operator       =(std::move(flat));
@@ -32,4 +32,8 @@ bool operator==(const Flat& flat1, const Flat& flat2) {
 
 double Flat::logpdf(double mu) {
     return 0.0;
+}
+
+bool Flat::get_covariance_prior() const {
+    return _covariance_prior;
 }
