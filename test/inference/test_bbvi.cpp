@@ -9,7 +9,7 @@ TEST_CASE("Change parameters to BBVI object", "[change_parameters, current_param
     q.push_back(Normal(2.0, 0.5, "exp"));
     BBVI bbvi = BBVI(neg_posterior, q, 3);
 
-    std::vector<double> params{3.0, 1.0, 2.0, 1.0};
+    Eigen::VectorXd params = static_cast<Eigen::VectorXd>(Eigen::Vector4d{3.0, 1.0, 2.0, 1.0});
     bbvi.change_parameters(params);
 
     q[0].vi_change_param(0, 3.0);
@@ -18,7 +18,7 @@ TEST_CASE("Change parameters to BBVI object", "[change_parameters, current_param
     q[1].vi_change_param(1, 1.0);
     // REQUIRE(bbvi.get_q()[0] == q[0]);
     // REQUIRE(bbvi.get_q()[1] == q[1]);
-    REQUIRE(bbvi.current_parameters() == std::vector<double>{3.0, 1.0, 2.0, 1.0});
+    REQUIRE(bbvi.current_parameters() == params);
 }
 
 /*

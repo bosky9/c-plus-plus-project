@@ -133,14 +133,14 @@ double Normal::pdf(double mu) {
     return (1.0 / _sigma0) * exp(-((0.5 * std::pow(mu - _mu0, 2)) / std::pow(_sigma0, 2)));
 }
 
-void Normal::vi_change_param(int index, double value) {
+void Normal::vi_change_param(size_t index, double value) {
     if (index == 0)
         _mu0 = value;
     else if (index == 1)
         _sigma0 = exp(value);
 }
 
-double Normal::vi_return_param(int index) const {
+double Normal::vi_return_param(size_t index) const {
     if (index == 0)
         return _mu0;
     else if (index == 1)

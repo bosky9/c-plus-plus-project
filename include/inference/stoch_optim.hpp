@@ -14,7 +14,8 @@ protected:
     int _t = 1;
 
 public:
-    StochOptim(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances, double learning_rate);
+    StochOptim(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances,
+               double learning_rate);
     virtual Eigen::VectorXd update(Eigen::VectorXd& gradient);
     [[nodiscard]] Eigen::VectorXd get_parameters() const;
 };
@@ -22,7 +23,7 @@ public:
 /**
  * @brief Computes adaptive learning rates for each parameter. Has an EWMA of squared gradients.
  */
-class RMSProp : StochOptim {
+class RMSProp : public StochOptim {
 private:
     double _ewma;
 
@@ -34,7 +35,8 @@ public:
      * @param learning_rate
      * @param ewma Exponentially-Weighted Moving Average
      */
-    RMSProp(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances, double learning_rate, double ewma);
+    RMSProp(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances, double learning_rate,
+            double ewma);
 
     /**
      * @brief Copy constructor for RMSProp
@@ -73,9 +75,9 @@ public:
  * @brief Computes adaptive learning rates for each parameter.
  * @brief Has an EWMA of past gradients and squared gradients.
  */
-class ADAM : StochOptim {
+class ADAM : public StochOptim {
 private:
-    double _f_gradient = 0.0;
+    Eigen::VectorXd _f_gradient;
     double _ewma_1;
     double _ewma_2;
 
@@ -88,8 +90,8 @@ public:
      * @param ewma1 Exponentially-Weighted Moving Average
      * @param ewma2 Exponentially-Weighted Moving Average
      */
-    ADAM(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances, double learning_rate, double ewma1,
-         double ewma2);
+    ADAM(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances, double learning_rate,
+         double ewma1, double ewma2);
 
     /**
      * @brief Copy constructor for ADAM

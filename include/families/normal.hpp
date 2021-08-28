@@ -181,14 +181,14 @@ public:
      * @param index 0 or 1 depending on which latent variable
      * @param value What to change the latent variable to
      */
-    void vi_change_param(int index, double value);
+    void vi_change_param(size_t index, double value);
 
     /**
      * @brief Wrapper function for selecting appropriate latent variable for variational inference
      * @param index 0 or 1 depending on which latent variable
      * @return The appropriate indexed parameter
      */
-    [[nodiscard]] double vi_return_param(int index) const;
+    [[nodiscard]] double vi_return_param(size_t index) const;
 
     /**
      * @brief Return the number of parameters
