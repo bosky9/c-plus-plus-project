@@ -141,75 +141,7 @@ double BBVI::get_elbo(Eigen::VectorXd& current_params) {
     return -_neg_posterior(current_params) - create_normal_logq(current_params);
 }
 
-BBVIReturnData BBVI::run() {
-    // Initialization assumptions
-    Eigen::MatrixXd z        = draw_normal(true);
-    Eigen::VectorXd gradient = cv_gradient(z, true);
-    for (Eigen::Index i = 0; i < gradient.size(); i++) {
-        if (std::isnan(gradient[i]))
-            gradient[i] = 0;
-    }
-    Eigen::VectorXd variance         = gradient.array().pow(2);
-    Eigen::VectorXd final_parameters = current_parameters();
-    size_t final_samples             = 1;
-
-    // Create optimizer
-    if (_optimizer == "ADAM")
-        _optim.reset(new ADAM(final_parameters, variance, _learning_rate, 0.9, 0.999));
-    else if (_optimizer == "RMSProp")
-        _optim.reset(new RMSProp(final_parameters, variance, _learning_rate, 0.99));
-
-    // Record elbo
-    Eigen::VectorXd elbo_records;
-    if (_record_elbo)
-        elbo_records = Eigen::VectorXd::Zero(_iterations);
-
-    for (Eigen::Index i = 0; i < _iterations; i++) {
-        Eigen::MatrixXd x = draw_normal();
-        gradient          = cv_gradient(x, false);
-        for (Eigen::Index j = 0; j < gradient.size(); j++) {
-            if (std::isnan(gradient[j]))
-                gradient[j] = 0;
-        }
-        Eigen::VectorXd optim_parameters{_optim->update(gradient)};
-        change_parameters(optim_parameters);
-
-        optim_parameters = _optim->get_parameters()(Eigen::seq(0, 2));
-        if (_printer)
-            print_progress(static_cast<double>(i), optim_parameters);
-
-        // Construct final parameters using final 10% of samples
-        if (static_cast<double>(i) > _iterations - round(_iterations / 10)) {
-            final_samples++;
-            final_parameters = final_parameters + _optim->get_parameters();
-        }
-
-        if (_record_elbo) {
-            Eigen::VectorXd parameters = _optim->get_parameters()(Eigen::seq(0, 2));
-            elbo_records[i]            = get_elbo(parameters);
-        }
-    }
-
-    final_parameters = final_parameters / static_cast<double>(final_samples);
-    change_parameters(final_parameters);
-
-    std::vector<double> means, ses;
-    for (Eigen::Index i = 0; i < final_parameters.size(); i++) {
-        if (i % 2 == 0)
-            means.push_back(final_parameters[i]);
-        else
-            ses.push_back(final_parameters[i]);
-    }
-    Eigen::VectorXd final_means = Eigen::VectorXd::Map(means.data(), static_cast<Eigen::Index>(means.size()));
-    Eigen::VectorXd final_ses   = Eigen::VectorXd::Map(ses.data(), static_cast<Eigen::Index>(ses.size()));
-
-    if (!_quiet_progress)
-        std::cout << "\nFinal model ELBO is " << -_neg_posterior(final_means) - create_normal_logq(final_means) << "\n";
-
-    return {_q, final_means, final_ses, elbo_records};
-}
-
-BBVIReturnData BBVI::run_and_store() {
+BBVIReturnData BBVI::run(bool store) {
     // Initialization assumptions
     Eigen::MatrixXd z        = draw_normal(true);
     Eigen::VectorXd gradient = cv_gradient(z, true);
@@ -245,10 +177,12 @@ BBVIReturnData BBVI::run_and_store() {
         }
         Eigen::VectorXd optim_parameters{_optim->update(gradient)};
         change_parameters(optim_parameters);
+        optim_parameters = _optim->get_parameters()(Eigen::seq(0, 2));
 
-        optim_parameters                = _optim->get_parameters()(Eigen::seq(0, 2));
-        stored_means.row(i)             = optim_parameters;
-        stored_predictive_likelihood[i] = _neg_posterior(stored_means.row(i));
+        if (store) {
+            stored_means.row(i)             = optim_parameters;
+            stored_predictive_likelihood[i] = _neg_posterior(stored_means.row(i));
+        }
 
         if (_printer)
             print_progress(static_cast<double>(i), optim_parameters);
@@ -281,6 +215,9 @@ BBVIReturnData BBVI::run_and_store() {
     if (!_quiet_progress)
         std::cout << "\nFinal model ELBO is " << -_neg_posterior(final_means) - create_normal_logq(final_means) << "\n";
 
+    if (store) {
+        return {_q, final_means, final_ses, elbo_records, stored_means, stored_predictive_likelihood};
+    }
     return {_q, final_means, final_ses, elbo_records};
 }
 
@@ -360,76 +297,7 @@ void BBVIM::print_progress(double i, Eigen::VectorXd& current_params) {
     }
 }
 
-BBVIReturnData BBVIM::run() {
-    // Initialization assumptions
-    Eigen::MatrixXd z        = draw_normal(true);
-    Eigen::VectorXd gradient = cv_gradient(z, true);
-    for (Eigen::Index i = 0; i < gradient.size(); i++) {
-        if (std::isnan(gradient[i]))
-            gradient[i] = 0;
-    }
-    Eigen::VectorXd variance         = gradient.array().pow(2);
-    Eigen::VectorXd final_parameters = current_parameters();
-    size_t final_samples             = 1;
-
-    // Create optimizer
-    if (_optimizer == "ADAM")
-        _optim.reset(new ADAM(final_parameters, variance, _learning_rate, 0.9, 0.999));
-    else if (_optimizer == "RMSProp")
-        _optim.reset(new RMSProp(final_parameters, variance, _learning_rate, 0.99));
-
-    // Record elbo
-    Eigen::VectorXd elbo_records;
-    if (_record_elbo)
-        elbo_records = Eigen::VectorXd::Zero(_iterations);
-
-    for (Eigen::Index i = 0; i < _iterations; i++) {
-        Eigen::MatrixXd x = draw_normal();
-        gradient          = cv_gradient(x, false);
-        for (Eigen::Index j = 0; j < gradient.size(); j++) {
-            if (std::isnan(gradient[j]))
-                gradient[j] = 0;
-        }
-        Eigen::VectorXd optim_parameters{_optim->update(gradient)};
-        change_parameters(optim_parameters);
-
-        optim_parameters = _optim->get_parameters()(Eigen::seq(0, 2));
-        if (_printer)
-            print_progress(static_cast<double>(i), optim_parameters);
-
-        // Construct final parameters using final 10% of samples
-        if (static_cast<double>(i) > _iterations - round(_iterations / 10)) {
-            final_samples++;
-            final_parameters = final_parameters + _optim->get_parameters();
-        }
-
-        if (_record_elbo) {
-            Eigen::VectorXd parameters = _optim->get_parameters()(Eigen::seq(0, 2));
-            elbo_records[i]            = get_elbo(parameters);
-        }
-    }
-
-    final_parameters = final_parameters / static_cast<double>(final_samples);
-    change_parameters(final_parameters);
-
-    std::vector<double> means, ses;
-    for (Eigen::Index i = 0; i < final_parameters.size(); i++) {
-        if (i % 2 == 0)
-            means.push_back(final_parameters[i]);
-        else
-            ses.push_back(final_parameters[i]);
-    }
-    Eigen::VectorXd final_means = Eigen::VectorXd::Map(means.data(), static_cast<Eigen::Index>(means.size()));
-    Eigen::VectorXd final_ses   = Eigen::VectorXd::Map(ses.data(), static_cast<Eigen::Index>(ses.size()));
-
-    if (!_quiet_progress)
-        std::cout << "\nFinal model ELBO is " << -_full_neg_posterior(final_means) - create_normal_logq(final_means)
-                  << "\n";
-
-    return {_q, final_means, final_ses, elbo_records};
-}
-
-BBVIReturnData BBVIM::run_and_store() {
+BBVIReturnData BBVIM::run(bool store) {
     // Initialization assumptions
     Eigen::MatrixXd z        = draw_normal(true);
     Eigen::VectorXd gradient = cv_gradient(z, true);
@@ -465,11 +333,13 @@ BBVIReturnData BBVIM::run_and_store() {
         }
         Eigen::VectorXd optim_parameters{_optim->update(gradient)};
         change_parameters(optim_parameters);
+        optim_parameters = _optim->get_parameters()(Eigen::seq(0, 2));
 
-        optim_parameters                = _optim->get_parameters()(Eigen::seq(0, 2));
-        stored_means.row(i)             = optim_parameters;
-        stored_predictive_likelihood[i] = _neg_posterior(stored_means.row(i), _mini_batch);
-        //@FIXME: nell'originale richiama _neg_posterior con un solo parametro
+        if (store) {
+            stored_means.row(i)             = optim_parameters;
+            stored_predictive_likelihood[i] = _neg_posterior(stored_means.row(i), _mini_batch);
+            //@FIXME: nell'originale richiama _neg_posterior con un solo parametro
+        }
 
         if (_printer)
             print_progress(static_cast<double>(i), optim_parameters);
@@ -499,9 +369,13 @@ BBVIReturnData BBVIM::run_and_store() {
     Eigen::VectorXd final_means = Eigen::VectorXd::Map(means.data(), static_cast<Eigen::Index>(means.size()));
     Eigen::VectorXd final_ses   = Eigen::VectorXd::Map(ses.data(), static_cast<Eigen::Index>(ses.size()));
 
+    // TODO: Differisce dalla funzione padre solo per la chiamata a _full_neg_posterior (invece che _neg_posterior)
     if (!_quiet_progress)
         std::cout << "\nFinal model ELBO is " << -_full_neg_posterior(final_means) - create_normal_logq(final_means)
                   << "\n";
 
+    if (store) {
+        return {_q, final_means, final_ses, elbo_records, stored_means, stored_predictive_likelihood};
+    }
     return {_q, final_means, final_ses, elbo_records};
 }

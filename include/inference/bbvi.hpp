@@ -141,16 +141,10 @@ public:
 
     /**
      * @brief The core BBVI routine - Draws Monte Carlo gradients and uses a stochastic optimizer
+     * @param store If true, stores rgw history of updates for the benefit of a pretty animation
      * @return
      */
-    virtual BBVIReturnData run();
-
-    /**
-     * @brief The core BBVI routine - Draws Monte Carlo gradients and uses a stochastic optimizer
-     * Stores rgw history of updates for the benefit of a pretty animation.
-     * @return
-     */
-    virtual BBVIReturnData run_and_store();
+    virtual BBVIReturnData run(bool store);
 
     [[nodiscard]] std::vector<Normal> get_q() const;
 };
@@ -248,14 +242,8 @@ public:
 
     /**
      * @brief The core BBVI routine - Draws Monte Carlo gradients and uses a stochastic optimizer
+     * @param store If true, stores rgw history of updates for the benefit of a pretty animation
      * @return
      */
-    BBVIReturnData run() override;
-
-    /**
-     * @brief The core BBVI routine - Draws Monte Carlo gradients and uses a stochastic optimizer
-     * Stores rgw history of updates for the benefit of a pretty animation.
-     * @return
-     */
-    BBVIReturnData run_and_store() override;
+    BBVIReturnData run(bool store) override;
 };
