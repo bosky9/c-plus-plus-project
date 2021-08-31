@@ -1,5 +1,7 @@
 #include "inference/bbvi.hpp"
 
+#include <memory>
+
 #include "inference/bbvi_routines.hpp"
 #include "multivariate_normal.hpp"
 
@@ -24,8 +26,75 @@ BBVI::BBVI(const BBVI& bbvi) :
       _quiet_progress{bbvi._quiet_progress},
       _optimizer{bbvi._optimizer},
       _learning_rate{bbvi._learning_rate}
-      // TODO: ,_optim{new StochOptim(bbvi._optim)}
-{}
+{
+    if (_optimizer == "ADAM")
+        _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(bbvi._optim)));
+    else if (_optimizer == "RMSProp")
+        _optim = std::make_unique<RMSProp>(dynamic_cast<RMSProp&>(*(bbvi._optim)));
+}
+
+BBVI::BBVI(BBVI&& bbvi) noexcept :
+      BBVI(bbvi)
+{
+    bbvi._neg_posterior = {};
+    bbvi._q.resize(0);
+    bbvi._sims = 0;
+    bbvi._approx_param_no.resize(0,0);
+    bbvi._printer = false;
+    bbvi._iterations = 0;
+    bbvi._record_elbo = false;
+    bbvi._quiet_progress = true;
+    bbvi._optimizer = nullptr;
+    bbvi._learning_rate = 0;
+}
+
+BBVI& BBVI::operator=(const BBVI& bbvi) {
+    if (this == &bbvi)
+        return *this;
+    _neg_posterior = bbvi._neg_posterior;
+    _q = bbvi._q;
+    _sims = bbvi._sims;
+    _approx_param_no = bbvi._approx_param_no;
+    _printer = bbvi._printer;
+    _iterations = bbvi._iterations;
+    _record_elbo = bbvi._record_elbo;
+    _quiet_progress = bbvi._quiet_progress;
+    _optimizer = bbvi._optimizer;
+    _learning_rate = bbvi._learning_rate;
+    if (_optimizer == "ADAM")
+        _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(bbvi._optim)));
+    else if (_optimizer == "RMSProp")
+        _optim = std::make_unique<RMSProp>(dynamic_cast<RMSProp&>(*(bbvi._optim)));
+    return *this;
+}
+
+BBVI& BBVI::operator=(BBVI&& bbvi) noexcept {
+    _neg_posterior = bbvi._neg_posterior;
+    _q = bbvi._q;
+    _sims = bbvi._sims;
+    _approx_param_no = bbvi._approx_param_no;
+    _printer = bbvi._printer;
+    _iterations = bbvi._iterations;
+    _record_elbo = bbvi._record_elbo;
+    _quiet_progress = bbvi._quiet_progress;
+    _optimizer = bbvi._optimizer;
+    _learning_rate = bbvi._learning_rate;
+    if (_optimizer == "ADAM")
+        _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(bbvi._optim)));
+    else if (_optimizer == "RMSProp")
+        _optim = std::make_unique<RMSProp>(dynamic_cast<RMSProp&>(*(bbvi._optim)));
+    bbvi._neg_posterior = {};
+    bbvi._q.resize(0);
+    bbvi._sims = 0;
+    bbvi._approx_param_no.resize(0,0);
+    bbvi._printer = false;
+    bbvi._iterations = 0;
+    bbvi._record_elbo = false;
+    bbvi._quiet_progress = true;
+    bbvi._optimizer = nullptr;
+    bbvi._learning_rate = 0;
+    return *this;
+}
 
 BBVI::~BBVI() = default;
 
@@ -155,7 +224,7 @@ double BBVI::get_elbo(Eigen::VectorXd& current_params) {
     return -_neg_posterior(current_params) - create_normal_logq(current_params);
 }
 
-BBVIReturnData BBVI::run_with(bool store, std::function<double(Eigen::VectorXd)> neg_posterior) {
+BBVIReturnData BBVI::run_with(bool store, const std::function<double(Eigen::VectorXd)>& neg_posterior) {
     // Initialization assumptions
     Eigen::MatrixXd z        = draw_normal(true);
     Eigen::VectorXd gradient = cv_gradient(z, true);
@@ -169,9 +238,9 @@ BBVIReturnData BBVI::run_with(bool store, std::function<double(Eigen::VectorXd)>
 
     // Create optimizer
     if (_optimizer == "ADAM")
-        _optim.reset(new ADAM(final_parameters, variance, _learning_rate, 0.9, 0.999));
+        _optim = std::make_unique<ADAM>(final_parameters, variance, _learning_rate, 0.9, 0.999);
     else if (_optimizer == "RMSProp")
-        _optim.reset(new RMSProp(final_parameters, variance, _learning_rate, 0.99));
+        _optim = std::make_unique<RMSProp>(final_parameters, variance, _learning_rate, 0.99);
 
     // Store updates
     Eigen::MatrixXd stored_means                 = Eigen::MatrixXd::Zero(_iterations, final_parameters.size() / 2);

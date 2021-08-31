@@ -4,18 +4,10 @@ StochOptim::StochOptim(const Eigen::VectorXd& starting_parameters, const Eigen::
                        double learning_rate)
     : _parameters{starting_parameters}, _variances{starting_variances}, _learning_rate{learning_rate} {}
 
-StochOptim::StochOptim(const StochOptim& stochOptim) :
-      _parameters{stochOptim._parameters},
-      _variances{stochOptim._variances},
-      _learning_rate{stochOptim._learning_rate},
-      _t{stochOptim._t}
-{}
+StochOptim::StochOptim(const StochOptim& stochOptim) = default;
 
-StochOptim::StochOptim(StochOptim&& stochOptim) :
-      _parameters{stochOptim._parameters},
-      _variances{stochOptim._variances},
-      _learning_rate{stochOptim._learning_rate},
-      _t{stochOptim._t}
+StochOptim::StochOptim(StochOptim&& stochOptim) noexcept :
+      StochOptim(stochOptim)
 {
     stochOptim._parameters.resize(0);
     stochOptim._variances.resize(0);
@@ -33,7 +25,7 @@ StochOptim& StochOptim::operator=(const StochOptim& stochOptim) {
     return *this;
 }
 
-StochOptim& StochOptim::operator=(StochOptim&& stochOptim) {
+StochOptim& StochOptim::operator=(StochOptim&& stochOptim) noexcept {
     _parameters    = stochOptim._parameters;
     _variances     = stochOptim._variances;
     _learning_rate = stochOptim._learning_rate;
@@ -57,12 +49,9 @@ RMSProp::RMSProp(const Eigen::VectorXd& starting_parameters, const Eigen::Vector
                  double learning_rate, double ewma)
     : _ewma{ewma}, StochOptim{starting_parameters, starting_variances, learning_rate} {}
 
-RMSProp::RMSProp(const RMSProp& rmsprop) :
-      StochOptim{rmsprop},
-      _ewma{rmsprop._ewma}
-{}
+RMSProp::RMSProp(const RMSProp& rmsprop) = default;
 
-RMSProp::RMSProp(RMSProp&& rmsprop) :
+RMSProp::RMSProp(RMSProp&& rmsprop) noexcept :
       StochOptim{std::move(rmsprop)},
       _ewma{rmsprop._ewma}
 {
@@ -80,7 +69,7 @@ RMSProp& RMSProp::operator=(const RMSProp& rmsprop) {
     return *this;
 }
 
-RMSProp& RMSProp::operator=(RMSProp&& rmsprop) {
+RMSProp& RMSProp::operator=(RMSProp&& rmsprop) noexcept {
     _parameters    = rmsprop._parameters;
     _variances     = rmsprop._variances;
     _learning_rate = rmsprop._learning_rate;
@@ -111,14 +100,9 @@ ADAM::ADAM(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& st
     : StochOptim{starting_parameters, starting_variances, learning_rate},
       _f_gradient{Eigen::VectorXd::Zero(_parameters.size())}, _ewma_1{ewma1}, _ewma_2{ewma2} {}
 
-ADAM::ADAM(const ADAM& adam) :
-      StochOptim{adam},
-      _f_gradient{adam._f_gradient},
-      _ewma_1{adam._ewma_1},
-      _ewma_2{adam._ewma_2}
-{}
+ADAM::ADAM(const ADAM& adam) = default;
 
-ADAM::ADAM(ADAM&& adam) :
+ADAM::ADAM(ADAM&& adam) noexcept :
       StochOptim{std::move(adam)},
       _f_gradient{adam._f_gradient},
       _ewma_1{adam._ewma_1},
@@ -142,7 +126,7 @@ ADAM& ADAM::operator=(const ADAM& adam) {
     return *this;
 }
 
-ADAM& ADAM::operator=(ADAM&& adam) {
+ADAM& ADAM::operator=(ADAM&& adam) noexcept {
     _parameters    = adam._parameters;
     _f_gradient    = adam._f_gradient;
     _variances     = adam._variances;

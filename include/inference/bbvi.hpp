@@ -40,7 +40,7 @@ protected:
      * @param neg_posterior Negative posterior function
      * @return
      */
-    BBVIReturnData run_with(bool store, std::function<double(Eigen::VectorXd)> neg_posterior);
+    BBVIReturnData run_with(bool store, const std::function<double(Eigen::VectorXd)>& neg_posterior);
 
 public:
     /**
@@ -63,6 +63,24 @@ public:
      * @param bbvi The BBVI object
      */
     BBVI(const BBVI& bbvi);
+
+    /**
+     * @brief Move constructor for BBVI
+     * @param bbvi A BBVI object
+     */
+    BBVI(BBVI&& bbvi) noexcept;
+
+    /**
+     * @brief Assignment operator for BBVI
+     * @param bbvi A BBVI object
+     */
+    BBVI& operator=(const BBVI& bbvi);
+
+    /**
+     * @brief Move assignment operator for BBVI
+     * @param bbvi A BBVI object
+     */
+    BBVI& operator=(BBVI&& bbvi) noexcept;
 
     virtual ~BBVI();
 

@@ -27,7 +27,7 @@ public:
      * @brief Move constructor for StochOptim
      * @param stochOptim A StochOptim object
      */
-    StochOptim(StochOptim&& stochOptim);
+    StochOptim(StochOptim&& stochOptim) noexcept;
 
     /**
      * @brief Assignment operator for StochOptim
@@ -39,7 +39,7 @@ public:
      * @brief Move assignment operator for StochOptim
      * @param stochOptim A StochOptim object
      */
-    StochOptim& operator=(StochOptim&& stochOptim);
+    StochOptim& operator=(StochOptim&& stochOptim) noexcept;
 
     virtual Eigen::VectorXd update(Eigen::VectorXd& gradient);
     [[nodiscard]] Eigen::VectorXd get_parameters() const;
@@ -73,7 +73,7 @@ public:
      * @brief Move constructor for RMSProp
      * @param rmsprop A RMSProp object
      */
-    RMSProp(RMSProp&& rmsprop);
+    RMSProp(RMSProp&& rmsprop) noexcept;
 
     /**
      * @brief Assignment operator for RMSProp
@@ -85,7 +85,7 @@ public:
      * @brief Move assignment operator for RMSProp
      * @param rmsprop A RMSProp object
      */
-    RMSProp& operator=(RMSProp&& rmsprop);
+    RMSProp& operator=(RMSProp&& rmsprop) noexcept;
 
     /**
      * @brief
@@ -128,7 +128,7 @@ public:
      * @brief Move constructor for ADAM
      * @param adam A ADAM object
      */
-    ADAM(ADAM&& adam);
+    ADAM(ADAM&& adam) noexcept;
 
     /**
      * @brief Assignment operator for ADAM
@@ -140,7 +140,7 @@ public:
      * @brief Move assignment operator for ADAM
      * @param adam A ADAM object
      */
-    ADAM& operator=(ADAM&& adam);
+    ADAM& operator=(ADAM&& adam) noexcept;
 
     /**
      * @brief
