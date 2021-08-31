@@ -58,6 +58,11 @@ public:
          std::string optimizer = "RMSProp", int iterations = 1000, double learning_rate = 0.001,
          bool record_elbo = false, bool quiet_progress = false);
 
+    /**
+     * @brief Copy constructor for BBVI
+     * @param bbvi The BBVI object
+     */
+    BBVI(const BBVI& bbvi);
 
     virtual ~BBVI();
 
@@ -157,7 +162,7 @@ public:
     [[nodiscard]] std::vector<Normal> get_q() const;
 };
 
-class CBBVI : public BBVI {
+class CBBVI final : public BBVI {
 private:
     std::function<double(Eigen::VectorXd)> _log_p_blanket;
 
@@ -203,7 +208,7 @@ public:
 /**
  * @brief Black Box Variational Inference - Minibatch
  */
-class BBVIM : public BBVI {
+class BBVIM final : public BBVI {
 private:
     std::function<double(Eigen::VectorXd, int)> _neg_posterior;
     std::function<double(Eigen::VectorXd)> _full_neg_posterior;

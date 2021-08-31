@@ -12,7 +12,7 @@
 /**
  * @brief Normal distribution for time series
  */
-class Normal : public Family {
+class Normal final : public Family {
 private:
     double _mu0;
     double _sigma0;

@@ -13,6 +13,20 @@ BBVI::BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Nor
     }
 }
 
+BBVI::BBVI(const BBVI& bbvi) :
+      _neg_posterior{bbvi._neg_posterior},
+      _q{bbvi._q},
+      _sims{bbvi._sims},
+      _approx_param_no{bbvi._approx_param_no},
+      _printer{bbvi._printer},
+      _iterations{bbvi._iterations},
+      _record_elbo{bbvi._record_elbo},
+      _quiet_progress{bbvi._quiet_progress},
+      _optimizer{bbvi._optimizer},
+      _learning_rate{bbvi._learning_rate}
+      // TODO: ,_optim{new StochOptim(bbvi._optim)}
+{}
+
 BBVI::~BBVI() = default;
 
 void BBVI::change_parameters(Eigen::VectorXd& params) {

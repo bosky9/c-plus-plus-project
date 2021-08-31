@@ -16,6 +16,31 @@ protected:
 public:
     StochOptim(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances,
                double learning_rate);
+
+    /**
+     * @brief Copy constructor for StochOptim
+     * @param stochOptim The StochOptim object
+     */
+    StochOptim(const StochOptim& stochOptim);
+
+    /**
+     * @brief Move constructor for StochOptim
+     * @param stochOptim A StochOptim object
+     */
+    StochOptim(StochOptim&& stochOptim);
+
+    /**
+     * @brief Assignment operator for StochOptim
+     * @param stochOptim A StochOptim object
+     */
+    StochOptim& operator=(const StochOptim& stochOptim);
+
+    /**
+     * @brief Move assignment operator for StochOptim
+     * @param stochOptim A StochOptim object
+     */
+    StochOptim& operator=(StochOptim&& stochOptim);
+
     virtual Eigen::VectorXd update(Eigen::VectorXd& gradient);
     [[nodiscard]] Eigen::VectorXd get_parameters() const;
 };
@@ -23,7 +48,7 @@ public:
 /**
  * @brief Computes adaptive learning rates for each parameter. Has an EWMA of squared gradients.
  */
-class RMSProp : public StochOptim {
+class RMSProp final : public StochOptim {
 private:
     double _ewma;
 
@@ -75,7 +100,7 @@ public:
  * @brief Computes adaptive learning rates for each parameter.
  * @brief Has an EWMA of past gradients and squared gradients.
  */
-class ADAM : public StochOptim {
+class ADAM final : public StochOptim {
 private:
     Eigen::VectorXd _f_gradient;
     double _ewma_1;

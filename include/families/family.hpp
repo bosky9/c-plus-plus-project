@@ -113,7 +113,7 @@ private:
 /**
  * @brief Struct for attributes returned by families
  */
-struct FamilyAttributes {
+struct FamilyAttributes final {
     std::string name;
     std::function<double(double)> link;
     bool scale;

@@ -4,6 +4,47 @@ StochOptim::StochOptim(const Eigen::VectorXd& starting_parameters, const Eigen::
                        double learning_rate)
     : _parameters{starting_parameters}, _variances{starting_variances}, _learning_rate{learning_rate} {}
 
+StochOptim::StochOptim(const StochOptim& stochOptim) :
+      _parameters{stochOptim._parameters},
+      _variances{stochOptim._variances},
+      _learning_rate{stochOptim._learning_rate},
+      _t{stochOptim._t}
+{}
+
+StochOptim::StochOptim(StochOptim&& stochOptim) :
+      _parameters{stochOptim._parameters},
+      _variances{stochOptim._variances},
+      _learning_rate{stochOptim._learning_rate},
+      _t{stochOptim._t}
+{
+    stochOptim._parameters.resize(0);
+    stochOptim._variances.resize(0);
+    stochOptim._learning_rate = 0.0;
+    stochOptim._t             = 0;
+}
+
+StochOptim& StochOptim::operator=(const StochOptim& stochOptim) {
+    if (this == &stochOptim)
+        return *this;
+    _parameters    = stochOptim._parameters;
+    _variances     = stochOptim._variances;
+    _learning_rate = stochOptim._learning_rate;
+    _t             = stochOptim._t;
+    return *this;
+}
+
+StochOptim& StochOptim::operator=(StochOptim&& stochOptim) {
+    _parameters    = stochOptim._parameters;
+    _variances     = stochOptim._variances;
+    _learning_rate = stochOptim._learning_rate;
+    _t             = stochOptim._t;
+    stochOptim._parameters.resize(0);
+    stochOptim._variances.resize(0);
+    stochOptim._learning_rate = 0.0;
+    stochOptim._t             = 0;
+    return *this;
+}
+
 Eigen::VectorXd StochOptim::update(Eigen::VectorXd& gradient) {
     return {};
 }
@@ -16,25 +57,16 @@ RMSProp::RMSProp(const Eigen::VectorXd& starting_parameters, const Eigen::Vector
                  double learning_rate, double ewma)
     : _ewma{ewma}, StochOptim{starting_parameters, starting_variances, learning_rate} {}
 
-RMSProp::RMSProp(const RMSProp& rmsprop) : StochOptim{rmsprop} {
-    _parameters    = rmsprop._parameters;
-    _variances     = rmsprop._variances;
-    _learning_rate = rmsprop._learning_rate;
-    _ewma          = rmsprop._ewma;
-    _t             = rmsprop._t;
-}
+RMSProp::RMSProp(const RMSProp& rmsprop) :
+      StochOptim{rmsprop},
+      _ewma{rmsprop._ewma}
+{}
 
-RMSProp::RMSProp(RMSProp&& rmsprop) : StochOptim{std::move(rmsprop)} {
-    _parameters    = rmsprop._parameters;
-    _variances     = rmsprop._variances;
-    _learning_rate = rmsprop._learning_rate;
-    _ewma          = rmsprop._ewma;
-    _t             = rmsprop._t;
-    rmsprop._parameters.resize(0);
-    rmsprop._variances.resize(0);
-    rmsprop._learning_rate = 0.0;
-    rmsprop._ewma          = 0.0;
-    rmsprop._t             = 0;
+RMSProp::RMSProp(RMSProp&& rmsprop) :
+      StochOptim{std::move(rmsprop)},
+      _ewma{rmsprop._ewma}
+{
+    rmsprop._ewma = 0.0;
 }
 
 RMSProp& RMSProp::operator=(const RMSProp& rmsprop) {
@@ -79,31 +111,22 @@ ADAM::ADAM(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& st
     : StochOptim{starting_parameters, starting_variances, learning_rate},
       _f_gradient{Eigen::VectorXd::Zero(_parameters.size())}, _ewma_1{ewma1}, _ewma_2{ewma2} {}
 
-ADAM::ADAM(const ADAM& adam) : StochOptim{adam} {
-    _parameters    = adam._parameters;
-    _f_gradient    = adam._f_gradient;
-    _variances     = adam._variances;
-    _learning_rate = adam._learning_rate;
-    _ewma_1        = adam._ewma_1;
-    _ewma_2        = adam._ewma_2;
-    _t             = adam._t;
-}
+ADAM::ADAM(const ADAM& adam) :
+      StochOptim{adam},
+      _f_gradient{adam._f_gradient},
+      _ewma_1{adam._ewma_1},
+      _ewma_2{adam._ewma_2}
+{}
 
-ADAM::ADAM(ADAM&& adam) : StochOptim{std::move(adam)} {
-    _parameters    = adam._parameters;
-    _f_gradient    = adam._f_gradient;
-    _variances     = adam._variances;
-    _learning_rate = adam._learning_rate;
-    _ewma_1        = adam._ewma_1;
-    _ewma_2        = adam._ewma_2;
-    _t             = adam._t;
-    adam._parameters.resize(0);
+ADAM::ADAM(ADAM&& adam) :
+      StochOptim{std::move(adam)},
+      _f_gradient{adam._f_gradient},
+      _ewma_1{adam._ewma_1},
+      _ewma_2{adam._ewma_2}
+{
     adam._f_gradient = Eigen::VectorXd::Zero(0);
-    adam._variances.resize(0);
-    adam._learning_rate = 0.0;
     adam._ewma_1        = 0.0;
     adam._ewma_2        = 0.0;
-    adam._t             = 0;
 }
 
 ADAM& ADAM::operator=(const ADAM& adam) {

@@ -5,7 +5,7 @@
 #include <Eigen/Eigenvalues>
 #include <cmath>
 
-class Mvn {
+class Mvn final {
 public:
     Eigen::VectorXd _mean;
     Eigen::MatrixXd _sigma;
@@ -22,14 +22,14 @@ public:
      * @param scales Vector of scales of the normal distribution
      * @return Vector of logpdf values in x
      */
-    static Eigen::VectorXd logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& means,
-                                  const Eigen::VectorXd& scales);
+    [[nodiscard]] static Eigen::VectorXd logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& means,
+                                                const Eigen::VectorXd& scales);
 
-    static Eigen::MatrixXd logpdf(const Eigen::MatrixXd& x, const Eigen::VectorXd& means,
-                                  const Eigen::VectorXd& scales);
+    [[nodiscard]] static Eigen::MatrixXd logpdf(const Eigen::MatrixXd& x, const Eigen::VectorXd& means,
+                                                const Eigen::VectorXd& scales);
 
-    static Eigen::MatrixXd logpdf(const Eigen::MatrixXd& x, const Eigen::MatrixXd& means,
-                                  const Eigen::MatrixXd& scales);
+    [[nodiscard]] static Eigen::MatrixXd logpdf(const Eigen::MatrixXd& x, const Eigen::MatrixXd& means,
+                                                const Eigen::MatrixXd& scales);
 
     /**
      * @brief Generate random values from a normal distribution
@@ -38,5 +38,5 @@ public:
      * @param n Number of values to generate
      * @return Vector of random values
      */
-    static Eigen::VectorXd random(double mean, double scale, size_t n);
+    [[nodiscard]] static Eigen::VectorXd random(double mean, double scale, size_t n);
 };

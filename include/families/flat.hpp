@@ -5,7 +5,7 @@
 /**
  * @brief This class contains methods relating to the flat prior distribution for time series
  */
-class Flat : public Family {
+class Flat final : public Family {
 private:
     bool _covariance_prior;
 
