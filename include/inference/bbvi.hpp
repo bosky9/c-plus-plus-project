@@ -34,6 +34,14 @@ protected:
     std::unique_ptr<StochOptim> _optim{
             new StochOptim(Eigen::Vector<double, 1>{3.0}, Eigen::Vector<double, 1>{1.0}, 0)}; ///<
 
+    /**
+     * @brief Internal method called by run with selected negative posterior function
+     * @param store If true, stores rgw history of updates for the benefit of a pretty animation
+     * @param neg_posterior Negative posterior function
+     * @return
+     */
+    BBVIReturnData run_with(bool store, std::function<double(Eigen::VectorXd)> neg_posterior);
+
 public:
     /**
      * @brief Constructor for BBVI
