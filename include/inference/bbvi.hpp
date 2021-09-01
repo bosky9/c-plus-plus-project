@@ -54,7 +54,7 @@ public:
      * @param record_elbo
      * @param quiet_progress
      */
-    BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Normal>& q, int sims,
+    BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, const std::vector<Normal>& q, int sims,
          std::string optimizer = "RMSProp", int iterations = 1000, double learning_rate = 0.001,
          bool record_elbo = false, bool quiet_progress = false);
 
@@ -201,6 +201,30 @@ public:
           double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false);
 
     /**
+     * @brief Copy constructor for CBBVI
+     * @param cbbvi The CBBVI object
+     */
+    CBBVI(const CBBVI& cbbvi);
+
+    /**
+     * @brief Move constructor for CBBVI
+     * @param cbbvi A CBBVI object
+     */
+    CBBVI(CBBVI&& cbbvi) noexcept;
+
+    /**
+     * @brief Assignment operator for CBBVI
+     * @param cbbvi A CBBVI object
+     */
+    CBBVI& operator=(const CBBVI& cbbvi);
+
+    /**
+     * @brief Move assignment operator for CBBVI
+     * @param cbbvi A CBBVI object
+     */
+    CBBVI& operator=(CBBVI&& cbbvi) noexcept;
+
+    /**
      * @brief Returns the unnormalized log posterior components (the quantity we want to approximate)
      * @param z
      * @return
@@ -246,9 +270,33 @@ public:
      * @param quiet_progress
      */
     BBVIM(std::function<double(Eigen::VectorXd, int)> neg_posterior,
-          std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<Normal>& q, int sims,
+          std::function<double(Eigen::VectorXd)> full_neg_posterior, const std::vector<Normal>& q, int sims,
           std::string optimizer = "RMSProp", int iterations = 1000, double learning_rate = 0.001, int mini_batch = 2,
           bool record_elbo = false, bool quiet_progress = false);
+
+    /**
+     * @brief Copy constructor for BBVIM
+     * @param bbvim The BBVIM object
+     */
+    BBVIM(const BBVIM& bbvim);
+
+    /**
+     * @brief Move constructor for BBVIM
+     * @param bbvim A BBVIM object
+     */
+    BBVIM(BBVIM&& bbvim) noexcept;
+
+    /**
+     * @brief Assignment operator for BBVIM
+     * @param bbvim A BBVIM object
+     */
+    BBVIM& operator=(const BBVIM& bbvim);
+
+    /**
+     * @brief Move assignment operator for BBVIM
+     * @param bbvim A BBVIM object
+     */
+    BBVIM& operator=(BBVIM&& bbvim) noexcept;
 
     /**
      * @brief The unnormalized log posterior components (the quantity we want to approximate)
