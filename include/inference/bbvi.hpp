@@ -19,7 +19,7 @@ struct BBVIReturnData {
  * @brief Black Box Variational Inference
  */
 class BBVI {
-private:
+protected:
     std::function<double(Eigen::VectorXd)> _neg_posterior; ///< Posterior function
     std::vector<Normal> _q;                                ///< List holding the distribution objects
     int _sims;                                             ///< Number of Monte Carlo sims for the gradient
@@ -31,7 +31,16 @@ private:
     std::string _optimizer;                                ///<
     double _learning_rate;                                 ///<
     // @TODO: chiedere a Busato (e considera unique pointer)
-    StochOptim* _optim = new StochOptim(Eigen::Vector<double, 1>{3.0}, 0, 0); ///<
+    std::unique_ptr<StochOptim> _optim{
+            new StochOptim(Eigen::Vector<double, 1>{3.0}, Eigen::Vector<double, 1>{1.0}, 0)}; ///<
+
+    /**
+     * @brief Internal method called by run with selected negative posterior function
+     * @param store If true, stores rgw history of updates for the benefit of a pretty animation
+     * @param neg_posterior Negative posterior function
+     * @return
+     */
+    BBVIReturnData run_with(bool store, const std::function<double(Eigen::VectorXd)>& neg_posterior);
 
 public:
     /**
@@ -45,10 +54,33 @@ public:
      * @param record_elbo
      * @param quiet_progress
      */
-    BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Normal>& q, int sims,
+    BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, const std::vector<Normal>& q, int sims,
          std::string optimizer = "RMSProp", int iterations = 1000, double learning_rate = 0.001,
          bool record_elbo = false, bool quiet_progress = false);
 
+    /**
+     * @brief Copy constructor for BBVI
+     * @param bbvi The BBVI object
+     */
+    BBVI(const BBVI& bbvi);
+
+    /**
+     * @brief Move constructor for BBVI
+     * @param bbvi A BBVI object
+     */
+    BBVI(BBVI&& bbvi) noexcept;
+
+    /**
+     * @brief Assignment operator for BBVI
+     * @param bbvi A BBVI object
+     */
+    BBVI& operator=(const BBVI& bbvi);
+
+    /**
+     * @brief Move assignment operator for BBVI
+     * @param bbvi A BBVI object
+     */
+    BBVI& operator=(BBVI&& bbvi) noexcept;
 
     virtual ~BBVI();
 
@@ -56,7 +88,7 @@ public:
      * @brief Utility function for changing the approximate distribution parameters
      * @param params
      */
-    void change_parameters(std::vector<double>& params);
+    void change_parameters(Eigen::VectorXd& params);
 
     /**
      * @brief Create logq components for mean-field normal family (the entropy estimate)
@@ -69,14 +101,14 @@ public:
      * @brief Obtains an array with the current parameters
      * @return An array of parameters
      */
-    std::vector<double> current_parameters();
+    Eigen::VectorXd current_parameters();
 
     /**
      * @brief The control variate augmented Monte Carlo gradient estimate
      * @param z
      * @return
      */
-    virtual Eigen::VectorXd cv_gradient(Eigen::MatrixXd& z, bool initial = false);
+    virtual Eigen::VectorXd cv_gradient(Eigen::MatrixXd& z, bool initial);
 
     /**
      * @brief Draw parameters from a mean-field normal family
@@ -122,7 +154,7 @@ public:
      * @param z
      * @return
      */
-    virtual Eigen::VectorXd normal_log_q(Eigen::MatrixXd& z, bool initial = false);
+    virtual Eigen::VectorXd normal_log_q(Eigen::MatrixXd& z, bool initial);
 
     /**
      * @brief Prints the current ELBO at every decile of total iterations
@@ -140,23 +172,17 @@ public:
 
     /**
      * @brief The core BBVI routine - Draws Monte Carlo gradients and uses a stochastic optimizer
+     * @param store If true, stores rgw history of updates for the benefit of a pretty animation
      * @return
      */
-    virtual BBVIReturnData run();
+    virtual BBVIReturnData run(bool store);
 
-    /**
-     * @brief The core BBVI routine - Draws Monte Carlo gradients and uses a stochastic optimizer
-     * Stores rgw history of updates for the benefit of a pretty animation.
-     * @return
-     */
-    virtual BBVIReturnData run_and_store();
-
-    std::vector<Normal> get_q() const;
+    [[nodiscard]] std::vector<Normal> get_q() const;
 };
 
-class CBBVI : BBVI {
+class CBBVI final : public BBVI {
 private:
-    std::function<double(double)> _log_p_blanket;
+    std::function<double(Eigen::VectorXd)> _log_p_blanket;
 
 public:
     /**
@@ -170,16 +196,40 @@ public:
      * @param record_elbo
      * @param quiet_progress
      */
-    CBBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::function<double(double)> log_p_blanket, int sims,
-          std::string optimizer = "RMSProp", int iterations = 300000, double learning_rate = 0.001,
-          bool record_elbo = false, bool quiet_progress = false);
+    CBBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::function<double(Eigen::VectorXd)> log_p_blanket,
+          std::vector<Normal>& q, int sims, std::string optimizer = "RMSProp", int iterations = 300000,
+          double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false);
+
+    /**
+     * @brief Copy constructor for CBBVI
+     * @param cbbvi The CBBVI object
+     */
+    CBBVI(const CBBVI& cbbvi);
+
+    /**
+     * @brief Move constructor for CBBVI
+     * @param cbbvi A CBBVI object
+     */
+    CBBVI(CBBVI&& cbbvi) noexcept;
+
+    /**
+     * @brief Assignment operator for CBBVI
+     * @param cbbvi A CBBVI object
+     */
+    CBBVI& operator=(const CBBVI& cbbvi);
+
+    /**
+     * @brief Move assignment operator for CBBVI
+     * @param cbbvi A CBBVI object
+     */
+    CBBVI& operator=(CBBVI&& cbbvi) noexcept;
 
     /**
      * @brief Returns the unnormalized log posterior components (the quantity we want to approximate)
      * @param z
      * @return
      */
-    Eigen::VectorXd log_p(Eigen::VectorXd& z) override;
+    Eigen::VectorXd log_p(Eigen::MatrixXd& z) override;
 
     /**
      * @brief The unnormalized log posterior components for mean-field normal family (the quantity we want to
@@ -187,24 +237,23 @@ public:
      * @param z
      * @return
      */
-    Eigen::VectorXd normal_log_q(Eigen::VectorXd& z, bool initial = false) override;
+    Eigen::VectorXd normal_log_q(Eigen::MatrixXd& z, bool initial) override;
 
     /**
      * @brief The control variate augmented Monte Carlo gradient estimate
      * @param z
      * @return
      */
-    double cv_gradient(Eigen::MatrixXd& z, bool initial = false) override;
+    Eigen::VectorXd cv_gradient(Eigen::MatrixXd& z, bool initial) override;
 };
 
 /**
  * @brief Black Box Variational Inference - Minibatch
  */
-class BBVIM : BBVI {
+class BBVIM final : public BBVI {
 private:
+    std::function<double(Eigen::VectorXd, int)> _neg_posterior;
     std::function<double(Eigen::VectorXd)> _full_neg_posterior;
-    std::vector<int> _approx_param_no;
-    bool _printer;
     int _mini_batch;
 
 public:
@@ -220,17 +269,41 @@ public:
      * @param record_elbo
      * @param quiet_progress
      */
-    BBVIM(std::function<double(Eigen::VectorXd)> neg_posterior,
-          std::function<double(Eigen::VectorXd)> full_neg_posterior, int sims, std::string optimizer = "RMSProp",
-          int iterations = 1000, double learning_rate = 0.001, int mini_batch = 2, bool record_elbo = false,
-          bool quiet_progress = false);
+    BBVIM(std::function<double(Eigen::VectorXd, int)> neg_posterior,
+          std::function<double(Eigen::VectorXd)> full_neg_posterior, const std::vector<Normal>& q, int sims,
+          std::string optimizer = "RMSProp", int iterations = 1000, double learning_rate = 0.001, int mini_batch = 2,
+          bool record_elbo = false, bool quiet_progress = false);
+
+    /**
+     * @brief Copy constructor for BBVIM
+     * @param bbvim The BBVIM object
+     */
+    BBVIM(const BBVIM& bbvim);
+
+    /**
+     * @brief Move constructor for BBVIM
+     * @param bbvim A BBVIM object
+     */
+    BBVIM(BBVIM&& bbvim) noexcept;
+
+    /**
+     * @brief Assignment operator for BBVIM
+     * @param bbvim A BBVIM object
+     */
+    BBVIM& operator=(const BBVIM& bbvim);
+
+    /**
+     * @brief Move assignment operator for BBVIM
+     * @param bbvim A BBVIM object
+     */
+    BBVIM& operator=(BBVIM&& bbvim) noexcept;
 
     /**
      * @brief The unnormalized log posterior components (the quantity we want to approximate)
      * @param z
      * @return
      */
-    Eigen::VectorXd log_p(Eigen::VectorXd& z) override;
+    Eigen::VectorXd log_p(Eigen::MatrixXd& z) override;
 
     /**
      * @brief Obtains the ELBO for the current set of parameters
@@ -248,14 +321,8 @@ public:
 
     /**
      * @brief The core BBVI routine - Draws Monte Carlo gradients and uses a stochastic optimizer
+     * @param store If true, stores rgw history of updates for the benefit of a pretty animation
      * @return
      */
-    BBVIReturnData run() override;
-
-    /**
-     * @brief The core BBVI routine - Draws Monte Carlo gradients and uses a stochastic optimizer
-     * Stores rgw history of updates for the benefit of a pretty animation.
-     * @return
-     */
-    BBVIReturnData run_and_store() override;
+    BBVIReturnData run(bool store) override;
 };

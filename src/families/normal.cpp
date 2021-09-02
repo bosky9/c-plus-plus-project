@@ -12,7 +12,7 @@ Normal::Normal(const Normal& normal) : Family(normal) {
     _covariance_prior = normal._covariance_prior;
 }
 
-Normal::Normal(Normal&& normal) : Family(std::move(normal)) {
+Normal::Normal(Normal&& normal) noexcept : Family(std::move(normal)) {
     _mu0                     = normal._mu0;
     _sigma0                  = normal._sigma0;
     _param_no                = normal._param_no;
@@ -34,7 +34,7 @@ Normal& Normal::operator=(const Normal& normal) {
     return *this;
 }
 
-Normal& Normal::operator=(Normal&& normal) {
+Normal& Normal::operator=(Normal&& normal) noexcept {
     _mu0                     = normal._mu0;
     _sigma0                  = normal._sigma0;
     _param_no                = normal._param_no;
@@ -58,31 +58,30 @@ bool operator==(const Normal& normal1, const Normal& normal2) {
            normal1._param_no == normal2._param_no && normal1._covariance_prior == normal2._covariance_prior;
 }
 
-Eigen::MatrixXd* Normal::approximating_model(const std::vector<double>& beta, const Eigen::MatrixXd& T,
-                                             const Eigen::MatrixXd& Z, const Eigen::MatrixXd& R,
-                                             const Eigen::MatrixXd& Q, double h_approx,
-                                             const std::vector<double>& data) {
-    std::unique_ptr<Eigen::MatrixXd[]> H_mu(new Eigen::MatrixXd[2]);
-    auto size = static_cast<Eigen::Index>(data.size());
-    H_mu[0]   = Eigen::MatrixXd::Constant(size, size, h_approx);
-    H_mu[1]   = Eigen::MatrixXd::Zero(size, size);
+std::pair<Eigen::MatrixXd, Eigen::MatrixXd>
+Normal::approximating_model(const Eigen::VectorXd& beta, const Eigen::MatrixXd& T, const Eigen::MatrixXd& Z,
+                            const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q, double h_approx,
+                            const Eigen::VectorXd& data) {
+    std::pair<Eigen::MatrixXd, Eigen::MatrixXd> H_mu;
+    auto size   = data.size();
+    H_mu.first  = Eigen::MatrixXd::Constant(size, size, h_approx);
+    H_mu.second = Eigen::MatrixXd::Zero(size, size);
 
     // Pointer to array (of size 2) of Eigen::MatrixXd
-    return H_mu.get();
+    return H_mu;
 }
 
-Eigen::MatrixXd* Normal::approximating_model_reg(const std::vector<double>& beta, const Eigen::MatrixXd& T,
-                                                 const Eigen::MatrixXd& Z, const Eigen::MatrixXd& R,
-                                                 const Eigen::MatrixXd& Q, double h_approx,
-                                                 const std::vector<double>& data, const std::vector<double>& X,
-                                                 int state_no) {
-    std::unique_ptr<Eigen::MatrixXd[]> H_mu(new Eigen::MatrixXd[2]);
-    auto size = static_cast<Eigen::Index>(data.size());
-    H_mu[0]   = Eigen::MatrixXd::Constant(size, size, h_approx);
-    H_mu[1]   = Eigen::MatrixXd::Zero(size, size);
+std::pair<Eigen::MatrixXd, Eigen::MatrixXd>
+Normal::approximating_model_reg(const Eigen::VectorXd& beta, const Eigen::MatrixXd& T, const Eigen::MatrixXd& Z,
+                                const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q, double h_approx,
+                                const Eigen::VectorXd& data, const Eigen::VectorXd& X, int state_no) {
+    std::pair<Eigen::MatrixXd, Eigen::MatrixXd> H_mu;
+    auto size   = data.size();
+    H_mu.first  = Eigen::MatrixXd::Constant(size, size, h_approx);
+    H_mu.second = Eigen::MatrixXd::Zero(size, size);
 
     // Pointer to array (of size 2) of Eigen::MatrixXd
-    return H_mu.get();
+    return H_mu;
 }
 
 // Copy/move constructor may be needed
@@ -93,13 +92,13 @@ std::list<Normal::lv_to_build> Normal::build_latent_variables() {
     return lvs_to_build;
 }
 
-std::vector<double> Normal::draw_variable(double loc, double scale, double shape, double skewness, int nsims) {
+Eigen::VectorXd Normal::draw_variable(double loc, double scale, double shape, double skewness, int nsims) {
     std::normal_distribution<double> my_normal{loc, scale};
-    std::vector<double> sims(nsims);
+    Eigen::VectorXd sims(nsims);
     std::random_device rd{};
     std::mt19937 gen{rd()};
-    for (int n = 0; n++; n < nsims)
-        sims.at(n) = my_normal(gen);
+    for (Eigen::Index n = 0; n < nsims; n++)
+        sims[n] = my_normal(gen);
     return sims;
 }
 
@@ -134,22 +133,26 @@ double Normal::pdf(double mu) {
     return (1.0 / _sigma0) * exp(-((0.5 * std::pow(mu - _mu0, 2)) / std::pow(_sigma0, 2)));
 }
 
-void Normal::vi_change_param(int index, double value) {
+void Normal::vi_change_param(size_t index, double value) {
     if (index == 0)
         _mu0 = value;
     else if (index == 1)
         _sigma0 = exp(value);
 }
 
-double Normal::vi_return_param(int index) const {
+double Normal::vi_return_param(size_t index) const {
     if (index == 0)
         return _mu0;
     else if (index == 1)
         return log(_sigma0);
 }
 
-short int Normal::get_param_no() const {
+short unsigned int Normal::get_param_no() const {
     return _param_no;
+}
+
+bool Normal::get_covariance_prior() const {
+    return _covariance_prior;
 }
 
 // vi_loc_score DEFINITION AND SPECIALIZATIONS -------------------------------------------------------------------------

@@ -9,26 +9,26 @@
 //@Todo: find a better way to implement key
 
 template< typename T >
-struct is_map_str_int{
+struct is_map_str_int final {
     static const bool value = false;
 };
 
 template<>
-struct is_map_str_int<std::map<std::basic_string<char>, double>>{
+struct is_map_str_int<std::map<std::basic_string<char>, double>> final {
     static const bool value = true;
 };
 
 template< typename T >
-struct is_map_str_str{
+struct is_map_str_str final{
     static const bool value = false;
 };
 
 template<>
-struct is_map_str_str<std::map<std::string, std::string>>{
+struct is_map_str_str<std::map<std::string, std::string>> final {
     static const bool value = true;
 };
 
-class TablePrinter {
+class TablePrinter final {
 private:
     std::string _fmt;
     std::map<std::string, std::string> _head;

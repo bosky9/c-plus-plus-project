@@ -8,7 +8,7 @@
 /**
  * @brief Random-walk Metropolis-Hastings MCMC
  */
-class MetropolisHastings {
+class MetropolisHastings final {
 private:
     std::function<double(Eigen::VectorXd)> _posterior; ///< A posterior function
     double _scale;                                     ///< The scale for the random walk

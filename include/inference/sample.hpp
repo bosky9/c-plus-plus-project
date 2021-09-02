@@ -1,7 +1,7 @@
 /**
  * @brief Sample data returned by many functions
  */
-struct Sample {
+struct Sample final {
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> chain; ///< Chains for each parameter
     std::vector<double> mean_est;                                ///< Mean values for each parameter
     std::vector<double> median_est;                              ///< Median values for each parameter

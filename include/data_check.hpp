@@ -10,7 +10,7 @@
  * @brief Struct containing the data returned by data_check
  * @see data_check
  */
-struct CheckedData {
+struct CheckedData final {
     std::unique_ptr<std::vector<double>> transformed_data; ///< Raw data array for use in the model
     std::unique_ptr<std::string> data_name;                ///< Name of the data
     std::unique_ptr<std::vector<size_t>> data_index;       ///< The time indices for the data
@@ -20,7 +20,7 @@ struct CheckedData {
  * @brief Struct containing the data returned by mv_data_check
  * @see data_check
  */
-struct CheckedDataMv {
+struct CheckedDataMv final {
     std::unique_ptr<std::vector<std::vector<double>>> transformed_data; ///< Raw data array for use in the model
     std::unique_ptr<std::vector<size_t>> data_name;                     ///< Names of the data
     std::unique_ptr<std::vector<size_t>> data_index;                    ///< The time indices for the data

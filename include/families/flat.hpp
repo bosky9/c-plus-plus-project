@@ -1,11 +1,11 @@
-#ifndef C_PLUS_PLUS_PROJECT_FLAT_H
-#define C_PLUS_PLUS_PROJECT_FLAT_H
+#pragma once
+
 #include "family.hpp"
 
 /**
  * @brief This class contains methods relating to the flat prior distribution for time series
  */
-class Flat : Family {
+class Flat final : public Family {
 private:
     bool _covariance_prior;
 
@@ -14,7 +14,7 @@ public:
      * @brief Constructor for Flat
      * @param transform Whether to apply a transformation - e.g. 'exp' or 'logit'
      */
-    Flat(const std::string& transform = "");
+    explicit Flat(const std::string& transform = "");
 
     /**
      * @brief Copy constructor for Flat distribution
@@ -26,7 +26,7 @@ public:
      * @brief Move constructor for Flat distribution
      * @param flat A Flat object
      */
-    Flat(Flat&& flat);
+    Flat(Flat&& flat) noexcept;
 
     /**
      * @brief Assignment operator for Flat distribution
@@ -38,7 +38,7 @@ public:
      * @brief Move assignment operator for Flat distribution
      * @param flat A Flat object
      */
-    Flat& operator=(Flat&& flat);
+    Flat& operator=(Flat&& flat) noexcept;
 
     /**
      * @brief Equal operator for Flat
@@ -54,6 +54,10 @@ public:
      * @return log(p(mu))
      */
     double logpdf(double mu);
-};
 
-#endif // C_PLUS_PLUS_PROJECT_FLAT_H
+    /**
+     * @brief Return the covariance prior
+     * @return The covariance prior
+     */
+    [[nodiscard]] bool get_covariance_prior() const;
+};

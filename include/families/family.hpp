@@ -2,21 +2,22 @@
 #include "headers.hpp"
 
 class Family {
-public:
-    static const std::string TRANSFORM_EXP;
-    static const std::string TRANSFORM_TANH;
-    static const std::string TRANSFORM_LOGIT;
-
+protected:
     std::string _transform_name;
     std::function<double(double)> _transform;
     std::string _itransform_name;
     std::function<double(double)> _itransform;
 
+public:
+    static const std::string TRANSFORM_EXP;
+    static const std::string TRANSFORM_TANH;
+    static const std::string TRANSFORM_LOGIT;
+
     /**
      * @brief Constructor for Family
      * @param transform Whether to apply a transformation (e.g. "exp" or "logit")
      */
-    Family(const std::string& transform = "");
+    explicit Family(const std::string& transform = "");
 
     /**
      * @brief Copy constructor for Family
@@ -28,7 +29,7 @@ public:
      * @brief Move constructor for Family
      * @param family A Family object
      */
-    Family(Family&& family);
+    Family(Family&& family) noexcept;
 
     /**
      * @brief Assignment operator for Family
@@ -40,7 +41,7 @@ public:
      * @brief Move assignment operator for Family
      * @param family A Family object
      */
-    Family& operator=(Family&& family);
+    Family& operator=(Family&& family) noexcept;
 
     /**
      * @brief Check if Family objects are equal
@@ -49,6 +50,30 @@ public:
      * @return If the two objects are equal
      */
     friend bool is_equal(const Family& family1, const Family& family2);
+
+    /**
+     * @brief Return the name of the transform
+     * @return The name of the transform
+     */
+    [[nodiscard]] std::string get_transform_name() const;
+
+    /**
+     * @brief Return the transform
+     * @return The transform
+     */
+    [[nodiscard]] std::function<double(double)> get_transform() const;
+
+    /**
+     * @brief Return the name of the inverse transform
+     * @return The name of the inverse transform
+     */
+    [[nodiscard]] std::string get_itransform_name() const;
+
+    /**
+     * @brief Return the inverse transform
+     * @return The inverse transform
+     */
+    [[nodiscard]] std::function<double(double)> get_itransform() const;
 
 private:
     /**
@@ -88,7 +113,7 @@ private:
 /**
  * @brief Struct for attributes returned by families
  */
-struct FamilyAttributes {
+struct FamilyAttributes final {
     std::string name;
     std::function<double(double)> link;
     bool scale;
