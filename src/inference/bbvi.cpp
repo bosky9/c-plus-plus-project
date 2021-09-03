@@ -117,7 +117,14 @@ Eigen::VectorXd BBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
     Eigen::VectorXd log_q_res      = normal_log_q(z_t, initial);
     Eigen::VectorXd log_p_res      = log_p(z_t);
     Eigen::MatrixXd grad_log_q_res = grad_log_q(z);
-    gradient                       = grad_log_q_res * (log_p_res - log_q_res);
+    // gradient                       = grad_log_q_res.array() * (log_p_res - log_q_res).array();
+    // std::cout << gradient << "\n";
+    Eigen::MatrixXd gradient(grad_log_q_res.rows(), _sims);
+    for (Eigen::Index i = 0; i < gradient.rows(); i++) {
+        // std::cout << grad_log_q_res.row(i) << " " << log_p_res - log_q_res << "\n";
+        gradient.row(i) = grad_log_q_res.row(i).array() * (log_p_res - log_q_res).transpose().array();
+    }
+    // std::cout << gradient << "\n";
 
     Eigen::VectorXd alpha0 = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_approx_param_no.sum()));
     alpha_recursion(alpha0, grad_log_q_res, gradient, static_cast<size_t>(_approx_param_no.sum()));
