@@ -5,8 +5,8 @@
 TEST_CASE("Change parameters to BBVI object", "[change_parameters, current_parameters]") {
     std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return 0; };
     std::vector<Normal> q                                = std::vector<Normal>();
-    q.push_back(Normal());
-    q.push_back(Normal(2.0, 0.5, "exp"));
+    q.emplace_back();
+    q.emplace_back(2.0, 0.5, "exp");
     BBVI bbvi = BBVI(neg_posterior, q, 3, "ADAM", 100, 0.01, true, true);
 
     Eigen::VectorXd params = static_cast<Eigen::VectorXd>(Eigen::Vector4d{3.0, 1.0, 2.0, 1.0});
@@ -79,4 +79,42 @@ TEST_CASE("Draw variables", "[draw_variables]") {
     std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
     BBVI bbvi = BBVI(neg_posterior, q, 3);
     bbvi.draw_variables();
+}
+
+TEST_CASE("Get means and scales from q", "[get_means_and_scales_from_q]") {
+    std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return 0; };
+    std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
+    BBVI bbvi         = BBVI(neg_posterior, q, 3);
+    auto means_scales = bbvi.get_means_and_scales_from_q();
+    REQUIRE(means_scales.first == Eigen::Vector2d{q[0].vi_return_param(0), q[1].vi_return_param(0)});
+    REQUIRE(means_scales.second == Eigen::Vector2d{q[0].vi_return_param(1), q[1].vi_return_param(1)});
+}
+
+TEST_CASE("Get means and scales", "[get_means_and_scales]") {
+    std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return 0; };
+    std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
+    BBVI bbvi = BBVI(neg_posterior, q, 3);
+
+    // TODO: Chiamare prima run!
+    // auto means_scales = bbvi.get_means_and_scales();
+}
+
+TEST_CASE("Compute the gradient of the approximating distributions", "[grad_log_q]") {
+    std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return 0; };
+    std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
+    int sims  = 3;
+    BBVI bbvi = BBVI(neg_posterior, q, sims);
+
+    Eigen::MatrixXd z        = Eigen::MatrixXd::Identity(2, sims);
+    Eigen::Index param_count = 0;
+    Eigen::MatrixXd grad     = Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(bbvi.get_approx_param_no().sum()), sims);
+    for (size_t core_param = 0; core_param < q.size(); core_param++) {
+        for (size_t approx_param = 0; approx_param < q[core_param].get_param_no(); approx_param++) {
+            Eigen::VectorXd temp_z = z.row(static_cast<Eigen::Index>(core_param));
+            grad.row(param_count)  = q[core_param].vi_score(temp_z, approx_param);
+            param_count++;
+        }
+    }
+
+    REQUIRE(bbvi.grad_log_q(z) == grad);
 }
