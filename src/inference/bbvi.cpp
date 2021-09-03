@@ -119,9 +119,6 @@ Eigen::VectorXd BBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
     Eigen::VectorXd log_p_res      = log_p(z_t);
     Eigen::MatrixXd grad_log_q_res = grad_log_q(z);
 
-    // Replace nan with 0, inside log_q_res
-    log_q_res = log_q_res.unaryExpr([](double v) { return isnan(v) ? 0.0 : v; });
-    std::cout << log_q_res << "\n";
     // Create gradient matrix
     Eigen::MatrixXd gradient(grad_log_q_res.rows(), _sims);
     for (Eigen::Index i = 0; i < gradient.rows(); i++)
@@ -138,7 +135,14 @@ Eigen::VectorXd BBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
         sub.row(i) = (alpha0.transpose().array() / var) * grad_log_q_res.transpose().row(i).array();
     vectorized = gradient - sub.transpose();
 
-    return vectorized.rowwise().mean();
+    // This is what I would return in python
+    Eigen::VectorXd ret_vectorized = vectorized.rowwise().mean();
+
+    // Replace nan with 0, inside ret_vectorized
+    ret_vectorized = ret_vectorized.unaryExpr([](double v) { return isnan(v) ? 0.0 : v; });
+    std::cout << ret_vectorized << "\n";
+
+    return std::move(ret_vectorized);
 }
 
 Eigen::VectorXd BBVI::current_parameters() {
