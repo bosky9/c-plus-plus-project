@@ -39,4 +39,13 @@ public:
      * @return Vector of random values
      */
     [[nodiscard]] static Eigen::VectorXd random(double mean, double scale, size_t n);
+
+    /**
+     * @brief Generate random values from a normal distribution
+     * @param mean Means of the normal distributions
+     * @param scale Scales of the normal distributions
+     * @param n Number of values to generate
+     * @return Vector of random values
+     */
+    [[nodiscard]] static Eigen::MatrixXd random(Eigen::VectorXd mean, Eigen::VectorXd scale, size_t n);
 };

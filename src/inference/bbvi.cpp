@@ -1,9 +1,5 @@
 #include "inference/bbvi.hpp"
 
-#include <memory>
-#include <utility>
-#include <math.h>
-
 #include "inference/bbvi_routines.hpp"
 #include "multivariate_normal.hpp"
 
@@ -119,6 +115,8 @@ Eigen::VectorXd BBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
     Eigen::VectorXd log_p_res      = log_p(z_t);
     Eigen::MatrixXd grad_log_q_res = grad_log_q(z);
 
+    // Replace nan with 0, inside log_q_res
+    log_q_res = log_q_res.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
     // Create gradient matrix
     Eigen::MatrixXd gradient(grad_log_q_res.rows(), _sims);
     for (Eigen::Index i = 0; i < gradient.rows(); i++)
@@ -130,19 +128,11 @@ Eigen::VectorXd BBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
     double var = pow((grad_log_q_res.array() - grad_log_q_res.mean()).abs(), 2).mean();
     Eigen::MatrixXd vectorized(gradient.rows(), gradient.cols());
     Eigen::MatrixXd sub(gradient.cols(), gradient.rows());
-    std::cout << alpha0.size() << " " << grad_log_q_res.rows() << " " << grad_log_q_res.cols() << "\n";
     for (Eigen::Index i = 0; i < sub.rows(); i++)
         sub.row(i) = (alpha0.transpose().array() / var) * grad_log_q_res.transpose().row(i).array();
     vectorized = gradient - sub.transpose();
 
-    // This is what I would return in python
-    Eigen::VectorXd ret_vectorized = vectorized.rowwise().mean();
-
-    // Replace nan with 0, inside ret_vectorized
-    ret_vectorized = ret_vectorized.unaryExpr([](double v) { return isnan(v) ? 0.0 : v; });
-    std::cout << ret_vectorized << "\n";
-
-    return std::move(ret_vectorized);
+    return vectorized.rowwise().mean();
 }
 
 Eigen::VectorXd BBVI::current_parameters() {
@@ -161,10 +151,7 @@ Eigen::MatrixXd BBVI::draw_normal(bool initial) {
     else
         pair = get_means_and_scales();
 
-    Eigen::MatrixXd normal = Eigen::MatrixXd(_sims, pair.first.size());
-    for (Eigen::Index i = 0; i < _sims; i++)
-        normal.row(i) = Mvn::random(pair.first[i], pair.second[i], pair.first.size());
-    return normal.transpose();
+    return Mvn::random(pair.first, pair.second, pair.first.size()).transpose();
 }
 
 Eigen::MatrixXd BBVI::draw_variables() {
@@ -172,6 +159,10 @@ Eigen::MatrixXd BBVI::draw_variables() {
     for (Eigen::Index i = 0; i < _q.size(); i++)
         z.row(i) = _q[i].draw_variable_local(_sims);
     return z;
+}
+
+Eigen::VectorXd BBVI::get_approx_param_no() {
+    return _approx_param_no;
 }
 
 std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales_from_q() {
@@ -188,7 +179,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales_from_q() 
 
 std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales() {
     return std::move(std::pair{_optim->get_parameters()(Eigen::seq(0, Eigen::last, 2)),
-            _optim->get_parameters()(Eigen::seq(1, Eigen::last, 2))});
+                               _optim->get_parameters()(Eigen::seq(1, Eigen::last, 2))});
 }
 
 

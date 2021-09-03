@@ -85,3 +85,16 @@ Eigen::VectorXd Mvn::random(double mean, double scale, size_t n) {
     }
     return rands;
 }
+
+Eigen::MatrixXd Mvn::random(Eigen::VectorXd mean, Eigen::VectorXd scale, size_t n) {
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator(seed);
+    Eigen::MatrixXd rands(n, mean.size());
+    for (Eigen::Index i{0}; i < n; i++) {
+        for (Eigen::Index j{0}; j < n; j++) {
+            std::normal_distribution<double> distribution{mean[j], scale[j]};
+            rands(i, j) = distribution(generator);
+        }
+    }
+    return rands;
+}

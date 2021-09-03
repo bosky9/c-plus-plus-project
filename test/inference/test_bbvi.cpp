@@ -38,62 +38,45 @@ TEST_CASE("Crate logq components for Normal", "[create_normal_logq") {
 TEST_CASE("Compute cv_gradient", "[cv_gradient, normal_log_q, log_p, grad_log_q]") {
     std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return 0; };
     std::vector<Normal> q                                = std::vector<Normal>{Normal(), Normal()};
-    BBVI bbvi                                            = BBVI(neg_posterior, q, 3);
+    int sims                                             = 3;
+    BBVI bbvi                                            = BBVI(neg_posterior, q, sims);
 
-    Eigen::MatrixXd z = Eigen::MatrixXd::Identity(2, 3);
-    bbvi.cv_gradient(z, true);
+    Eigen::MatrixXd z          = Eigen::MatrixXd::Identity(2, sims);
+    Eigen::MatrixXd z_t        = z.transpose();
+    Eigen::VectorXd log_q      = bbvi.normal_log_q(z_t, true);
+    Eigen::VectorXd log_p      = bbvi.log_p(z_t);
+    Eigen::MatrixXd grad_log_q = bbvi.grad_log_q(z);
+    log_q                      = log_q.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
+    Eigen::MatrixXd gradient(grad_log_q.rows(), sims);
+    for (Eigen::Index i = 0; i < gradient.rows(); i++)
+        gradient.row(i) = grad_log_q.row(i).array() * (log_p - log_q).transpose().array();
+    Eigen::VectorXd alpha0 = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(bbvi.get_approx_param_no().sum()));
+    alpha_recursion(alpha0, grad_log_q, gradient, static_cast<size_t>(bbvi.get_approx_param_no().sum()));
+    double var = pow((grad_log_q.array() - grad_log_q.mean()).abs(), 2).mean();
+    Eigen::MatrixXd sub(gradient.cols(), gradient.rows());
+    for (Eigen::Index i = 0; i < sub.rows(); i++)
+        sub.row(i) = (alpha0.transpose().array() / var) * grad_log_q.transpose().row(i).array();
+    Eigen::MatrixXd vectorized = gradient - sub.transpose();
 
-    /*
-    Eigen::MatrixXd z          = Eigen::MatrixXd::Identity(2, 2);
-    Eigen::VectorXd log_q      = Eigen::Vector2d{-2.33787707, -2.33787707};
-    Eigen::VectorXd log_p      = Eigen::Vector2d{-0.0, -0.0};
-    Eigen::MatrixXd grad_log_q = Eigen::MatrixXd(4, 2);
-    grad_log_q.row(0)          = q[0].vi_score(static_cast<Eigen::VectorXd>(z.row(0)), 0);
-    grad_log_q.row(1)          = q[0].vi_score(static_cast<Eigen::VectorXd>(z.row(0)), 1);
-    grad_log_q.row(2)          = q[1].vi_score(static_cast<Eigen::VectorXd>(z.row(1)), 0);
-    grad_log_q.row(3)          = q[1].vi_score(static_cast<Eigen::VectorXd>(z.row(1)), 1);
-    Eigen::VectorXd gradient   = grad_log_q * (log_p - log_q);
-    Eigen::VectorXd alpha0     = Eigen::VectorXd::Zero(4);
-    // gradient è un VETTORE e non una matrice!
-    alpha_recursion(alpha0, grad_log_q, gradient, 4);
-    double var                 = pow((grad_log_q.array() - grad_log_q.mean()).abs(), 2).mean();
-    Eigen::VectorXd vectorized = gradient - ((alpha0 / var) * grad_log_q.transpose()).transpose();
+    REQUIRE(bbvi.cv_gradient(z, true) == vectorized.rowwise().mean());
 
-    REQUIRE(bbvi.cv_gradient(z, true) == vectorized.colwise().mean());*/
     // TODO: Chiamare prima run!
-    //   REQUIRE(bbvi.cv_gradient(z, false) == vectorized.colwise().mean());
+    //   REQUIRE(bbvi.cv_gradient(z, false) == (gradient - sub.transpose()).rowwise().mean());
 }
 
 TEST_CASE("Draw normal", "[draw_normal]") {
     std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return 0; };
     std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
     BBVI bbvi = BBVI(neg_posterior, q, 3);
-
-    auto means_scales = bbvi.get_means_and_scales_from_q();
-    Eigen::MatrixXd normal(3, means_scales.first.size());
-    normal.row(0) = Mvn::random(means_scales.first[0], means_scales.second[0], means_scales.first.size());
-    normal.row(1) = Mvn::random(means_scales.first[1], means_scales.second[1], means_scales.first.size());
-    normal        = normal.transpose();
-    REQUIRE(bbvi.draw_normal(true) == normal);
+    bbvi.draw_normal(true);
 
     // FIXME:: Chiamare prima run!
-    /*
-    means_scales = bbvi.get_means_and_scales();
-    normal.row(0) = Mvn::random(means_scales.first[0], means_scales.second[0], means_scales.first.size());
-    normal.row(1) = Mvn::random(means_scales.first[1], means_scales.second[1], means_scales.first.size());
-    normal        = normal.transpose();
-    REQUIRE(bbvi.draw_normal() == normal);
-     */
+    // REQUIRE(bbvi.draw_normal() == normal);
 }
 
 TEST_CASE("Draw variables", "[draw_variables]") {
     std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return 0; };
     std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
     BBVI bbvi = BBVI(neg_posterior, q, 3);
-
-    Eigen::MatrixXd z(q.size(), 3);
-    z.row(0) = q[0].draw_variable_local(3);
-    z.row(1) = q[1].draw_variable_local(3);
-
-    REQUIRE(bbvi.draw_variables() == z);
+    bbvi.draw_variables();
 }

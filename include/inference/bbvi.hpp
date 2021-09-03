@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cmath>
+#include <memory>
+#include <utility>
+
 #include "families/normal.hpp"
 #include "headers.hpp"
 #include "inference/bbvi_routines.hpp"
@@ -121,6 +125,12 @@ public:
      * @return
      */
     Eigen::MatrixXd draw_variables();
+
+    /**
+     * @brief Returns the number of parameters for every function (Normal) in q
+     * @return Number of parameters
+     */
+    Eigen::VectorXd get_approx_param_no();
 
     /**
      * @brief Gets the mean and scales for normal approximating parameters
