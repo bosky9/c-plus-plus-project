@@ -44,31 +44,26 @@ Sample norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& cov_ma
         phi.row(i) = mul_norm.sample(); // Incollo un vettore di lunghezza modes.size() in ogni riga
     }
 
-    Sample data{};
-    data.chain = phi.transpose();
+    Eigen::MatrixXd chain = phi.transpose();
 
     Eigen::VectorXd mean_vector = phi.colwise().mean();
-    data.mean_est.resize(mean_vector.size());
-    Eigen::VectorXd::Map(&data.mean_est[0], mean_vector.size()) = mean_vector;
+    Eigen::VectorXd mean_est(mean_vector.size());
+    Eigen::VectorXd::Map(&mean_est[0], mean_vector.size()) = mean_vector;
 
-    /*for (int i = 0; i < modes_len; i++)
-        data.mean_est.push_back(mean_vector[i]); */
-
-    //data.mean_est = dynamic_cast<std::vector<double>>(phi.colwise().mean());
-
+    Eigen::VectorXd median_est{}, upper_95_est{}, lower_5_est{};
     for (int i = 0; i < modes_len; i++) {
         std::vector<double> col_sort(NSIMS);
         Eigen::VectorXd::Map(&col_sort[0], NSIMS) = phi.col(i);
         std::sort(col_sort.begin(), col_sort.end());
 
         if (NSIMS_ODD)
-            data.median_est.push_back(col_sort[NSIMS / 2]);
+            median_est[i] = col_sort[NSIMS / 2];
         else
-            data.median_est.push_back((col_sort[NSIMS / 2] + col_sort[NSIMS / 2 - 1]) / 2);
+            median_est[i] = ((col_sort[NSIMS / 2] + col_sort[NSIMS / 2 - 1]) / 2);
 
-        data.upper_95_est.push_back((col_sort[N95]));
-        data.lower_5_est.push_back((col_sort[N5]));
+        upper_95_est[i] = col_sort[N95];
+        lower_5_est[i]  = col_sort[N5];
     }
 
-    return data;
+    return {chain, mean_est, median_est, upper_95_est, lower_5_est};
 }

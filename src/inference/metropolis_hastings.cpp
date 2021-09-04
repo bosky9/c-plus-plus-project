@@ -157,26 +157,23 @@ Sample MetropolisHastings::sample() {
     // Non lo fa, quella è la funzione transposeInPlace()
     Eigen::MatrixXd chain = _phi.transpose();
 
-    std::vector<double> mean_est(_phi.cols());
     Eigen::VectorXd mean_vector = _phi.colwise().mean();
-    mean_est.resize(mean_vector.size());
+    Eigen::VectorXd mean_est(mean_vector.size());
     Eigen::VectorXd::Map(&mean_est[0], mean_vector.size()) = mean_vector;
 
-    std::vector<double> median_est;
-    std::vector<double> upper_95_est;
-    std::vector<double> lower_5_est;
+    Eigen::VectorXd median_est{}, upper_95_est{}, lower_5_est{};
     for (Eigen::Index i{0}; i < _param_no; i++) {
         std::vector<double> col_sort(_phi.rows());
         Eigen::VectorXd::Map(&col_sort[0], _nsims) = _phi.col(i);
         std::sort(col_sort.begin(), col_sort.end());
 
         if (static_cast<bool>(_phi.rows() % 2))
-            median_est.push_back(col_sort[_phi.rows() / 2]);
+            median_est[i] = col_sort[_phi.rows() / 2];
         else
-            median_est.push_back((col_sort[_phi.rows() / 2] + col_sort[_phi.rows() / 2 - 1]) / 2);
+            median_est[i] = (col_sort[_phi.rows() / 2] + col_sort[_phi.rows() / 2 - 1]) / 2;
 
-        upper_95_est.push_back((col_sort[_phi.rows() * 95 / 100]));
-        lower_5_est.push_back((col_sort[_phi.rows() * 5 / 100]));
+        upper_95_est[i] = col_sort[_phi.rows() * 95 / 100];
+        lower_5_est[i]  = col_sort[_phi.rows() * 5 / 100];
     }
 
     return {chain, mean_est, median_est, upper_95_est, lower_5_est};
