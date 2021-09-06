@@ -21,7 +21,7 @@ TEST_CASE("Covariance", "[covariance]") {
     REQUIRE(static_cast<int>(covariance(x3, y3)) == 987);
 }
 
-TEST_CASE("alpha_recursion", "[alpha_recursion]") {
+TEST_CASE("Alpha recursion", "[alpha_recursion]") {
     Eigen::VectorXd alpha0(2);
     alpha0 << 0, 0;
     Eigen::MatrixXd m1(2, 3);
@@ -32,4 +32,18 @@ TEST_CASE("alpha_recursion", "[alpha_recursion]") {
     alpha_recursion(alpha0, m1, m2, param_no);
     REQUIRE(alpha0[0] == -2);
     REQUIRE(static_cast<int>(alpha0[1]) == -7);
+}
+
+TEST_CASE("Log p posterior", "[log_p_posterior]") {
+    Eigen::MatrixXd z                                    = Eigen::MatrixXd::Identity(2, 2);
+    std::function<double(Eigen::VectorXd)> neg_posterior = [](Eigen::VectorXd v) { return v[0]; };
+
+    REQUIRE(log_p_posterior(z, neg_posterior) == Eigen::Vector2d{-1, -0});
+}
+
+TEST_CASE("Mini batch log p posterior", "[mb_log_p_posterior]") {
+    Eigen::MatrixXd z                                         = Eigen::MatrixXd::Identity(2, 2);
+    std::function<double(Eigen::VectorXd, int)> neg_posterior = [](Eigen::VectorXd v, int n) { return v[n]; };
+
+    REQUIRE(mb_log_p_posterior(z, neg_posterior, 1) == Eigen::Vector2d{-0, -1});
 }

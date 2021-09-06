@@ -3,11 +3,11 @@
 #include "inference/bbvi_routines.hpp"
 #include "multivariate_normal.hpp"
 
-BBVI::BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, const std::vector<Normal>& q, int sims,
-           std::string optimizer, int iterations, double learning_rate, bool record_elbo, bool quiet_progress)
-    : _neg_posterior{std::move(neg_posterior)}, _q{q}, _sims{sims}, _printer{true}, _optimizer{std::move(optimizer)},
-      _iterations{iterations}, _learning_rate{learning_rate}, _record_elbo{record_elbo}, _quiet_progress{
-                                                                                                 quiet_progress} {
+BBVI::BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Normal> q, int sims, std::string optimizer,
+           int iterations, double learning_rate, bool record_elbo, bool quiet_progress)
+    : _neg_posterior{std::move(neg_posterior)}, _q{std::move(q)}, _sims{sims}, _printer{true},
+      _optimizer{std::move(optimizer)}, _iterations{iterations}, _learning_rate{learning_rate},
+      _record_elbo{record_elbo}, _quiet_progress{quiet_progress} {
     _approx_param_no = Eigen::VectorXd(_q.size());
     for (Eigen::Index i{0}; i < _q.size(); i++) {
         _approx_param_no[i] = _q[i].get_param_no();
@@ -26,7 +26,7 @@ BBVI::BBVI(const BBVI& bbvi)
     */
 }
 
-BBVI::BBVI(BBVI&& bbvi) noexcept : BBVI(bbvi) {
+BBVI::BBVI(BBVI&& bbvi) noexcept {
     bbvi._neg_posterior = {};
     bbvi._q.resize(0);
     bbvi._sims = 0;
@@ -104,7 +104,7 @@ void BBVI::change_parameters(Eigen::VectorXd& params) {
 }
 
 double BBVI::create_normal_logq(Eigen::VectorXd& z) {
-    auto means_scales = BBVI::get_means_and_scales();
+    auto means_scales = get_means_and_scales();
     return Mvn::logpdf(z, means_scales.first, means_scales.second).sum();
 }
 
@@ -165,6 +165,18 @@ Eigen::VectorXd BBVI::get_approx_param_no() {
     return _approx_param_no;
 }
 
+int BBVI::get_iterations() const {
+    return _iterations;
+}
+
+std::string BBVI::get_optimizer() {
+    return _optimizer;
+}
+
+double BBVI::get_learning_rate() const {
+    return _learning_rate;
+}
+
 std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales_from_q() {
     Eigen::VectorXd means = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_q.size()));
     Eigen::VectorXd scale = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_q.size()));
@@ -177,11 +189,14 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales_from_q() 
     return std::move(std::pair{means, scale});
 }
 
-std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales() {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales() const {
     return std::move(std::pair{_optim->get_parameters()(Eigen::seq(0, Eigen::last, 2)),
-                               _optim->get_parameters()(Eigen::seq(1, Eigen::last, 2))});
+                               _optim->get_parameters()(Eigen::seq(1, Eigen::last, 2)).array().exp()});
 }
 
+std::function<double(Eigen::VectorXd)> BBVI::get_neg_posterior() {
+    return _neg_posterior;
+}
 
 Eigen::MatrixXd BBVI::grad_log_q(Eigen::MatrixXd& z) {
     Eigen::Index param_count = 0;
@@ -198,10 +213,6 @@ Eigen::MatrixXd BBVI::grad_log_q(Eigen::MatrixXd& z) {
 
 Eigen::VectorXd BBVI::log_p(Eigen::MatrixXd& z) {
     return log_p_posterior(z, _neg_posterior);
-}
-
-std::vector<Normal> BBVI::get_q() const {
-    return _q;
 }
 
 Eigen::VectorXd BBVI::normal_log_q(Eigen::MatrixXd& z, bool initial) {
@@ -266,7 +277,7 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(Eigen::Vect
         }
         Eigen::VectorXd optim_parameters{_optim->update(gradient)};
         change_parameters(optim_parameters);
-        optim_parameters = _optim->get_parameters()(Eigen::seq(0, 2));
+        optim_parameters = _optim->get_parameters()(Eigen::seq(0, 1));
 
         if (store) {
             stored_means.row(i)             = optim_parameters;
@@ -283,7 +294,7 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(Eigen::Vect
         }
 
         if (_record_elbo) {
-            Eigen::VectorXd parameters = _optim->get_parameters()(Eigen::seq(0, 2));
+            Eigen::VectorXd parameters = _optim->get_parameters()(Eigen::seq(0, 1));
             elbo_records[i]            = get_elbo(parameters);
         }
     }

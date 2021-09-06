@@ -21,20 +21,6 @@ TEST_CASE("Change parameters to BBVI object", "[change_parameters, current_param
     REQUIRE(bbvi.current_parameters() == params);
 }
 
-// FIXME: Chiamare prima run!
-/*
-TEST_CASE("Crate logq components for Normal", "[create_normal_logq") {
-    std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return 0; };
-    std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
-    BBVI bbvi = BBVI(neg_posterior, q, 3);
-
-    Eigen::VectorXd z      = Eigen::VectorXd::Ones(2);
-    Eigen::VectorXd means  = Eigen::Vector2d{0.0, 2.0};
-    Eigen::VectorXd scales = Eigen::Vector2d{1.0, 2.5};
-    REQUIRE(bbvi.create_normal_logq(z) == Mvn::logpdf(z, means, scales).sum());
-}
-*/
-
 TEST_CASE("Compute cv_gradient", "[cv_gradient, normal_log_q, log_p, grad_log_q]") {
     std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return 0; };
     std::vector<Normal> q                                = std::vector<Normal>{Normal(), Normal()};
@@ -117,4 +103,102 @@ TEST_CASE("Compute the gradient of the approximating distributions", "[grad_log_
     }
 
     REQUIRE(bbvi.grad_log_q(z) == grad);
+}
+
+TEST_CASE("Compute the unnormalized log posterior components", "[log_p]") {
+    std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return v[1]; };
+    std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
+    int sims  = 3;
+    BBVI bbvi = BBVI(neg_posterior, q, sims);
+
+    Eigen::MatrixXd z = Eigen::MatrixXd::Identity(2, sims);
+    REQUIRE(bbvi.log_p(z) == log_p_posterior(z, bbvi.get_neg_posterior()));
+}
+
+TEST_CASE("Compute the mean-field normal log posterior components", "[normal_log_q]") {
+    std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return v[1]; };
+    std::vector<Normal> q{Normal(1.0, 1.5), Normal(2.0, 2.5)};
+    BBVI bbvi = BBVI(neg_posterior, q, 3);
+
+    Eigen::MatrixXd z = Eigen::MatrixXd::Zero(2, 2);
+    auto means_scales = bbvi.get_means_and_scales_from_q();
+    REQUIRE(bbvi.normal_log_q(z, true) == Mvn::logpdf(z, means_scales.first, means_scales.second).rowwise().sum());
+    // TODO: Chiamare prima run!
+    // means_scales = bbvi.get_means_and_scales();
+    // REQUIRE(bbvi.normal_log_q(z, false) == Mvn::logpdf(z, means_scales.first, means_scales.second).rowwise().sum());
+}
+
+TEST_CASE("Print progress", "[print_progress]") {
+    std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return v[1]; };
+    std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
+    BBVI bbvi = BBVI(neg_posterior, q, 3);
+
+    Eigen::VectorXd current_params = Eigen::Vector2d::Ones();
+    bbvi.print_progress(1, current_params);
+}
+
+TEST_CASE("Get ELBO", "[get_elbo]") {
+    std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return v[1]; };
+    std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
+    BBVI bbvi = BBVI(neg_posterior, q, 2);
+
+    Eigen::VectorXd current_params = Eigen::Vector2d::Ones();
+    // TODO: Chiamare prima run!
+    // REQUIRE(bbvi.get_elbo(current_params) == neg_posterior(current_params) -
+    // bbvi.create_normal_logq(current_params));
+}
+
+TEST_CASE("Run", "[run, create_normal_logq]") {
+    std::function<double(Eigen::VectorXd)> neg_posterior = [](const Eigen::VectorXd& v) { return v[1]; };
+    std::vector<Normal> q{Normal(1.0, 1.5), Normal(2.0, 2.5)};
+    BBVI bbvi = BBVI(neg_posterior, q, 2, "RMSProp", 5, 0.01, true, true);
+
+    Eigen::MatrixXd z                = bbvi.draw_normal(true);
+    Eigen::VectorXd gradient         = bbvi.cv_gradient(z, true);
+    Eigen::VectorXd variance         = gradient.array().pow(2);
+    Eigen::VectorXd final_parameters = bbvi.current_parameters();
+    size_t final_samples             = 1;
+    // bbvi._optim = std::make_unique<ADAM>(final_parameters, variance, bbvi.get_learning_rate(), 0.9, 0.999);
+    bbvi._optim    = std::make_unique<RMSProp>(final_parameters, variance, bbvi.get_learning_rate(), 0.99);
+    int iterations = bbvi.get_iterations();
+    Eigen::MatrixXd stored_means                 = Eigen::MatrixXd::Zero(iterations, final_parameters.size() / 2);
+    Eigen::VectorXd stored_predictive_likelihood = Eigen::VectorXd::Zero(iterations);
+    Eigen::VectorXd elbo_records                 = Eigen::VectorXd::Zero(iterations);
+
+    for (Eigen::Index i = 0; i < iterations; i++) {
+        Eigen::MatrixXd x = bbvi.draw_normal();
+        gradient          = bbvi.cv_gradient(x, false);
+        Eigen::VectorXd optim_parameters{bbvi._optim->update(gradient)};
+        bbvi.change_parameters(optim_parameters);
+        optim_parameters                = bbvi._optim->get_parameters()(Eigen::seq(0, 1));
+        stored_means.row(i)             = optim_parameters;
+        stored_predictive_likelihood[i] = neg_posterior(stored_means.row(i));
+        bbvi.print_progress(static_cast<double>(i), optim_parameters);
+        if (static_cast<double>(i) > iterations - round(iterations / 10)) {
+            final_samples++;
+            final_parameters = final_parameters + bbvi._optim->get_parameters();
+        }
+        Eigen::VectorXd parameters = bbvi._optim->get_parameters()(Eigen::seq(0, 1));
+        elbo_records[i]            = bbvi.get_elbo(parameters);
+    }
+
+    final_parameters = final_parameters / static_cast<double>(final_samples);
+    bbvi.change_parameters(final_parameters);
+    std::vector<double> means, ses;
+    for (Eigen::Index i = 0; i < final_parameters.size(); i++) {
+        if (i % 2 == 0)
+            means.push_back(final_parameters[i]);
+        else
+            ses.push_back(final_parameters[i]);
+    }
+    Eigen::VectorXd final_means = Eigen::VectorXd::Map(means.data(), static_cast<Eigen::Index>(means.size()));
+    Eigen::VectorXd final_ses   = Eigen::VectorXd::Map(ses.data(), static_cast<Eigen::Index>(ses.size()));
+
+    BBVIReturnData result = bbvi.run(true);
+    REQUIRE(result.q == q);
+    REQUIRE(result.final_means == final_means);
+    REQUIRE(result.final_ses == final_ses);
+    REQUIRE(result.elbo_records == elbo_records);
+    REQUIRE(result.stored_means == stored_means);
+    REQUIRE(result.stored_predictive_likelihood == stored_predictive_likelihood);
 }

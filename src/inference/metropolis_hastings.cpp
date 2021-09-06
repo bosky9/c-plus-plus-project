@@ -161,20 +161,22 @@ Sample MetropolisHastings::sample() {
     Eigen::VectorXd mean_est(mean_vector.size());
     Eigen::VectorXd::Map(&mean_est[0], mean_vector.size()) = mean_vector;
 
-    Eigen::VectorXd median_est{}, upper_95_est{}, lower_5_est{};
+    std::vector<double> median_est{}, upper_95_est{}, lower_5_est{};
     for (Eigen::Index i{0}; i < _param_no; i++) {
         std::vector<double> col_sort(_phi.rows());
         Eigen::VectorXd::Map(&col_sort[0], _nsims) = _phi.col(i);
         std::sort(col_sort.begin(), col_sort.end());
 
         if (static_cast<bool>(_phi.rows() % 2))
-            median_est[i] = col_sort[_phi.rows() / 2];
+            median_est.push_back(col_sort[_phi.rows() / 2]);
         else
-            median_est[i] = (col_sort[_phi.rows() / 2] + col_sort[_phi.rows() / 2 - 1]) / 2;
+            median_est.push_back((col_sort[_phi.rows() / 2] + col_sort[_phi.rows() / 2 - 1]) / 2);
 
-        upper_95_est[i] = col_sort[_phi.rows() * 95 / 100];
-        lower_5_est[i]  = col_sort[_phi.rows() * 5 / 100];
+        upper_95_est.push_back(col_sort[_phi.rows() * 95 / 100]);
+        lower_5_est.push_back(col_sort[_phi.rows() * 5 / 100]);
     }
 
-    return {chain, mean_est, median_est, upper_95_est, lower_5_est};
+    return {chain, mean_est, Eigen::VectorXd::Map(median_est.data(), median_est.size()),
+            Eigen::VectorXd::Map(upper_95_est.data(), upper_95_est.size()),
+            Eigen::VectorXd::Map(lower_5_est.data(), lower_5_est.size())};
 }

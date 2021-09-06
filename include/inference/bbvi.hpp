@@ -35,8 +35,6 @@ protected:
     std::string _optimizer;                                ///<
     double _learning_rate;                                 ///<
     // @TODO: chiedere a Busato (e considera unique pointer)
-    std::unique_ptr<StochOptim> _optim{
-            new StochOptim(Eigen::Vector<double, 1>{3.0}, Eigen::Vector<double, 1>{1.0}, 0)}; ///<
 
     /**
      * @brief Internal method called by run with selected negative posterior function
@@ -47,6 +45,9 @@ protected:
     BBVIReturnData run_with(bool store, const std::function<double(Eigen::VectorXd)>& neg_posterior);
 
 public:
+    std::unique_ptr<StochOptim> _optim{
+            new StochOptim(Eigen::Vector<double, 1>{3.0}, Eigen::Vector<double, 1>{1.0}, 0)}; ///<
+
     /**
      * @brief Constructor for BBVI
      * @param neg_posterior Posterior function
@@ -58,7 +59,7 @@ public:
      * @param record_elbo
      * @param quiet_progress
      */
-    BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, const std::vector<Normal>& q, int sims,
+    BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Normal> q, int sims,
          std::string optimizer = "RMSProp", int iterations = 1000, double learning_rate = 0.001,
          bool record_elbo = false, bool quiet_progress = false);
 
@@ -133,6 +134,24 @@ public:
     Eigen::VectorXd get_approx_param_no();
 
     /**
+     * @brief Returns the number of iterations
+     * @return Number of iterations
+     */
+    [[nodiscard]] int get_iterations() const;
+
+    /**
+     * @brief Returns the name of the optimizer
+     * @return Optimizer name
+     */
+    std::string get_optimizer();
+
+    /**
+     * @brief Returns the learning rate
+     * @return Learning rate
+     */
+    [[nodiscard]] double get_learning_rate() const;
+
+    /**
      * @brief Gets the mean and scales for normal approximating parameters
      * @return
      */
@@ -142,7 +161,13 @@ public:
      * @brief Gets the mean and scales for normal approximating parameters
      * @return
      */
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> get_means_and_scales();
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> get_means_and_scales() const;
+
+    /**
+     * @brief Returns the negative posterior function
+     * @return Negative posterior function
+     */
+    std::function<double(Eigen::VectorXd)> get_neg_posterior();
 
     /**
      * @brief The gradients of the approximating distributions
@@ -186,8 +211,6 @@ public:
      * @return
      */
     virtual BBVIReturnData run(bool store);
-
-    [[nodiscard]] std::vector<Normal> get_q() const;
 };
 
 class CBBVI final : public BBVI {
