@@ -12,16 +12,16 @@
 class LatentVariable final {
 private:
     std::string _name;                        ///< Name of the latent variable
-    size_t _index;                            ///< Index of the latent variable
+    size_t _index = 0;                        ///< Index of the latent variable
     Family _prior;                            ///< The prior for the latent variable, e.g. Normal(0,1)
     std::function<double(double)> _transform; ///< The transform function of the prior
     double _start = 0.0;
     Family _q;                                ///< The variational distribution for the latent variable, e.g. Normal(0,1)
     //TODO: I seguenti attributi non sono dichiarati nella classe Python ma usate in LatentVariables
-    std::string _method;
-    double _value = 0.0;
-    double _std = 0.0;
-    double _sample = 0.0;
+    std::string _method = nullptr;
+    double _value = nullptr;
+    double _std = nullptr;
+    double _sample = nullptr;
 
 public:
     /**
@@ -31,7 +31,7 @@ public:
      * @param prior The prior for the latent variable, e.g. Normal(0,1)
      * @param q The variational distribution for the latent variable, e.g. Normal(0,1)
      */
-    LatentVariable(const std::string& name, size_t index = 0, const Family& prior, const Family& q);
+    LatentVariable(const std::string& name, const Family& prior, const Family& q);
 
     /**
      * @brief Function that plots information about the latent variable
@@ -49,8 +49,8 @@ public:
 class LatentVariables final {
 private:
     std::string _model_name;
-    std::vector<LatentVariable> _z_list = nullptr;
-    std::map<std::string, std::map<std::string,size_t>> _z_indices = nullptr;
+    std::vector<LatentVariable> _z_list;
+    std::map<std::string, std::map<std::string,size_t>> _z_indices;
     bool _estimated = false;
     std::string _estimation_method = nullptr;
 
