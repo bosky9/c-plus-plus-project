@@ -51,7 +51,7 @@ public:
      * \brief Appends every value of data map in a string; the value is taken using the @var _width key.
      * \brief Width of every string is given by @var _width value.
      * @tparam T: could be a map of str:double or a map of str:str
-     * @param data: a map of keys (str) and values (double)
+     * @param data: a map of keys (str) and values (double or string)
      * @return string, where all the values are appended together
      */
     template<typename T, std::enable_if_t<is_map_str_int<T>::value, int> = 0>
@@ -60,6 +60,6 @@ public:
     template<typename T, std::enable_if_t<is_map_str_str<T>::value, int> = 0>
     std::string row(const T& data); //SFINAE
 
-    std::list<std::string> _call_(const std::list<std::map<std::string /*key*/, double>>& dataList);
+    std::string _call_(const std::list<std::map<std::string /*key*/, std::string>>& dataList);
 
 };

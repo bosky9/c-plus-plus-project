@@ -62,12 +62,15 @@ std::string TablePrinter::row(const T& data){
     return std::move(str_to_return);
 }
 
-std::list<std::string> TablePrinter::_call_(const std::list<std::map<std::string /*key*/, double>>& dataList) {
+std::string TablePrinter::_call_(const std::list<std::map<std::string /*key*/, std::string>>& dataList) {
     std::list<std::string> res;
     for (auto const& dl : dataList)
         res.push_back(row(dl));
     if (!_ul.empty())
         res.push_front(row(_ul));
     res.push_front(row(_head));
-    return std::move(res);
+    std::string return_string="";
+    for (auto const &r : res)
+        return_string.append(r).append("\n");
+    return std::move(return_string);
 }
