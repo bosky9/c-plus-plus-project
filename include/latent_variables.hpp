@@ -1,5 +1,7 @@
 #pragma once
 
+#include "families/family.hpp"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -18,10 +20,10 @@ private:
     double _start = 0.0;
     Family _q;                                ///< The variational distribution for the latent variable, e.g. Normal(0,1)
     //TODO: I seguenti attributi non sono dichiarati nella classe Python ma usate in LatentVariables
-    std::string _method = nullptr;
-    double _value = nullptr;
-    double _std = nullptr;
-    double _sample = nullptr;
+    std::string _method = "";
+    std::optional<double> _value = std::nullopt;
+    std::optional<double> _std = std::nullopt;
+    std::optional<double> _sample = std::nullopt;
 
 public:
     /**
@@ -52,7 +54,7 @@ private:
     std::vector<LatentVariable> _z_list;
     std::map<std::string, std::map<std::string,size_t>> _z_indices;
     bool _estimated = false;
-    std::string _estimation_method = nullptr;
+    std::string _estimation_method = "";
 
 public:
     /**
@@ -85,7 +87,7 @@ public:
      * @param prior Which prior distribution? E.g. Normal(0,1)
      * @param q Which distribution to use for variational approximation
      */
-    void create(const std::string& name, size_t dim, const Family& prior, const Family& q);
+    void create(const std::string& name, const std::vector<size_t>& dim, const Family& prior, const Family& q);
 
     /**
      * @brief Adjusts priors for the latent variables
@@ -94,23 +96,23 @@ public:
      */
     void adjust_prior(const std::vector<size_t>& index, const Family& prior);
 
-    std::vector<std::string> get_z_names();
+    std::vector<std::string> get_z_names() const;
 
-    std::vector<Family> get_z_priors();
+    std::vector<Family> get_z_priors() const;
 
-    std::pair<std::vector<std::string>,std::vector<std::string>> get_z_priors_names();
+    std::pair<std::vector<std::string>,std::vector<std::string>> get_z_priors_names() const;
 
-    std::vector<std::function<double(double)>> get_z_transforms();
+    std::vector<std::function<double(double)>> get_z_transforms() const;
 
-    std::vector<std::string> get_z_transforms_names();
+    std::vector<std::string> get_z_transforms_names() const;
 
-    Eigen::VectorXd get_z_starting_values(bool transformed = false);
+    Eigen::VectorXd get_z_starting_values(bool transformed = false) const;
 
-    Eigen::VectorXd get_z_values(bool transformed = false);
+    Eigen::VectorXd get_z_values(bool transformed = false) const;
 
-    std::vector<Family> get_z_approx_dist();
+    std::vector<Family> get_z_approx_dist() const;
 
-    std::vector<std::string> get_z_approx_dist_names();
+    std::vector<std::string> get_z_approx_dist_names() const;
 
     void set_z_values(const Eigen::VectorXd& values, const std::string& method, const std::optional<Eigen::VectorXd>& std = std::nullopt, const std::optional<Eigen::VectorXd>& sample = std::nullopt);
 

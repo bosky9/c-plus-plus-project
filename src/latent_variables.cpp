@@ -1,10 +1,12 @@
 #include "latent_variables.hpp"
 
-#include "families/family.hpp"
+#include "output/tableprinter.hpp"
 #include <string>
 #include <vector>
+#include <utility>
 #include <list>
 #include <tuple>
+#include <numeric>
 
 LatentVariable::LatentVariable(const std::string& name, const Family& prior, const Family& q) :
       _name{name},
@@ -14,8 +16,8 @@ LatentVariable::LatentVariable(const std::string& name, const Family& prior, con
 {}
 
 void LatentVariable::plot_z(double width, double height) {
-    assert(_sample != nullptr || (_value != nullptr && _std != nullptr));
-    if (_sample != nullptr) {
+    assert(_sample || (_value && _std));
+    if (_sample) {
         //TODO
     }
     else {
@@ -30,14 +32,14 @@ LatentVariables::LatentVariables(const std::string& model_name) :
     _z_indices = {};
 }
 
-friend std::ostream& operator<<(std::ostream& stream, const LatentVariables& latent_variables) {
-    std::vector<std::string> z_names = get_z_names();
-    std::vector<Family> priors = get_z_priors();
-    std::pair<std::vector<std::string>,std::vector<std::string>> z_priors_names = get_z_priors_names();
+inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs) {
+    std::vector<std::string> z_names = lvs.get_z_names();
+    std::vector<Family> priors = lvs.get_z_priors();
+    std::pair<std::vector<std::string>,std::vector<std::string>> z_priors_names = lvs.get_z_priors_names();
     std::vector<std::string> prior_names = z_priors_names.first;
     std::vector<std::string> prior_z_names = z_priors_names.second;
-    std::vector<std::string> vardist_names = get_z_approx_dist_names();
-    std::vector<std::string> transforms = get_z_transforms_names();
+    std::vector<std::string> vardist_names = lvs.get_z_approx_dist_names();
+    std::vector<std::string> transforms = lvs.get_z_transforms_names();
 
     std::list<std::tuple<std::string, std::string, int>> fmt = {
             std::make_tuple("Index","z_index",8),
@@ -48,9 +50,18 @@ friend std::ostream& operator<<(std::ostream& stream, const LatentVariables& lat
             std::make_tuple("Transform","z_transform",10)
     };
 
-    //TODO: Assegnare a stream il risultato di TablePrinter(fmt,ul="=")(z_row)
+    std::list<std::map<std::string, std::string>> z_row;
+    for (size_t z{0}; z < lvs._z_list.size(); z++)
+        z_row.push_back({
+                {"z_index", std::to_string(z)},
+                {"z_name", z_names.at(z)},
+                {"z_prior", prior_names.at(z)},
+                {"z_hyper", prior_z_names.at(z)},
+                {"z_vardist", vardist_names.at(z)},
+                {"z_transform", transforms.at(z)}
+        });
 
-    stream << "";
+    stream << TablePrinter(fmt, " ","=")._call_(z_row);
     return stream;
 }
 
@@ -59,4 +70,21 @@ void LatentVariables::add_z(const std::string& name, const Family& prior, const 
     _z_list.push_back(std::move(lv));
     if (index)
         _z_indices[name] = { {"start",_z_list.size()-1}, {"end",_z_list.size()-1} };
+}
+
+void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, const Family& prior, const Family& q) {
+    // Initialize indices vector
+    size_t indices_dim = std::accumulate(dim.begin(),dim.end(),1,std::multiplies<>());
+    std::vector<std::string> indices(indices_dim,"(");
+    for (size_t d{0}; d < dim.size(); d++) {
+        size_t span = std::accumulate(dim.begin() + d + 1, dim.end(), 1, std::multiplies<>());
+        std::string separator = (d == dim.size()-1) ? "," : ")";
+        for (size_t index{0}; index < indices_dim; index++)
+            indices.at(index) += std::to_string(index / span) + separator;
+    }
+
+    size_t starting_index = _z_list.size();
+    _z_indices[name] = { {"start",starting_index}, {"end",starting_index+indices.size()-1}, {"dim",dim.size()} };
+    for (const std::string& index : indices)
+        add_z(name+" "+index, prior, q, false);
 }
