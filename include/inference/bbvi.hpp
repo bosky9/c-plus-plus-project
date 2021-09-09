@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <utility>
@@ -27,14 +28,13 @@ protected:
     std::function<double(Eigen::VectorXd)> _neg_posterior; ///< Posterior function
     std::vector<Normal> _q;                                ///< List holding the distribution objects
     int _sims;                                             ///< Number of Monte Carlo sims for the gradient
-    Eigen::VectorXd _approx_param_no;                      ///<
     bool _printer;                                         ///<
+    std::string _optimizer;                                ///<
     int _iterations;                                       ///< How many iterations to run
+    double _learning_rate;                                 ///<
     bool _record_elbo;                                     ///< Whether to record the ELBO at every iteration
     bool _quiet_progress;                                  ///< Whether to print progress or stay quiet
-    std::string _optimizer;                                ///<
-    double _learning_rate;                                 ///<
-    // @TODO: chiedere a Busato (e considera unique pointer)
+    Eigen::VectorXd _approx_param_no;                      ///<
 
     /**
      * @brief Internal method called by run with selected negative posterior function
@@ -45,8 +45,9 @@ protected:
     BBVIReturnData run_with(bool store, const std::function<double(Eigen::VectorXd)>& neg_posterior);
 
 public:
-    std::unique_ptr<StochOptim> _optim{
-            new StochOptim(Eigen::Vector<double, 1>{3.0}, Eigen::Vector<double, 1>{1.0}, 0)}; ///<
+    // @TODO: chiedere a Busato (e considera unique pointer)
+    std::unique_ptr<StochOptim> _optim{nullptr}; ///<
+    // new StochOptim(Eigen::Vector<double, 1>{3.0}, Eigen::Vector<double, 1>{1.0}, 0)
 
     /**
      * @brief Constructor for BBVI
@@ -59,7 +60,7 @@ public:
      * @param record_elbo
      * @param quiet_progress
      */
-    BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Normal> q, int sims,
+    BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Normal>& q, int sims,
          std::string optimizer = "RMSProp", int iterations = 1000, double learning_rate = 0.001,
          bool record_elbo = false, bool quiet_progress = false);
 
@@ -87,6 +88,14 @@ public:
      */
     BBVI& operator=(BBVI&& bbvi) noexcept;
 
+    /**
+     * @brief Equality operator for BBVI
+     * @param bbvi1 First BBVI object
+     * @param bbvi2 Second BBVI object
+     * @return If the two objects are equal
+     */
+    friend bool operator==(const BBVI& bbvi1, const BBVI& bbvi2);
+
     virtual ~BBVI();
 
     /**
@@ -100,13 +109,13 @@ public:
      * @param z
      * @return
      */
-    double create_normal_logq(Eigen::VectorXd& z);
+    double create_normal_logq(Eigen::VectorXd& z) const;
 
     /**
      * @brief Obtains an array with the current parameters
      * @return An array of parameters
      */
-    Eigen::VectorXd current_parameters();
+    [[nodiscard]] Eigen::VectorXd current_parameters() const;
 
     /**
      * @brief The control variate augmented Monte Carlo gradient estimate
@@ -140,12 +149,6 @@ public:
     [[nodiscard]] int get_iterations() const;
 
     /**
-     * @brief Returns the name of the optimizer
-     * @return Optimizer name
-     */
-    std::string get_optimizer();
-
-    /**
      * @brief Returns the learning rate
      * @return Learning rate
      */
@@ -164,12 +167,6 @@ public:
     [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> get_means_and_scales() const;
 
     /**
-     * @brief Returns the negative posterior function
-     * @return Negative posterior function
-     */
-    std::function<double(Eigen::VectorXd)> get_neg_posterior();
-
-    /**
      * @brief The gradients of the approximating distributions
      * @param z
      * @return
@@ -182,14 +179,14 @@ public:
      * @param z
      * @return
      */
-    virtual Eigen::VectorXd log_p(Eigen::MatrixXd& z);
+    virtual Eigen::MatrixXd log_p(Eigen::MatrixXd& z);
 
     /**
      * @brief The mean-field normal log posterior components (the quantity we want to approximate)
      * @param z
      * @return
      */
-    virtual Eigen::VectorXd normal_log_q(Eigen::MatrixXd& z, bool initial);
+    virtual Eigen::MatrixXd normal_log_q(Eigen::MatrixXd& z, bool initial);
 
     /**
      * @brief Prints the current ELBO at every decile of total iterations
@@ -215,7 +212,7 @@ public:
 
 class CBBVI final : public BBVI {
 private:
-    std::function<double(Eigen::VectorXd)> _log_p_blanket;
+    std::function<Eigen::VectorXd(Eigen::VectorXd)> _log_p_blanket;
 
 public:
     /**
@@ -229,9 +226,10 @@ public:
      * @param record_elbo
      * @param quiet_progress
      */
-    CBBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::function<double(Eigen::VectorXd)> log_p_blanket,
-          std::vector<Normal>& q, int sims, std::string optimizer = "RMSProp", int iterations = 300000,
-          double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false);
+    CBBVI(std::function<double(Eigen::VectorXd)> neg_posterior,
+          std::function<Eigen::VectorXd(Eigen::VectorXd)> log_p_blanket, std::vector<Normal>& q, int sims,
+          std::string optimizer = "RMSProp", int iterations = 300000, double learning_rate = 0.001,
+          bool record_elbo = false, bool quiet_progress = false);
 
     /**
      * @brief Copy constructor for CBBVI
@@ -258,11 +256,19 @@ public:
     CBBVI& operator=(CBBVI&& cbbvi) noexcept;
 
     /**
+     * @brief Equality operator for CBBVI
+     * @param cbbvi1 First CBBVI object
+     * @param cbbvi2 Second CBBVI object
+     * @return If the two objects are equal
+     */
+    friend bool operator==(const CBBVI& cbbvi1, const CBBVI& cbbvi2);
+
+    /**
      * @brief Returns the unnormalized log posterior components (the quantity we want to approximate)
      * @param z
      * @return
      */
-    Eigen::VectorXd log_p(Eigen::MatrixXd& z) override;
+    Eigen::MatrixXd log_p(Eigen::MatrixXd& z) override;
 
     /**
      * @brief The unnormalized log posterior components for mean-field normal family (the quantity we want to
@@ -270,7 +276,7 @@ public:
      * @param z
      * @return
      */
-    Eigen::VectorXd normal_log_q(Eigen::MatrixXd& z, bool initial) override;
+    Eigen::MatrixXd normal_log_q(Eigen::MatrixXd& z, bool initial) override;
 
     /**
      * @brief The control variate augmented Monte Carlo gradient estimate
@@ -303,7 +309,7 @@ public:
      * @param quiet_progress
      */
     BBVIM(std::function<double(Eigen::VectorXd, int)> neg_posterior,
-          std::function<double(Eigen::VectorXd)> full_neg_posterior, const std::vector<Normal>& q, int sims,
+          std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<Normal>& q, int sims,
           std::string optimizer = "RMSProp", int iterations = 1000, double learning_rate = 0.001, int mini_batch = 2,
           bool record_elbo = false, bool quiet_progress = false);
 
@@ -332,11 +338,19 @@ public:
     BBVIM& operator=(BBVIM&& bbvim) noexcept;
 
     /**
+     * @brief Equality operator for BBVIM
+     * @param bbvim1 First BBVIM object
+     * @param bbvim2 Second BBVIM object
+     * @return If the two objects are equal
+     */
+    friend bool operator==(const BBVIM& bbvim1, const BBVIM& bbvim2);
+
+    /**
      * @brief The unnormalized log posterior components (the quantity we want to approximate)
      * @param z
      * @return
      */
-    Eigen::VectorXd log_p(Eigen::MatrixXd& z) override;
+    Eigen::MatrixXd log_p(Eigen::MatrixXd& z) override;
 
     /**
      * @brief Obtains the ELBO for the current set of parameters

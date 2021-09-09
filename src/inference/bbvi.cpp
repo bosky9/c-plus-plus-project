@@ -3,11 +3,11 @@
 #include "inference/bbvi_routines.hpp"
 #include "multivariate_normal.hpp"
 
-BBVI::BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Normal> q, int sims, std::string optimizer,
-           int iterations, double learning_rate, bool record_elbo, bool quiet_progress)
-    : _neg_posterior{std::move(neg_posterior)}, _q{std::move(q)}, _sims{sims}, _printer{true},
-      _optimizer{std::move(optimizer)}, _iterations{iterations}, _learning_rate{learning_rate},
-      _record_elbo{record_elbo}, _quiet_progress{quiet_progress} {
+BBVI::BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Normal>& q, int sims,
+           std::string optimizer, int iterations, double learning_rate, bool record_elbo, bool quiet_progress)
+    : _neg_posterior{std::move(neg_posterior)}, _q{q}, _sims{sims}, _printer{true}, _optimizer{std::move(optimizer)},
+      _iterations{iterations}, _learning_rate{learning_rate}, _record_elbo{record_elbo}, _quiet_progress{
+                                                                                                 quiet_progress} {
     _approx_param_no = Eigen::VectorXd(_q.size());
     for (Eigen::Index i{0}; i < _q.size(); i++) {
         _approx_param_no[i] = _q[i].get_param_no();
@@ -15,28 +15,30 @@ BBVI::BBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::vector<Nor
 }
 
 BBVI::BBVI(const BBVI& bbvi)
-    : _neg_posterior{bbvi._neg_posterior}, _q{bbvi._q}, _sims{bbvi._sims}, _approx_param_no{bbvi._approx_param_no},
-      _printer{bbvi._printer}, _iterations{bbvi._iterations}, _record_elbo{bbvi._record_elbo},
-      _quiet_progress{bbvi._quiet_progress}, _optimizer{bbvi._optimizer}, _learning_rate{bbvi._learning_rate} {
-    /*
-    if (_optimizer == "ADAM")
-        _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(bbvi._optim)));
-    else if (_optimizer == "RMSProp")
-        _optim = std::make_unique<RMSProp>(dynamic_cast<RMSProp&>(*(bbvi._optim)));
-    */
+    : _neg_posterior{bbvi._neg_posterior}, _q{bbvi._q}, _sims{bbvi._sims}, _printer{bbvi._printer},
+      _optimizer{bbvi._optimizer}, _iterations{bbvi._iterations}, _learning_rate{bbvi._learning_rate},
+      _record_elbo{bbvi._record_elbo}, _quiet_progress{bbvi._quiet_progress}, _approx_param_no{bbvi._approx_param_no} {
+    if (bbvi._optim != nullptr)
+        _optim.reset(bbvi._optim.get());
 }
 
-BBVI::BBVI(BBVI&& bbvi) noexcept {
+BBVI::BBVI(BBVI&& bbvi) noexcept
+    : _neg_posterior{bbvi._neg_posterior}, _q{bbvi._q}, _sims{bbvi._sims}, _printer{bbvi._printer},
+      _optimizer{bbvi._optimizer}, _iterations{bbvi._iterations}, _learning_rate{bbvi._learning_rate},
+      _record_elbo{bbvi._record_elbo}, _quiet_progress{bbvi._quiet_progress}, _approx_param_no{bbvi._approx_param_no} {
+    if (bbvi._optim != nullptr)
+        _optim.reset(bbvi._optim.get());
     bbvi._neg_posterior = {};
     bbvi._q.resize(0);
-    bbvi._sims = 0;
-    bbvi._approx_param_no.resize(0, 0);
-    bbvi._printer        = false;
-    bbvi._iterations     = 0;
-    bbvi._record_elbo    = false;
-    bbvi._quiet_progress = true;
-    bbvi._optimizer      = nullptr;
-    bbvi._learning_rate  = 0;
+    bbvi._sims            = 0;
+    bbvi._printer         = false;
+    bbvi._optimizer       = "";
+    bbvi._iterations      = 0;
+    bbvi._learning_rate   = 0;
+    bbvi._record_elbo     = false;
+    bbvi._quiet_progress  = true;
+    bbvi._approx_param_no = Eigen::VectorXd::Zero(0);
+    bbvi._optim           = nullptr;
 }
 
 BBVI& BBVI::operator=(const BBVI& bbvi) {
@@ -45,19 +47,15 @@ BBVI& BBVI::operator=(const BBVI& bbvi) {
     _neg_posterior   = bbvi._neg_posterior;
     _q               = bbvi._q;
     _sims            = bbvi._sims;
-    _approx_param_no = bbvi._approx_param_no;
     _printer         = bbvi._printer;
+    _optimizer       = bbvi._optimizer;
     _iterations      = bbvi._iterations;
+    _learning_rate   = bbvi._learning_rate;
     _record_elbo     = bbvi._record_elbo;
     _quiet_progress  = bbvi._quiet_progress;
-    _optimizer       = bbvi._optimizer;
-    _learning_rate   = bbvi._learning_rate;
-    /*
-    if (_optimizer == "ADAM")
-        _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(bbvi._optim)));
-    else if (_optimizer == "RMSProp")
-        _optim = std::make_unique<RMSProp>(dynamic_cast<RMSProp&>(*(bbvi._optim)));
-    */
+    _approx_param_no = bbvi._approx_param_no;
+    if (bbvi._optim != nullptr)
+        _optim.reset(bbvi._optim.get());
     return *this;
 }
 
@@ -65,30 +63,35 @@ BBVI& BBVI::operator=(BBVI&& bbvi) noexcept {
     _neg_posterior   = bbvi._neg_posterior;
     _q               = bbvi._q;
     _sims            = bbvi._sims;
-    _approx_param_no = bbvi._approx_param_no;
     _printer         = bbvi._printer;
+    _optimizer       = bbvi._optimizer;
     _iterations      = bbvi._iterations;
+    _learning_rate   = bbvi._learning_rate;
     _record_elbo     = bbvi._record_elbo;
     _quiet_progress  = bbvi._quiet_progress;
-    _optimizer       = bbvi._optimizer;
-    _learning_rate   = bbvi._learning_rate;
-    /*
-    if (_optimizer == "ADAM")
-        _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(bbvi._optim)));
-    else if (_optimizer == "RMSProp")
-        _optim = std::make_unique<RMSProp>(dynamic_cast<RMSProp&>(*(bbvi._optim)));
-    */
+    _approx_param_no = bbvi._approx_param_no;
+    if (bbvi._optim != nullptr)
+        _optim.reset(bbvi._optim.get());
     bbvi._neg_posterior = {};
     bbvi._q.resize(0);
-    bbvi._sims = 0;
-    bbvi._approx_param_no.resize(0, 0);
-    bbvi._printer        = false;
-    bbvi._iterations     = 0;
-    bbvi._record_elbo    = false;
-    bbvi._quiet_progress = true;
-    bbvi._optimizer      = nullptr;
-    bbvi._learning_rate  = 0;
+    bbvi._sims            = 0;
+    bbvi._printer         = false;
+    bbvi._optimizer       = "";
+    bbvi._iterations      = 0;
+    bbvi._learning_rate   = 0;
+    bbvi._record_elbo     = false;
+    bbvi._quiet_progress  = true;
+    bbvi._approx_param_no = Eigen::VectorXd::Zero(0);
+    bbvi._optim           = nullptr;
     return *this;
+}
+
+bool operator==(const BBVI& bbvi1, const BBVI& bbvi2) {
+    return bbvi1._neg_posterior(bbvi1.current_parameters()) == bbvi2._neg_posterior(bbvi2.current_parameters()) &&
+           bbvi1._q == bbvi2._q && bbvi1._sims == bbvi2._sims && bbvi1._printer == bbvi2._printer &&
+           bbvi1._optimizer == bbvi2._optimizer && bbvi1._iterations == bbvi2._iterations &&
+           bbvi1._learning_rate == bbvi2._learning_rate && bbvi1._record_elbo == bbvi2._record_elbo &&
+           bbvi1._quiet_progress == bbvi2._quiet_progress && bbvi1._approx_param_no == bbvi2._approx_param_no;
 }
 
 BBVI::~BBVI() = default;
@@ -103,7 +106,7 @@ void BBVI::change_parameters(Eigen::VectorXd& params) {
     }
 }
 
-double BBVI::create_normal_logq(Eigen::VectorXd& z) {
+double BBVI::create_normal_logq(Eigen::VectorXd& z) const {
     auto means_scales = get_means_and_scales();
     return Mvn::logpdf(z, means_scales.first, means_scales.second).sum();
 }
@@ -135,7 +138,7 @@ Eigen::VectorXd BBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
     return vectorized.rowwise().mean();
 }
 
-Eigen::VectorXd BBVI::current_parameters() {
+Eigen::VectorXd BBVI::current_parameters() const {
     std::vector<double> current = std::vector<double>();
     for (auto& normal : _q) {
         for (size_t approx_param = 0; approx_param < normal.get_param_no(); approx_param++)
@@ -169,10 +172,6 @@ int BBVI::get_iterations() const {
     return _iterations;
 }
 
-std::string BBVI::get_optimizer() {
-    return _optimizer;
-}
-
 double BBVI::get_learning_rate() const {
     return _learning_rate;
 }
@@ -194,10 +193,6 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales() const {
                                _optim->get_parameters()(Eigen::seq(1, Eigen::last, 2)).array().exp()});
 }
 
-std::function<double(Eigen::VectorXd)> BBVI::get_neg_posterior() {
-    return _neg_posterior;
-}
-
 Eigen::MatrixXd BBVI::grad_log_q(Eigen::MatrixXd& z) {
     Eigen::Index param_count = 0;
     Eigen::MatrixXd grad     = Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(_approx_param_no.sum()), _sims);
@@ -211,11 +206,11 @@ Eigen::MatrixXd BBVI::grad_log_q(Eigen::MatrixXd& z) {
     return grad;
 }
 
-Eigen::VectorXd BBVI::log_p(Eigen::MatrixXd& z) {
+Eigen::MatrixXd BBVI::log_p(Eigen::MatrixXd& z) {
     return log_p_posterior(z, _neg_posterior);
 }
 
-Eigen::VectorXd BBVI::normal_log_q(Eigen::MatrixXd& z, bool initial) {
+Eigen::MatrixXd BBVI::normal_log_q(Eigen::MatrixXd& z, bool initial) {
     std::pair<Eigen::VectorXd, Eigen::VectorXd> means_scales;
     if (initial)
         means_scales = get_means_and_scales_from_q();
@@ -318,16 +313,16 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(Eigen::Vect
     if (store) {
         return {_q, final_means, final_ses, elbo_records, stored_means, stored_predictive_likelihood};
     }
-    return {_q, final_means, final_ses, elbo_records};
+    return {_q, final_means, final_ses, elbo_records, {}, {}};
 }
 
 BBVIReturnData BBVI::run(bool store) {
     return run_with(store, _neg_posterior);
 }
 
-CBBVI::CBBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::function<double(Eigen::VectorXd)> log_p_blanket,
-             std::vector<Normal>& q, int sims, std::string optimizer, int iterations, double learning_rate,
-             bool record_elbo, bool quiet_progress)
+CBBVI::CBBVI(std::function<double(Eigen::VectorXd)> neg_posterior,
+             std::function<Eigen::VectorXd(Eigen::VectorXd)> log_p_blanket, std::vector<Normal>& q, int sims,
+             std::string optimizer, int iterations, double learning_rate, bool record_elbo, bool quiet_progress)
     : BBVI{std::move(neg_posterior),
            q,
            sims,
@@ -338,21 +333,9 @@ CBBVI::CBBVI(std::function<double(Eigen::VectorXd)> neg_posterior, std::function
            quiet_progress},
       _log_p_blanket{std::move(log_p_blanket)} {}
 
-CBBVI::CBBVI(const CBBVI& cbbvi)
-    : _log_p_blanket{cbbvi._log_p_blanket}, BBVI{cbbvi._neg_posterior, cbbvi._q,
-                                                 cbbvi._sims,          cbbvi._optimizer,
-                                                 cbbvi._iterations,    cbbvi._learning_rate,
-                                                 cbbvi._record_elbo,   cbbvi._quiet_progress} {
-    /*
-    if (_optimizer == "ADAM")
-        _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(cbbvi._optim)));
-    else if (_optimizer == "RMSProp")
-        _optim = std::make_unique<RMSProp>(dynamic_cast<RMSProp&>(*(cbbvi._optim)));
-    */
-}
+CBBVI::CBBVI(const CBBVI& cbbvi) = default;
 
-CBBVI::CBBVI(CBBVI&& cbbvi) noexcept : BBVI(std::move(cbbvi)) {
-    _log_p_blanket       = cbbvi._log_p_blanket;
+CBBVI::CBBVI(CBBVI&& cbbvi) noexcept : BBVI{std::move(cbbvi)}, _log_p_blanket{cbbvi._log_p_blanket} {
     cbbvi._log_p_blanket = {};
 }
 
@@ -362,13 +345,16 @@ CBBVI& CBBVI::operator=(const CBBVI& cbbvi) {
     _neg_posterior   = cbbvi._neg_posterior;
     _q               = cbbvi._q;
     _sims            = cbbvi._sims;
-    _approx_param_no = cbbvi._approx_param_no;
     _printer         = cbbvi._printer;
+    _optimizer       = cbbvi._optimizer;
     _iterations      = cbbvi._iterations;
+    _learning_rate   = cbbvi._learning_rate;
     _record_elbo     = cbbvi._record_elbo;
     _quiet_progress  = cbbvi._quiet_progress;
-    _optimizer       = cbbvi._optimizer;
-    _learning_rate   = cbbvi._learning_rate;
+    _approx_param_no = cbbvi._approx_param_no;
+    if (cbbvi._optim != nullptr)
+        _optim.reset(cbbvi._optim.get());
+    _log_p_blanket = cbbvi._log_p_blanket;
     /*
     if (_optimizer == "ADAM")
         _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(cbbvi._optim)));
@@ -383,42 +369,49 @@ CBBVI& CBBVI::operator=(CBBVI&& cbbvi) noexcept {
     _neg_posterior   = cbbvi._neg_posterior;
     _q               = cbbvi._q;
     _sims            = cbbvi._sims;
-    _approx_param_no = cbbvi._approx_param_no;
     _printer         = cbbvi._printer;
+    _optimizer       = cbbvi._optimizer;
     _iterations      = cbbvi._iterations;
+    _learning_rate   = cbbvi._learning_rate;
     _record_elbo     = cbbvi._record_elbo;
     _quiet_progress  = cbbvi._quiet_progress;
-    _optimizer       = cbbvi._optimizer;
-    _learning_rate   = cbbvi._learning_rate;
-    /*
-    if (_optimizer == "ADAM")
-        _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(cbbvi._optim)));
-    else if (_optimizer == "RMSProp")
-        _optim = std::make_unique<RMSProp>(dynamic_cast<RMSProp&>(*(cbbvi._optim)));
-    */
+    _approx_param_no = cbbvi._approx_param_no;
+    if (cbbvi._optim != nullptr)
+        _optim.reset(cbbvi._optim.get());
     _log_p_blanket       = cbbvi._log_p_blanket;
     cbbvi._neg_posterior = {};
     cbbvi._q.resize(0);
-    cbbvi._sims = 0;
-    cbbvi._approx_param_no.resize(0, 0);
-    cbbvi._printer        = false;
-    cbbvi._iterations     = 0;
-    cbbvi._record_elbo    = false;
-    cbbvi._quiet_progress = true;
-    cbbvi._optimizer      = nullptr;
-    cbbvi._learning_rate  = 0;
-    cbbvi._log_p_blanket  = {};
+    cbbvi._sims            = 0;
+    cbbvi._printer         = false;
+    cbbvi._optimizer       = "";
+    cbbvi._iterations      = 0;
+    cbbvi._learning_rate   = 0;
+    cbbvi._record_elbo     = false;
+    cbbvi._quiet_progress  = true;
+    cbbvi._approx_param_no = Eigen::VectorXd::Zero(0);
+    cbbvi._optim           = nullptr;
+    cbbvi._log_p_blanket   = {};
     return *this;
 }
 
-Eigen::VectorXd CBBVI::log_p(Eigen::MatrixXd& z) {
-    std::vector<double> result;
-    for (Eigen::Index i = 0; i < z.size(); i++)
-        result.push_back(_log_p_blanket(static_cast<Eigen::VectorXd>(z.row(i))));
-    return Eigen::VectorXd::Map(result.data(), static_cast<Eigen::Index>(result.size()));
+bool operator==(const CBBVI& cbbvi1, const CBBVI& cbbvi2) {
+    Eigen::VectorXd v = Eigen::Vector3d::Random();
+    return cbbvi1._neg_posterior(cbbvi1.current_parameters()) == cbbvi2._neg_posterior(cbbvi2.current_parameters()) &&
+           cbbvi1._log_p_blanket(v) == cbbvi2._log_p_blanket(v) && cbbvi1._q == cbbvi2._q &&
+           cbbvi1._sims == cbbvi2._sims && cbbvi1._printer == cbbvi2._printer &&
+           cbbvi1._optimizer == cbbvi2._optimizer && cbbvi1._iterations == cbbvi2._iterations &&
+           cbbvi1._learning_rate == cbbvi2._learning_rate && cbbvi1._record_elbo == cbbvi2._record_elbo &&
+           cbbvi1._quiet_progress == cbbvi2._quiet_progress && cbbvi1._approx_param_no == cbbvi2._approx_param_no;
 }
 
-Eigen::VectorXd CBBVI::normal_log_q(Eigen::MatrixXd& z, bool initial) {
+Eigen::MatrixXd CBBVI::log_p(Eigen::MatrixXd& z) {
+    Eigen::MatrixXd result(z.rows(), z.cols());
+    for (Eigen::Index i = 0; i < z.rows(); i++)
+        result.row(i) = _log_p_blanket(static_cast<Eigen::VectorXd>(z.row(i)));
+    return result;
+}
+
+Eigen::MatrixXd CBBVI::normal_log_q(Eigen::MatrixXd& z, bool initial) {
     std::pair<Eigen::VectorXd, Eigen::VectorXd> means_scales;
     if (initial)
         means_scales = get_means_and_scales_from_q();
@@ -428,29 +421,33 @@ Eigen::VectorXd CBBVI::normal_log_q(Eigen::MatrixXd& z, bool initial) {
 }
 
 Eigen::VectorXd CBBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
-    Eigen::VectorXd gradient;
-    Eigen::MatrixXd z_t            = z.transpose();
-    Eigen::VectorXd log_q_res      = normal_log_q(z_t, initial);
-    Eigen::VectorXd log_p_res      = log_p(z_t);
+    Eigen::MatrixXd z_t       = z.transpose();
+    Eigen::MatrixXd log_q_res = normal_log_q(z_t, initial);
+    // Replace nan with 0, inside log_q_res
+    log_q_res                      = log_q_res.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
+    Eigen::MatrixXd log_p_res      = log_p(z_t);
     Eigen::MatrixXd grad_log_q_res = grad_log_q(z);
-    Eigen::MatrixXd sub_log;
+    Eigen::MatrixXd sub_log(z.rows() * 2, z.cols());
     sub_log << (log_p_res - log_q_res).transpose(), (log_p_res - log_q_res).transpose();
-    gradient = grad_log_q_res * sub_log;
+    Eigen::MatrixXd gradient = grad_log_q_res.array() * sub_log.array();
 
     Eigen::VectorXd alpha0 = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_approx_param_no.sum()));
     alpha_recursion(alpha0, grad_log_q_res, gradient, static_cast<size_t>(_approx_param_no.sum()));
 
-    double var                 = pow((grad_log_q_res.array() - grad_log_q_res.mean()).abs(), 2).mean();
-    Eigen::VectorXd vectorized = gradient - ((alpha0 / var) * grad_log_q_res.transpose()).transpose();
+    double var = pow((grad_log_q_res.array() - grad_log_q_res.mean()).abs(), 2).mean();
+    Eigen::MatrixXd sub(gradient.cols(), gradient.rows());
+    for (Eigen::Index i = 0; i < sub.rows(); i++)
+        sub.row(i) = (alpha0.transpose().array() / var) * grad_log_q_res.transpose().row(i).array();
+    Eigen::MatrixXd vectorized = gradient - sub.transpose();
 
-    return vectorized.colwise().mean();
+    return vectorized.rowwise().mean();
 }
 
 BBVIM::BBVIM(std::function<double(Eigen::VectorXd, int)> neg_posterior,
-             std::function<double(Eigen::VectorXd)> full_neg_posterior, const std::vector<Normal>& q, int sims,
+             std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<Normal>& q, int sims,
              std::string optimizer, int iterations, double learning_rate, int mini_batch, bool record_elbo,
              bool quiet_progress)
-    : BBVI{std::function<double(Eigen::VectorXd)>(),
+    : BBVI{std::function<double(Eigen::VectorXd)>{},
            q,
            sims,
            std::move(optimizer),
@@ -461,78 +458,74 @@ BBVIM::BBVIM(std::function<double(Eigen::VectorXd, int)> neg_posterior,
       _neg_posterior{std::move(neg_posterior)}, _full_neg_posterior{std::move(full_neg_posterior)},
       _mini_batch{mini_batch} {}
 
-BBVIM::BBVIM(const BBVIM& bbvim)
-    : BBVIM{bbvim._neg_posterior, bbvim._full_neg_posterior, bbvim._q,
-            bbvim._sims,          bbvim._optimizer,          bbvim._iterations,
-            bbvim._learning_rate, bbvim._mini_batch,         bbvim._record_elbo,
-            bbvim._quiet_progress} {}
+BBVIM::BBVIM(const BBVIM& bbvim) = default;
 
-BBVIM::BBVIM(BBVIM&& bbvim) noexcept : BBVI(std::move(bbvim)) {
-    _mini_batch               = bbvim._mini_batch;
-    _full_neg_posterior       = bbvim._full_neg_posterior;
-    bbvim._mini_batch         = 0;
+BBVIM::BBVIM(BBVIM&& bbvim) noexcept
+    : BBVI{std::move(bbvim)}, _neg_posterior{bbvim._neg_posterior}, _full_neg_posterior{bbvim._full_neg_posterior},
+      _mini_batch{bbvim._mini_batch} {
     bbvim._full_neg_posterior = {};
+    bbvim._mini_batch         = 0;
 }
 
 BBVIM& BBVIM::operator=(const BBVIM& bbvim) {
     if (this == &bbvim)
         return *this;
-    _neg_posterior   = bbvim._neg_posterior;
-    _q               = bbvim._q;
-    _sims            = bbvim._sims;
-    _approx_param_no = bbvim._approx_param_no;
-    _printer         = bbvim._printer;
-    _iterations      = bbvim._iterations;
-    _record_elbo     = bbvim._record_elbo;
-    _quiet_progress  = bbvim._quiet_progress;
-    _optimizer       = bbvim._optimizer;
-    _learning_rate   = bbvim._learning_rate;
-    /*
-    if (_optimizer == "ADAM")
-        _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(bbvim._optim)));
-    else if (_optimizer == "RMSProp")
-        _optim = std::make_unique<RMSProp>(dynamic_cast<RMSProp&>(*(bbvim._optim)));
-    */
+    _neg_posterior      = bbvim._neg_posterior;
+    _q                  = bbvim._q;
+    _sims               = bbvim._sims;
+    _printer            = bbvim._printer;
+    _optimizer          = bbvim._optimizer;
+    _iterations         = bbvim._iterations;
+    _learning_rate      = bbvim._learning_rate;
+    _record_elbo        = bbvim._record_elbo;
+    _quiet_progress     = bbvim._quiet_progress;
+    _approx_param_no    = bbvim._approx_param_no;
     _full_neg_posterior = bbvim._full_neg_posterior;
     _mini_batch         = bbvim._mini_batch;
     return *this;
 }
 
 BBVIM& BBVIM::operator=(BBVIM&& bbvim) noexcept {
-    _neg_posterior   = bbvim._neg_posterior;
-    _q               = bbvim._q;
-    _sims            = bbvim._sims;
-    _approx_param_no = bbvim._approx_param_no;
-    _printer         = bbvim._printer;
-    _iterations      = bbvim._iterations;
-    _record_elbo     = bbvim._record_elbo;
-    _quiet_progress  = bbvim._quiet_progress;
-    _optimizer       = bbvim._optimizer;
-    _learning_rate   = bbvim._learning_rate;
-    /*
-    if (_optimizer == "ADAM")
-        _optim = std::make_unique<ADAM>(dynamic_cast<ADAM&>(*(bbvim._optim)));
-    else if (_optimizer == "RMSProp")
-        _optim = std::make_unique<RMSProp>(dynamic_cast<RMSProp&>(*(bbvim._optim)));
-    */
+    _neg_posterior       = bbvim._neg_posterior;
+    _q                   = bbvim._q;
+    _sims                = bbvim._sims;
+    _printer             = bbvim._printer;
+    _optimizer           = bbvim._optimizer;
+    _iterations          = bbvim._iterations;
+    _learning_rate       = bbvim._learning_rate;
+    _record_elbo         = bbvim._record_elbo;
+    _quiet_progress      = bbvim._quiet_progress;
+    _approx_param_no     = bbvim._approx_param_no;
     _full_neg_posterior  = bbvim._full_neg_posterior;
     _mini_batch          = bbvim._mini_batch;
     bbvim._neg_posterior = {};
     bbvim._q.resize(0);
-    bbvim._sims = 0;
-    bbvim._approx_param_no.resize(0, 0);
+    bbvim._sims               = 0;
     bbvim._printer            = false;
+    bbvim._optimizer          = "";
     bbvim._iterations         = 0;
+    bbvim._learning_rate      = 0;
     bbvim._record_elbo        = false;
     bbvim._quiet_progress     = true;
-    bbvim._optimizer          = nullptr;
-    bbvim._learning_rate      = 0;
+    bbvim._approx_param_no    = Eigen::VectorXd::Zero(0);
+    bbvim._optim              = nullptr;
     bbvim._full_neg_posterior = {};
     bbvim._mini_batch         = 0;
     return *this;
 }
 
-Eigen::VectorXd BBVIM::log_p(Eigen::MatrixXd& z) {
+bool operator==(const BBVIM& bbvim1, const BBVIM& bbvim2) {
+    Eigen::VectorXd v = Eigen::Vector3d::Random();
+    return bbvim1._neg_posterior(v, bbvim1._mini_batch) == bbvim2._neg_posterior(v, bbvim2._mini_batch) &&
+           bbvim1._full_neg_posterior(bbvim1.current_parameters()) ==
+                   bbvim2._full_neg_posterior(bbvim2.current_parameters()) &&
+           bbvim1._q == bbvim2._q && bbvim1._sims == bbvim2._sims && bbvim1._printer == bbvim2._printer &&
+           bbvim1._optimizer == bbvim2._optimizer && bbvim1._iterations == bbvim2._iterations &&
+           bbvim1._learning_rate == bbvim2._learning_rate && bbvim1._record_elbo == bbvim2._record_elbo &&
+           bbvim1._quiet_progress == bbvim2._quiet_progress && bbvim1._approx_param_no == bbvim2._approx_param_no;
+}
+
+Eigen::MatrixXd BBVIM::log_p(Eigen::MatrixXd& z) {
     return mb_log_p_posterior(z, _neg_posterior, _mini_batch);
 }
 
