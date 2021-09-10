@@ -1,12 +1,16 @@
 #pragma once
 
+#include "covariances.hpp"
 #include "families/family.hpp"
+#include "matplotlibcpp.hpp"
 
+#include <Eigen/Core>
+#include <map>
+#include <optional>
 #include <string>
 #include <vector>
-#include <map>
-#include <Eigen/Core>
-#include <optional>
+
+namespace plt = matplotlibcpp;
 
 /**
  * @brief Class that represents a latent variable
@@ -18,12 +22,12 @@ private:
     Family _prior;                            ///< The prior for the latent variable, e.g. Normal(0,1)
     std::function<double(double)> _transform; ///< The transform function of the prior
     double _start = 0.0;
-    Family _q;                                ///< The variational distribution for the latent variable, e.g. Normal(0,1)
-    //TODO: I seguenti attributi non sono dichiarati nella classe Python ma usate in LatentVariables
-    std::string _method = "";
-    std::optional<double> _value = std::nullopt;
-    std::optional<double> _std = std::nullopt;
-    std::optional<double> _sample = std::nullopt;
+    Family _q; ///< The variational distribution for the latent variable, e.g. Normal(0,1)
+    // TODO: I seguenti attributi non sono dichiarati nella classe Python ma usate in LatentVariables
+    std::string _method                        = "";
+    std::optional<double> _value               = std::nullopt;
+    std::optional<double> _std                 = std::nullopt;
+    std::optional<std::vector<double>> _sample = std::nullopt;
 
 public:
     /**
@@ -46,6 +50,8 @@ public:
 
     [[nodiscard]] Family get_prior() const;
 
+    [[nodiscard]] std::optional<std::vector<double>> get_sample() const;
+
     [[nodiscard]] double get_start() const;
 
     [[nodiscard]] std::optional<double> get_value() const;
@@ -66,8 +72,8 @@ class LatentVariables final {
 private:
     std::string _model_name;
     std::vector<LatentVariable> _z_list;
-    std::map<std::string, std::map<std::string,size_t>> _z_indices;
-    bool _estimated = false;
+    std::map<std::string, std::map<std::string, size_t>> _z_indices;
+    bool _estimated                = false;
     std::string _estimation_method = "";
 
 public:
@@ -75,7 +81,7 @@ public:
      * Constructor for LatentVariables
      * @param model_name The name of the model
      */
-    explicit LatentVariables(const std::string& model_name);
+    LatentVariables(const std::string& model_name);
 
     /**
      * @brief Overload of the stream operation
@@ -110,29 +116,32 @@ public:
      */
     void adjust_prior(const std::vector<size_t>& index, const Family& prior);
 
-    [[nodiscard]] std::vector<std::string> get_z_names() const;
+    std::vector<std::string> get_z_names() const;
 
-    [[nodiscard]] std::vector<Family> get_z_priors() const;
+    std::vector<Family> get_z_priors() const;
 
-    [[nodiscard]] std::pair<std::vector<std::string>,std::vector<std::string>> get_z_priors_names() const;
+    std::pair<std::vector<std::string>, std::vector<std::string>> get_z_priors_names() const;
 
-    [[nodiscard]] std::vector<std::function<double(double)>> get_z_transforms() const;
+    std::vector<std::function<double(double)>> get_z_transforms() const;
 
-    [[nodiscard]] std::vector<std::string> get_z_transforms_names() const;
+    std::vector<std::string> get_z_transforms_names() const;
 
-    [[nodiscard]] Eigen::VectorXd get_z_starting_values(bool transformed = false) const;
+    Eigen::VectorXd get_z_starting_values(bool transformed = false) const;
 
-    [[nodiscard]] Eigen::VectorXd get_z_values(bool transformed = false) const;
+    Eigen::VectorXd get_z_values(bool transformed = false) const;
 
-    [[nodiscard]] std::vector<Family> get_z_approx_dist() const;
+    std::vector<Family> get_z_approx_dist() const;
 
-    [[nodiscard]] std::vector<std::string> get_z_approx_dist_names() const;
+    std::vector<std::string> get_z_approx_dist_names() const;
 
-    void set_z_values(const Eigen::VectorXd& values, const std::string& method, const std::optional<Eigen::VectorXd>& std = std::nullopt, const std::optional<Eigen::VectorXd>& sample = std::nullopt);
+    void set_z_values(const Eigen::VectorXd& values, const std::string& method,
+                      const std::optional<Eigen::VectorXd>& std    = std::nullopt,
+                      const std::optional<Eigen::VectorXd>& sample = std::nullopt);
 
     void set_z_starting_values(const Eigen::VectorXd& values);
 
-    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, double width = 15.0, double height = 5.0, int loc = 1);
+    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, double width = 15.0,
+                double height = 5.0, int loc = 1);
 
     void trace_plot(double width = 15.0, double height = 15.0);
 };
