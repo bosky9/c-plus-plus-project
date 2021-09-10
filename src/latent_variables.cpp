@@ -25,6 +25,18 @@ void LatentVariable::plot_z(double width, double height) {
     }
 }
 
+Family LatentVariable::get_prior() const {
+    return _prior;
+}
+
+void LatentVariable::set_prior(const Family& prior) {
+    _prior = prior;
+}
+
+void LatentVariable::set_start(double start) {
+    _start = start;
+}
+
 LatentVariables::LatentVariables(const std::string& model_name) :
       _model_name{model_name}
 {
@@ -87,4 +99,15 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
     _z_indices[name] = { {"start",starting_index}, {"end",starting_index+indices.size()-1}, {"dim",dim.size()} };
     for (const std::string& index : indices)
         add_z(name+" "+index, prior, q, false);
+}
+
+void LatentVariables::adjust_prior(const std::vector<size_t>& index, const Family& prior) {
+    for (size_t item : index) {
+        assert(item < 0 || item > _z_list.size()-1);
+        _z_list.at(item).set_prior(prior);
+        if (auto mu0 = _z_list.at(item).get_prior().get_mu0())
+            _z_list.at(item).set_start(mu0.value());
+        if (auto loc0 = _z_list.at(item).get_prior().get_loc0())
+            _z_list.at(item).set_start(loc0.value());
+    }
 }

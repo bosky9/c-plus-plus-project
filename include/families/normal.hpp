@@ -237,4 +237,6 @@ public:
         else if (index == 1)
             return vi_scale_score(x);
     }
+
+    [[nodiscard]] std::optional<double> get_mu0() const override;
 };

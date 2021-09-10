@@ -182,3 +182,7 @@ template<>
 Eigen::VectorXd Normal::vi_scale_score<Eigen::VectorXd>(const Eigen::VectorXd& x) const {
     return exp(-2 * log(_sigma0)) * pow(x.array() - _mu0, 2) - 1;
 }
+
+std::optional<double> Normal::get_mu0() const {
+    return _mu0;
+}

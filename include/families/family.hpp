@@ -1,5 +1,6 @@
 #pragma once
 #include "headers.hpp"
+#include <optional>
 
 class Family {
 protected:
@@ -74,6 +75,10 @@ public:
      * @return The inverse transform
      */
     [[nodiscard]] std::function<double(double)> get_itransform() const;
+
+    virtual std::optional<double> get_mu0() const;
+
+    virtual std::optional<double> get_loc0() const;
 
 private:
     /**

@@ -41,6 +41,12 @@ public:
      * @param height The height of the figure to plot
      */
     void plot_z(double width = 15.0, double height = 5.0);
+
+    Family get_prior() const;
+
+    void set_prior(const Family& prior);
+
+    void set_start(double start);
 };
 
 /**
@@ -61,7 +67,7 @@ public:
      * Constructor for LatentVariables
      * @param model_name The name of the model
      */
-    LatentVariables(const std::string& model_name);
+    explicit LatentVariables(const std::string& model_name);
 
     /**
      * @brief Overload of the stream operation

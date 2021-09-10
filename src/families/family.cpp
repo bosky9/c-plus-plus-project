@@ -119,3 +119,11 @@ std::string Family::get_itransform_name() const {
 std::function<double(double)> Family::get_itransform() const {
     return _itransform;
 }
+
+std::optional<double> Family::get_mu0() const {
+    return {};
+}
+
+std::optional<double> Family::get_loc0() const {
+    return {};
+}
