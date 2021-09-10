@@ -60,4 +60,8 @@ public:
      * @return The covariance prior
      */
     [[nodiscard]] bool get_covariance_prior() const;
+
+    [[nodiscard]] std::string get_name() const override;
+
+    [[nodiscard]] std::string get_z_name() const override;
 };

@@ -37,3 +37,11 @@ double Flat::logpdf(double mu) {
 bool Flat::get_covariance_prior() const {
     return _covariance_prior;
 }
+
+std::string Flat::get_name() const {
+    return "Flat";
+}
+
+std::string Flat::get_z_name() const {
+    return "n/a (non-informative)";
+}

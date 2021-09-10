@@ -120,6 +120,14 @@ std::function<double(double)> Family::get_itransform() const {
     return _itransform;
 }
 
+std::string Family::get_name() const {
+    return "Prior distribution not detected";
+}
+
+std::string Family::get_z_name() const {
+    return "";
+}
+
 std::optional<double> Family::get_mu0() const {
     return {};
 }

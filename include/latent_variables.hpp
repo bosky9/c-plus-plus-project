@@ -42,7 +42,15 @@ public:
      */
     void plot_z(double width = 15.0, double height = 5.0);
 
-    Family get_prior() const;
+    [[nodiscard]] std::string get_name() const;
+
+    [[nodiscard]] Family get_prior() const;
+
+    [[nodiscard]] double get_start() const;
+
+    [[nodiscard]] std::optional<double> get_value() const;
+
+    [[nodiscard]] Family get_q() const;
 
     void set_prior(const Family& prior);
 
@@ -102,23 +110,23 @@ public:
      */
     void adjust_prior(const std::vector<size_t>& index, const Family& prior);
 
-    std::vector<std::string> get_z_names() const;
+    [[nodiscard]] std::vector<std::string> get_z_names() const;
 
-    std::vector<Family> get_z_priors() const;
+    [[nodiscard]] std::vector<Family> get_z_priors() const;
 
-    std::pair<std::vector<std::string>,std::vector<std::string>> get_z_priors_names() const;
+    [[nodiscard]] std::pair<std::vector<std::string>,std::vector<std::string>> get_z_priors_names() const;
 
-    std::vector<std::function<double(double)>> get_z_transforms() const;
+    [[nodiscard]] std::vector<std::function<double(double)>> get_z_transforms() const;
 
-    std::vector<std::string> get_z_transforms_names() const;
+    [[nodiscard]] std::vector<std::string> get_z_transforms_names() const;
 
-    Eigen::VectorXd get_z_starting_values(bool transformed = false) const;
+    [[nodiscard]] Eigen::VectorXd get_z_starting_values(bool transformed = false) const;
 
-    Eigen::VectorXd get_z_values(bool transformed = false) const;
+    [[nodiscard]] Eigen::VectorXd get_z_values(bool transformed = false) const;
 
-    std::vector<Family> get_z_approx_dist() const;
+    [[nodiscard]] std::vector<Family> get_z_approx_dist() const;
 
-    std::vector<std::string> get_z_approx_dist_names() const;
+    [[nodiscard]] std::vector<std::string> get_z_approx_dist_names() const;
 
     void set_z_values(const Eigen::VectorXd& values, const std::string& method, const std::optional<Eigen::VectorXd>& std = std::nullopt, const std::optional<Eigen::VectorXd>& sample = std::nullopt);
 

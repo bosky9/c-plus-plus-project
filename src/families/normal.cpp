@@ -183,6 +183,14 @@ Eigen::VectorXd Normal::vi_scale_score<Eigen::VectorXd>(const Eigen::VectorXd& x
     return exp(-2 * log(_sigma0)) * pow(x.array() - _mu0, 2) - 1;
 }
 
+std::string Normal::get_name() const {
+    return "Normal";
+}
+
+std::string Normal::get_z_name() const {
+    return "mu0: " + std::to_string(round(_mu0*10000)/10000) + ", sigma0: " + std::to_string(round(_sigma0*10000)/10000);
+}
+
 std::optional<double> Normal::get_mu0() const {
     return _mu0;
 }

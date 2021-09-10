@@ -76,9 +76,21 @@ public:
      */
     [[nodiscard]] std::function<double(double)> get_itransform() const;
 
-    virtual std::optional<double> get_mu0() const;
+    /**
+     * @brief Get the name of the distribution family for the get_z_priors_names() method of LatentVariables
+     * @return Name of the distribution family
+     */
+    [[nodiscard]] virtual std::string get_name() const;
 
-    virtual std::optional<double> get_loc0() const;
+    /**
+     * @brief Get the description of the parameters of the distribution family for the get_z_priors_names() method of LatentVariables
+     * @return Description of the parameters of the distribution family
+     */
+    [[nodiscard]] virtual std::string get_z_name() const;
+
+    [[nodiscard]] virtual std::optional<double> get_mu0() const;
+
+    [[nodiscard]] virtual std::optional<double> get_loc0() const;
 
 private:
     /**

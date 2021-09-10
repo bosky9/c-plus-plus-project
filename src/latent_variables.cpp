@@ -25,8 +25,24 @@ void LatentVariable::plot_z(double width, double height) {
     }
 }
 
+std::string LatentVariable::get_name() const {
+    return _name;
+}
+
 Family LatentVariable::get_prior() const {
     return _prior;
+}
+
+double LatentVariable::get_start() const {
+    return _start;
+}
+
+std::optional<double> LatentVariable::get_value() const {
+    return _value;
+}
+
+Family LatentVariable::get_q() const {
+    return _q;
 }
 
 void LatentVariable::set_prior(const Family& prior) {
@@ -110,4 +126,78 @@ void LatentVariables::adjust_prior(const std::vector<size_t>& index, const Famil
         if (auto loc0 = _z_list.at(item).get_prior().get_loc0())
             _z_list.at(item).set_start(loc0.value());
     }
+}
+
+std::vector<std::string> LatentVariables::get_z_names() const {
+    std::vector<std::string> names;
+    for (const LatentVariable& z : _z_list)
+        names.push_back(z.get_name());
+    return names;
+}
+
+std::vector<Family> LatentVariables::get_z_priors() const {
+    std::vector<Family> priors;
+    for (const LatentVariable& z : _z_list)
+        priors.push_back(z.get_prior());
+    return priors;
+}
+
+std::pair<std::vector<std::string>,std::vector<std::string>> LatentVariables::get_z_priors_names() const {
+    std::vector<Family> priors = get_z_priors();
+    std::vector<std::string> prior_names;
+    std::vector<std::string> prior_z_names;
+    for (const Family& prior : priors) {
+        prior_names.push_back(prior.get_name());
+        prior_z_names.push_back(prior.get_z_name());
+    }
+    return {prior_names, prior_z_names};
+}
+
+std::vector<std::function<double(double)>> LatentVariables::get_z_transforms() const {
+    std::vector<std::function<double(double)>> transforms;
+    for (const LatentVariable& z : _z_list)
+        transforms.push_back(z.get_prior().get_transform());
+    return transforms;
+}
+
+std::vector<std::string> LatentVariables::get_z_transforms_names() const {
+    std::vector<std::string> transforms;
+    for (const LatentVariable& z : _z_list)
+        transforms.push_back(z.get_prior().get_transform_name());
+    return transforms;
+}
+
+Eigen::VectorXd LatentVariables::get_z_starting_values(bool transformed) const {
+    std::vector<std::function<double(double)>> transforms = get_z_transforms();
+    Eigen::VectorXd values(_z_list.size());
+    for (size_t i{0}; i < _z_list.size(); i++) {
+        values(i) = transformed ? transforms.at(i)(_z_list.at(i).get_start()) : _z_list.at(i).get_start();
+    }
+    return values;
+}
+
+Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
+    assert(_estimated);
+    std::vector<std::function<double(double)>> transforms = get_z_transforms();
+    Eigen::VectorXd values(_z_list.size());
+    for (size_t i{0}; i < _z_list.size(); i++) {
+        assert(_z_list.at(i).get_value());
+        values(i) = transformed ? transforms.at(i)(_z_list.at(i).get_value().value()) : _z_list.at(i).get_value().value();
+    }
+    return values;
+}
+
+std::vector<Family> LatentVariables::get_z_approx_dist() const {
+    std::vector<Family> dists;
+    for (const LatentVariable& z : _z_list)
+        dists.push_back(z.get_q());
+    return dists;
+}
+
+std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
+    std::vector<Family> approx_dists = get_z_approx_dist();
+    std::vector<std::string> q_list(approx_dists.size());
+    for (const Family& approx : approx_dists)
+        q_list.emplace_back((approx.get_name() == "Normal") ? "Normal" : "Approximate distribution not detected");
+    return q_list;
 }

@@ -238,5 +238,9 @@ public:
             return vi_scale_score(x);
     }
 
+    [[nodiscard]] std::string get_name() const override;
+
+    [[nodiscard]] std::string get_z_name() const override;
+
     [[nodiscard]] std::optional<double> get_mu0() const override;
 };
