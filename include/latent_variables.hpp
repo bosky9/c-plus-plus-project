@@ -3,6 +3,7 @@
 #include "covariances.hpp"
 #include "families/family.hpp"
 #include "matplotlibcpp.hpp"
+#include "multivariate_normal.hpp"
 
 #include <Eigen/Core>
 #include <map>
@@ -46,6 +47,8 @@ public:
      */
     void plot_z(double width = 15.0, double height = 5.0);
 
+    [[nodiscard]] std::string get_method() const;
+
     [[nodiscard]] std::string get_name() const;
 
     [[nodiscard]] Family get_prior() const;
@@ -53,6 +56,8 @@ public:
     [[nodiscard]] std::optional<std::vector<double>> get_sample() const;
 
     [[nodiscard]] double get_start() const;
+
+    [[nodiscard]] std::optional<double> get_std() const;
 
     [[nodiscard]] std::optional<double> get_value() const;
 
@@ -143,13 +148,13 @@ public:
     [[nodiscard]] std::vector<std::string> get_z_approx_dist_names() const;
 
     void set_z_values(const std::vector<double>& values, const std::string& method,
-                      const std::optional<std::vector<double>>& stds    = std::nullopt,
+                      const std::optional<std::vector<double>>& stds                 = std::nullopt,
                       const std::optional<std::vector<std::vector<double>>>& samples = std::nullopt);
 
     void set_z_starting_values(const std::vector<double>& values);
 
-    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, double width = 15.0,
-                double height = 5.0, int loc = 1);
+    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5,
+                int loc = 1);
 
     void trace_plot(size_t width = 15, size_t height = 15);
 };

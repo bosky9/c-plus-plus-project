@@ -15,8 +15,7 @@
 #include <string> // std::stod
 #include <vector>
 
-#define WITHOUT_NUMPY
-#ifndef WITHOUT_NUMPY
+#ifdef WITHOUT_NUMPY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
@@ -146,7 +145,7 @@ namespace matplotlibcpp {
             }
 
         private:
-#ifndef WITHOUT_NUMPY
+#ifdef WITHOUT_NUMPY
 #if PY_MAJOR_VERSION >= 3
 
             void* import_numpy() {
@@ -185,7 +184,7 @@ namespace matplotlibcpp {
                 PySys_SetArgv(argc, (char**) (argv));
 #endif
 
-#ifndef WITHOUT_NUMPY
+#ifdef WITHOUT_NUMPY
                 import_numpy(); // initialize numpy C-API
 #endif
 
@@ -285,7 +284,7 @@ namespace matplotlibcpp {
                 s_python_function_subplots_adjust = safe_import(pymod, "subplots_adjust");
                 s_python_function_rcparams        = PyObject_GetAttrString(pymod, "rcParams");
                 s_python_function_spy             = PyObject_GetAttrString(pymod, "spy");
-#ifndef WITHOUT_NUMPY
+#ifdef WITHOUT_NUMPY
                 s_python_function_imshow = safe_import(pymod, "imshow");
 #endif
                 s_python_empty_tuple = PyTuple_New(0);
@@ -339,7 +338,7 @@ namespace matplotlibcpp {
 
     namespace detail {
 
-#ifndef WITHOUT_NUMPY
+#ifdef WITHOUT_NUMPY
         // Type selector for numpy array conversion
         template<typename T>
         struct select_npy_type {
@@ -514,7 +513,7 @@ namespace matplotlibcpp {
 
 // TODO - it should be possible to make this work by implementing
 // a non-numpy alternative for `detail::get_2darray()`.
-#ifndef WITHOUT_NUMPY
+#ifdef WITHOUT_NUMPY
     template<typename Numeric>
     void plot_surface(const std::vector<::std::vector<Numeric>>& x, const std::vector<::std::vector<Numeric>>& y,
                       const std::vector<::std::vector<Numeric>>& z,
@@ -953,7 +952,7 @@ namespace matplotlibcpp {
         return res;
     }
 
-#ifndef WITHOUT_NUMPY
+#ifdef WITHOUT_NUMPY
     namespace detail {
 
         inline void imshow(void* ptr, const NPY_TYPES type, const int rows, const int columns, const int colors,

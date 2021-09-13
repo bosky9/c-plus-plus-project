@@ -20,6 +20,10 @@ void LatentVariable::plot_z(double width, double height) {
     }
 }
 
+std::string LatentVariable::get_method() const {
+    return _method;
+}
+
 std::string LatentVariable::get_name() const {
     return _name;
 }
@@ -34,6 +38,10 @@ std::optional<std::vector<double>> LatentVariable::get_sample() const {
 
 double LatentVariable::get_start() const {
     return _start;
+}
+
+std::optional<double> LatentVariable::get_std() const {
+    return _std;
 }
 
 std::optional<double> LatentVariable::get_value() const {
@@ -233,6 +241,47 @@ void LatentVariables::set_z_starting_values(const std::vector<double>& values) {
     }
 }
 
+void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width, size_t height, int loc) {
+    plt::figure_size(width, height);
+    for (size_t z = 0; z < _z_list.size(); z++) {
+        assert(!_z_list[z].get_sample().has_value() ||
+               !(_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value()) &&
+                       "No information on latent variable to plot!");
+        if (!indices.has_value() ||
+            std::find(indices.value().begin(), indices.value().end(), z) == indices.value().end()) {
+            std::function<double(double)> transform = _z_list[z].get_prior().get_transform();
+            if (_z_list[z].get_sample().has_value()) {
+                std::vector<double> x{_z_list[z].get_sample().value()};
+                std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
+                plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), x);
+            } else if (_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value()) {
+                if (_z_list[z].get_prior().get_transform_name() == "") {
+                    Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(
+                            100, _z_list[z].get_value().value() - _z_list[z].get_std().value() * 3.5,
+                            _z_list[z].get_value().value() + _z_list[z].get_std().value() * 3.5);
+                    std::vector<double> x_v{&x[0], x.data()};
+                    Eigen::VectorXd y = Mvn::pdf(x, _z_list[z].get_value().value(), _z_list[z].get_std().value());
+                    std::vector<double> y_v{&y[0], y.data()};
+                    plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), x_v, y_v);
+                } else {
+                    Eigen::VectorXd sims{
+                            Mvn::random(_z_list[z].get_value().value(), _z_list[z].get_std().value(), 100000)};
+                    std::vector<double> sims_v{&sims[0], sims.data()};
+                    std::transform(sims_v.begin(), sims_v.end(), sims_v.begin(),
+                                   [transform](double n) { return transform(n); });
+                    plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), sims_v);
+                }
+            }
+        }
+    }
+    plt::xlabel("Value");
+    plt::ylabel("Frequency");
+    plt::title("Latent Variable Plot");
+    plt::legend(std::map<std::string, std::string>{{"loc", "upper right"}});
+    plt::save("../data/plot_z.png");
+    plt::show();
+}
+
 void LatentVariables::trace_plot(size_t width, size_t height) {
     assert(_z_list[0].get_sample().has_value() && "No samples to plot!");
     plt::figure_size(width, height);
@@ -296,5 +345,6 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
             }
         }
     }
-    plt::show();
+    plt::save("../data/trace_plot.png");
+    // plt::show();
 }
