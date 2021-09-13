@@ -8,8 +8,8 @@
 #include <utility>
 #include <vector>
 
-LatentVariable::LatentVariable(const std::string& name, const Family& prior, const Family& q)
-    : _name{name}, _prior{prior}, _transform{prior.get_transform()}, _q{q} {}
+LatentVariable::LatentVariable(std::string name, const Family& prior, Family q)
+    : _name{std::move(name)}, _prior{prior}, _transform{prior.get_transform()}, _q{std::move(q)} {}
 
 void LatentVariable::plot_z(double width, double height) {
     assert(_sample || (_value && _std));
@@ -53,7 +53,7 @@ void LatentVariable::set_start(double start) {
 }
 
 
-LatentVariables::LatentVariables(const std::string& model_name) : _model_name{model_name} {
+LatentVariables::LatentVariables(std::string model_name) : _model_name{std::move(model_name)} {
     _z_list    = {};
     _z_indices = {};
 }
@@ -97,8 +97,8 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
     // Initialize indices vector
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "(");
-    for (size_t d{0}; d < dim.size(); d++) {
-        size_t span           = std::accumulate(dim.begin() + d + 1, dim.end(), 1, std::multiplies<>());
+    for (Eigen::Index d{0}; d < dim.size(); d++) {
+        Eigen::Index span     = std::accumulate(dim.begin() + d + 1, dim.end(), 1, std::multiplies<>());
         std::string separator = (d == dim.size() - 1) ? "," : ")";
         for (size_t index{0}; index < indices_dim; index++)
             indices.at(index) += std::to_string(index / span) + separator;
@@ -112,7 +112,7 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
 
 void LatentVariables::adjust_prior(const std::vector<size_t>& index, const Family& prior) {
     for (size_t item : index) {
-        assert(item < 0 || item > _z_list.size() - 1);
+        assert(item > _z_list.size() - 1);
         _z_list.at(item).set_prior(prior);
         if (auto mu0 = _z_list.at(item).get_prior().get_mu0())
             _z_list.at(item).set_start(mu0.value());
@@ -163,7 +163,7 @@ std::vector<std::string> LatentVariables::get_z_transforms_names() const {
 Eigen::VectorXd LatentVariables::get_z_starting_values(bool transformed) const {
     std::vector<std::function<double(double)>> transforms = get_z_transforms();
     Eigen::VectorXd values(_z_list.size());
-    for (size_t i{0}; i < _z_list.size(); i++) {
+    for (Eigen::Index i{0}; i < _z_list.size(); i++) {
         values(i) = transformed ? transforms.at(i)(_z_list.at(i).get_start()) : _z_list.at(i).get_start();
     }
     return values;
@@ -173,7 +173,7 @@ Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
     assert(_estimated);
     std::vector<std::function<double(double)>> transforms = get_z_transforms();
     Eigen::VectorXd values(_z_list.size());
-    for (size_t i{0}; i < _z_list.size(); i++) {
+    for (Eigen::Index i{0}; i < _z_list.size(); i++) {
         assert(_z_list.at(i).get_value());
         values(i) =
                 transformed ? transforms.at(i)(_z_list.at(i).get_value().value()) : _z_list.at(i).get_value().value();
@@ -196,7 +196,7 @@ std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
     return q_list;
 }
 
-void LatentVariables::trace_plot(double width, double height) {
+void LatentVariables::trace_plot(size_t width, size_t height) {
     assert(_z_list[0].get_sample().has_value() && "No samples to plot!");
     plt::figure_size(width, height);
     // FIXME: Non esiste una funzione plot in cui passare il colore come tupla di 3 valori (solo scatter_colored)
@@ -216,7 +216,7 @@ void LatentVariables::trace_plot(double width, double height) {
         std::vector<double> chain = _z_list[i].get_sample().value();
         for (size_t j = 0; j < 4; j++) {
             size_t iteration = i * 4 + j + 1;
-            plt::subplot(_z_list.size(), 4, iteration);
+            plt::subplot(static_cast<long>(_z_list.size()), 4, static_cast<long>(iteration));
             if (iteration >= 1 && iteration <= _z_list.size() * 4 + 1) {
                 std::function<double(double)> transform = _z_list[i].get_prior().get_transform();
                 if (iteration % 4 == 1) {
@@ -239,7 +239,7 @@ void LatentVariables::trace_plot(double width, double height) {
                     std::vector<double> indices(chain.size());
                     std::iota(indices.begin(), indices.end(), 1);
                     std::vector<double> result(chain.size());
-                    std::transform(x.begin(), x.end(), indices.begin(), result.begin(), std::divides<double>());
+                    std::transform(x.begin(), x.end(), indices.begin(), result.begin(), std::divides<>());
                     plt::plot(x, palette[i]);
                     if (iteration == 3)
                         plt::title("Cumulative Average");
@@ -247,8 +247,11 @@ void LatentVariables::trace_plot(double width, double height) {
                     std::vector<double> x(9);
                     std::iota(x.begin(), x.end(), 1);
                     std::vector<double> y(9);
-                    for (size_t lag = 1; lag < 10; lag++)
-                        y[lag - 1] = acf(Eigen::VectorXd::Map(chain.data(), chain.size()), lag);
+                    for (size_t lag = 1; lag < 10; lag++) {
+                        Eigen::VectorXd eigen_chain =
+                                Eigen::VectorXd::Map(chain.data(), static_cast<Eigen::Index>(chain.size()));
+                        y[lag - 1] = acf(eigen_chain, lag);
+                    }
                     plt::bar(x, y, palette[i]);
                     if (iteration == 4)
                         plt::title("ACF Plot");

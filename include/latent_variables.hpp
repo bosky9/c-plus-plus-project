@@ -37,7 +37,7 @@ public:
      * @param prior The prior for the latent variable, e.g. Normal(0,1)
      * @param q The variational distribution for the latent variable, e.g. Normal(0,1)
      */
-    LatentVariable(const std::string& name, const Family& prior, const Family& q);
+    LatentVariable(std::string name, const Family& prior, Family q);
 
     /**
      * @brief Function that plots information about the latent variable
@@ -81,7 +81,7 @@ public:
      * Constructor for LatentVariables
      * @param model_name The name of the model
      */
-    LatentVariables(const std::string& model_name);
+    LatentVariables(std::string model_name);
 
     /**
      * @brief Overload of the stream operation
@@ -143,5 +143,5 @@ public:
     void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, double width = 15.0,
                 double height = 5.0, int loc = 1);
 
-    void trace_plot(double width = 15.0, double height = 15.0);
+    void trace_plot(size_t width = 15, size_t height = 15);
 };

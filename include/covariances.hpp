@@ -1,3 +1,5 @@
+#pragma once
+
 #include <algorithm>
 #include <cassert>
 #include <iterator>
@@ -31,9 +33,9 @@ T cov(const Eigen::Vector<T, N>& x, size_t lag = 0) {
  * @param lag Index to split the array into two arrays with equal sizes
  * @return The sample autocorrelation function of the array x
  */
-// template<typename T, int N>
-double acf(const Eigen::VectorXd& x, size_t lag = 0) {
-    //    static_assert(std::is_floating_point<T>::value, "acf accepts only vector of float or double");
+template<typename T, int N>
+double acf(const Eigen::Vector<T, N>& x, size_t lag = 0) {
+    static_assert(std::is_floating_point<T>::value, "acf accepts only vector of float or double");
     return cov(x, lag) / cov(x);
 }
 
