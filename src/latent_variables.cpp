@@ -52,6 +52,21 @@ void LatentVariable::set_start(double start) {
     _start = start;
 }
 
+void LatentVariable::set_method(const std::string& method) {
+    _method = method;
+}
+
+void LatentVariable::set_value(double value) {
+    _value = value;
+}
+
+void LatentVariable::set_std(double std) {
+    _std = std;
+}
+
+void LatentVariable::set_sample(const std::vector<double>& sample) {
+    _sample = sample;
+}
 
 LatentVariables::LatentVariables(std::string model_name) : _model_name{std::move(model_name)} {
     _z_list    = {};
@@ -194,6 +209,28 @@ std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
     for (const Family& approx : approx_dists)
         q_list.emplace_back((approx.get_name() == "Normal") ? "Normal" : "Approximate distribution not detected");
     return q_list;
+}
+
+void LatentVariables::set_z_values(const std::vector<double>& values, const std::string& method,
+                                   const std::optional<std::vector<double>>& stds,
+                                   const std::optional<std::vector<std::vector<double>>>& samples) {
+    assert(values.size() == _z_list.size());
+    for (size_t i{0}; i < _z_list.size(); i++) {
+        _z_list.at(i).set_method(method);
+        _z_list.at(i).set_value(values.at(i));
+        if (stds)
+            _z_list.at(i).set_std(stds.value().at(i));
+        if (samples)
+            _z_list.at(i).set_sample(samples.value().at(i));
+    }
+    _estimated = true;
+}
+
+void LatentVariables::set_z_starting_values(const std::vector<double>& values) {
+    assert(values.size() == _z_list.size());
+    for (size_t i{0}; i < _z_list.size(); i++) {
+        _z_list.at(i).set_start(values.at(i));
+    }
 }
 
 void LatentVariables::trace_plot(size_t width, size_t height) {
