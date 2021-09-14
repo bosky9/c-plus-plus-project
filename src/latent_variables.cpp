@@ -8,9 +8,8 @@
 #include <utility>
 #include <vector>
 
-LatentVariable::LatentVariable(std::string name, const Family& prior, Family q)
-    : _name{std::move(name)}, _index{0}, _prior{prior}, _transform{prior.get_transform()}, _start{0.0}, _q{std::move(
-                                                                                                                q)} {}
+LatentVariable::LatentVariable(std::string name, const Family& prior, const Family& q)
+    : _name{std::move(name)}, _index{0}, _prior{prior}, _transform{prior.get_transform()}, _start{0.0}, _q{q} {}
 
 void LatentVariable::plot_z(size_t width, size_t height) {
     assert((_sample.has_value() || (_value.has_value() && _std.has_value())) &&

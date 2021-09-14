@@ -38,7 +38,7 @@ public:
      * @param prior The prior for the latent variable, e.g. Normal(0,1)
      * @param q The variational distribution for the latent variable, e.g. Normal(0,1)
      */
-    LatentVariable(std::string name, const Family& prior, Family q);
+    LatentVariable(std::string name, const Family& prior, const Family& q);
 
     /**
      * @brief Function that plots information about the latent variable
