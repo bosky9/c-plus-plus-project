@@ -3,10 +3,10 @@
 #include <chrono>
 #include <random>
 
-Mvn::Mvn(const Eigen::VectorXd& mu, const Eigen::MatrixXd& s) : _mean{mu}, _sigma{s} {}
+Mvn::Mvn(Eigen::VectorXd mu, const Eigen::MatrixXd& s) : _mean{std::move(mu)}, _sigma{s} {}
 
 double Mvn::pdf(const Eigen::VectorXd& x) const {
-    double n        = static_cast<double>(x.size());
+    auto n          = static_cast<double>(x.size());
     double sqrt2pi  = std::sqrt(2 * M_PI);
     double quadform = (x - _mean).transpose() * _sigma.inverse() * (x - _mean);
     double norm     = std::pow(sqrt2pi, -n) * std::pow(_sigma.determinant(), -0.5);

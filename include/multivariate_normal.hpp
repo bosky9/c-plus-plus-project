@@ -10,13 +10,37 @@ public:
     Eigen::VectorXd _mean;
     Eigen::MatrixXd _sigma;
 
-    Mvn(const Eigen::VectorXd& mu, const Eigen::MatrixXd& s);
+    /**
+     * @brief Constructor for Multivariate Normal distribution
+     * @param mu Vector of means
+     * @param s Matrix of scales
+     */
+    Mvn(Eigen::VectorXd mu, const Eigen::MatrixXd& s);
+
+    /**
+     * @brief Compute the PDF of the distribution
+     * @param x Vector of indices
+     * @return PDF value
+     */
     [[nodiscard]] double pdf(const Eigen::VectorXd& x) const;
+
+    /**
+     * @brief Returns a random sample from the distribution
+     * @param nr_iterations Number of iterations
+     * @return Random sample from the distribution
+     */
     [[nodiscard]] Eigen::VectorXd sample(unsigned int nr_iterations = 20) const;
 
+    /**
+     * @brief Compute the PDF of a normal distribution (like scipy.stats.norm.pdf)
+     * @param x Vector of indices
+     * @param mean Mean
+     * @param sigma Scale
+     * @return Vector of PDF values in x
+     */
     static Eigen::VectorXd pdf(const Eigen::VectorXd& x, double mean = 0.0, double sigma = 1.0);
 
-    // @Todo: consider a template approach
+    // @TODO: Consider a template approach
     /**
      * @brief Compute the logpdf of a normal distribution (like scipy.stats.norm.logpdf)
      * @param x Vector of indexes

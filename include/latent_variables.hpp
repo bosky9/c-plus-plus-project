@@ -19,13 +19,13 @@ namespace plt = matplotlibcpp;
 class LatentVariable final {
 private:
     std::string _name;                        ///< Name of the latent variable
-    size_t _index = 0;                        ///< Index of the latent variable
+    size_t _index;                            ///< Index of the latent variable
     Family _prior;                            ///< The prior for the latent variable, e.g. Normal(0,1)
     std::function<double(double)> _transform; ///< The transform function of the prior
-    double _start = 0.0;
+    double _start;                            ///< Starting value
     Family _q; ///< The variational distribution for the latent variable, e.g. Normal(0,1)
     // TODO: I seguenti attributi non sono dichiarati nella classe Python ma usate in LatentVariables
-    std::string _method                        = "";
+    std::string _method;
     std::optional<double> _value               = std::nullopt;
     std::optional<double> _std                 = std::nullopt;
     std::optional<std::vector<double>> _sample = std::nullopt;
@@ -45,34 +45,90 @@ public:
      * @param width The width of the figure to plot
      * @param height The height of the figure to plot
      */
-    void plot_z(double width = 15.0, double height = 5.0);
+    void plot_z(size_t width = 15, size_t height = 5);
 
+    /**
+     * @brief Returns the method's name
+     * @return Method
+     */
     [[nodiscard]] std::string get_method() const;
 
+    /**
+     * @brief Returns the name of the latent variable
+     * @return Name
+     */
     [[nodiscard]] std::string get_name() const;
 
+    /**
+     * @brief Returns the prior for the latent variable
+     * @return Prior
+     */
     [[nodiscard]] Family get_prior() const;
 
+    /**
+     * @brief Returns the sample (optional)
+     * @return Sample
+     */
     [[nodiscard]] std::optional<std::vector<double>> get_sample() const;
 
+    /**
+     * @brief Returns start
+     * @return Start
+     */
     [[nodiscard]] double get_start() const;
 
+    /**
+     * @brief Returns STD (optional)
+     * @return STD
+     */
     [[nodiscard]] std::optional<double> get_std() const;
 
+    /**
+     * @brief Returns value
+     * @return Value
+     */
     [[nodiscard]] std::optional<double> get_value() const;
 
+    /**
+     * @brief Returns the variational distribution for the latent variable
+     * @return Variational distribution
+     */
     [[nodiscard]] Family get_q() const;
 
+    /**
+     * @brief Set prior for the latent vairable
+     * @param prior Prior
+     */
     void set_prior(const Family& prior);
 
+    /**
+     * @brief Set start
+     * @param start Start
+     */
     void set_start(double start);
 
+    /**
+     * @brief Set method's name
+     * @param method Method name
+     */
     void set_method(const std::string& method);
 
+    /**
+     * @brief Set value
+     * @param value Value
+     */
     void set_value(double value);
 
+    /**
+     * @brief Set STD
+     * @param std STD
+     */
     void set_std(double std);
 
+    /**
+     * @brief Set sample
+     * @param sample Sample
+     */
     void set_sample(const std::vector<double>& sample);
 };
 
@@ -83,18 +139,18 @@ public:
  */
 class LatentVariables final {
 private:
-    std::string _model_name;
-    std::vector<LatentVariable> _z_list;
-    std::map<std::string, std::map<std::string, size_t>> _z_indices;
-    bool _estimated                = false;
-    std::string _estimation_method = "";
+    std::string _model_name;                                         ///< Model's name
+    std::vector<LatentVariable> _z_list;                             ///< List of latent variables
+    std::map<std::string, std::map<std::string, size_t>> _z_indices; ///<
+    bool _estimated = false;                                         ///<
+    std::string _estimation_method;                                  ///<
 
 public:
     /**
      * Constructor for LatentVariables
      * @param model_name The name of the model
      */
-    LatentVariables(std::string model_name);
+    explicit LatentVariables(std::string model_name);
 
     /**
      * @brief Overload of the stream operation
@@ -129,32 +185,93 @@ public:
      */
     void adjust_prior(const std::vector<size_t>& index, const Family& prior);
 
+    /**
+     * @brief Returns latent variables' names
+     * @return Latent variables' names
+     */
     [[nodiscard]] std::vector<std::string> get_z_names() const;
 
+    /**
+     * @brief Returns latent variables' priors
+     * @return Latent variables' priors
+     */
     [[nodiscard]] std::vector<Family> get_z_priors() const;
 
+    /**
+     * @brief Returns latent variables' priors' names
+     * @return Latent variables' priors' names
+     */
     [[nodiscard]] std::pair<std::vector<std::string>, std::vector<std::string>> get_z_priors_names() const;
 
+    /**
+     * @brief Returns latent variables' transforms
+     * @return Latent variables' transforms
+     */
     [[nodiscard]] std::vector<std::function<double(double)>> get_z_transforms() const;
 
+    /**
+     * @brief Returns latent variables' transforms' names
+     * @return Latent variables' transforms' names
+     */
     [[nodiscard]] std::vector<std::string> get_z_transforms_names() const;
 
+    /**
+     * @brief Returns latent variables' starting values
+     * @param transformed If values need to be transformed before
+     * @return Latent variablesì starting values
+     */
     [[nodiscard]] Eigen::VectorXd get_z_starting_values(bool transformed = false) const;
 
+    /**
+     * @brief Returns latent variables' values
+     * @param transformed If values need to be transformed before
+     * @return  Latent variables' values
+     */
     [[nodiscard]] Eigen::VectorXd get_z_values(bool transformed = false) const;
 
+    /**
+     * @brief Returns the approximate distributions of the latent variables
+     * @return Approximate distributions
+     */
     [[nodiscard]] std::vector<Family> get_z_approx_dist() const;
 
+    /**
+     * @brief Returns the approximate distributions' names of the latent variables
+     * @return Approximate distributions' names
+     */
     [[nodiscard]] std::vector<std::string> get_z_approx_dist_names() const;
 
+    /**
+     * @brief Set values to latent variables
+     * @param values Vector of values to set
+     * @param method Method name
+     * @param stds Vector of STDs
+     * @param samples Vector of samples
+     */
     void set_z_values(const std::vector<double>& values, const std::string& method,
                       const std::optional<std::vector<double>>& stds                 = std::nullopt,
                       const std::optional<std::vector<std::vector<double>>>& samples = std::nullopt);
 
+    /**
+     * @brief Set starting values to latent variables
+     * @param values Vector of starting values to set
+     */
     void set_z_starting_values(const std::vector<double>& values);
 
+    /**
+     * @brief Plots the latent variables
+     * @param indices Vector of indices to plot
+     * @param width Width of the figure
+     * @param height Height of the figure
+     * @param loc Location of the legend
+     */
     void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5,
-                int loc = 1);
+                std::string loc = "upper right");
 
+    /**
+     * @brief Plot samples
+     * @param width Width of the figure
+     * @param height Height of the figure
+     */
     void trace_plot(size_t width = 15, size_t height = 15);
 };
