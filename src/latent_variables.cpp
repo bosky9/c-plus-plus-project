@@ -8,20 +8,20 @@
 #include <utility>
 #include <vector>
 
-LatentVariable::LatentVariable(std::string name, const Family& prior, const Family& q)
-    : _name{std::move(name)}, _index{0}, _prior{prior}, _transform{prior.get_transform()}, _start{0.0}, _q{q} {}
+LatentVariable::LatentVariable(std::string name, Family& prior, Family& q)
+    : _name{std::move(name)}, _index{0}, _prior{&prior}, _transform{prior.get_transform()}, _start{0.0}, _q{&q} {}
 
 void LatentVariable::plot_z(size_t width, size_t height) {
     assert((_sample.has_value() || (_value.has_value() && _std.has_value())) &&
            "No information on latent variables to plot!");
-    std::function<double(double)> transform = _prior.get_transform();
+    std::function<double(double)> transform = _prior->get_transform();
     if (_sample.has_value()) {
         std::vector<double> x{_sample.value()};
         std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
         plt::named_plot(_method + " estimate of " + _name, x);
     } else if (_value.has_value() && _std.has_value()) {
         plt::figure_size(width, height);
-        if (_prior.get_transform_name().empty()) {
+        if (_prior->get_transform_name().empty()) {
             Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(100, _value.value() - _std.value() * 3.5,
                                                            _value.value() + _std.value() * 3.5);
             std::vector<double> x_v{&x[0], x.data()};
@@ -50,7 +50,7 @@ std::string LatentVariable::get_name() const {
     return _name;
 }
 
-Family LatentVariable::get_prior() const {
+Family* LatentVariable::get_prior() const {
     return _prior;
 }
 
@@ -70,12 +70,12 @@ std::optional<double> LatentVariable::get_value() const {
     return _value;
 }
 
-Family LatentVariable::get_q() const {
+Family* LatentVariable::get_q() const {
     return _q;
 }
 
-void LatentVariable::set_prior(const Family& prior) {
-    _prior = prior;
+void LatentVariable::set_prior(Family& prior) {
+    _prior = &prior;
 }
 
 void LatentVariable::set_start(double start) {
@@ -105,7 +105,7 @@ LatentVariables::LatentVariables(std::string model_name) : _model_name{std::move
 
 inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs) {
     std::vector<std::string> z_names{lvs.get_z_names()};
-    std::vector<Family> priors{lvs.get_z_priors()};
+    //std::vector<Family*> priors{lvs.get_z_priors()};
     std::pair<std::vector<std::string>, std::vector<std::string>> z_priors_names{lvs.get_z_priors_names()};
     std::vector<std::string> prior_names{z_priors_names.first};
     std::vector<std::string> prior_z_names{z_priors_names.second};
@@ -130,15 +130,14 @@ inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs
     return stream;
 }
 
-void LatentVariables::add_z(const std::string& name, const Family& prior, const Family& q, bool index) {
+void LatentVariables::add_z(const std::string& name, Family& prior, Family& q, bool index) {
     LatentVariable lv{name, prior, q};
     _z_list.push_back(std::move(lv));
     if (index)
         _z_indices[name] = {{"start", _z_list.size() - 1}, {"end", _z_list.size() - 1}};
 }
 
-void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, const Family& prior,
-                             const Family& q) {
+void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, Family& prior, Family& q) {
     // Initialize indices vector
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "(");
@@ -155,13 +154,13 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
         add_z(name + " " + index, prior, q, false);
 }
 
-void LatentVariables::adjust_prior(const std::vector<size_t>& index, const Family& prior) {
+void LatentVariables::adjust_prior(const std::vector<size_t>& index, Family& prior) {
     for (size_t item : index) {
         assert(item > _z_list.size() - 1);
         _z_list[item].set_prior(prior);
-        if (auto mu0 = _z_list[item].get_prior().get_mu0())
+        if (auto mu0 = _z_list[item].get_prior()->get_mu0())
             _z_list[item].set_start(mu0.value());
-        if (auto loc0 = _z_list[item].get_prior().get_loc0())
+        if (auto loc0 = _z_list[item].get_prior()->get_loc0())
             _z_list[item].set_start(loc0.value());
     }
 }
@@ -173,20 +172,20 @@ std::vector<std::string> LatentVariables::get_z_names() const {
     return names;
 }
 
-std::vector<Family> LatentVariables::get_z_priors() const {
-    std::vector<Family> priors;
+std::vector<Family*> LatentVariables::get_z_priors() const {
+    std::vector<Family*> priors;
     for (const LatentVariable& z : _z_list)
         priors.push_back(z.get_prior());
     return priors;
 }
 
 std::pair<std::vector<std::string>, std::vector<std::string>> LatentVariables::get_z_priors_names() const {
-    std::vector<Family> priors = get_z_priors();
+    std::vector<Family*> priors = get_z_priors();
     std::vector<std::string> prior_names;
     std::vector<std::string> prior_z_names;
-    for (const Family& prior : priors) {
-        prior_names.push_back(prior.get_name());
-        prior_z_names.push_back(prior.get_z_name());
+    for (const Family* prior : priors) {
+        prior_names.push_back(prior->get_name());
+        prior_z_names.push_back(prior->get_z_name());
     }
     return {prior_names, prior_z_names};
 }
@@ -194,14 +193,14 @@ std::pair<std::vector<std::string>, std::vector<std::string>> LatentVariables::g
 std::vector<std::function<double(double)>> LatentVariables::get_z_transforms() const {
     std::vector<std::function<double(double)>> transforms;
     for (const LatentVariable& z : _z_list)
-        transforms.push_back(z.get_prior().get_transform());
+        transforms.push_back(z.get_prior()->get_transform());
     return transforms;
 }
 
 std::vector<std::string> LatentVariables::get_z_transforms_names() const {
     std::vector<std::string> transforms;
     for (const LatentVariable& z : _z_list)
-        transforms.push_back(z.get_prior().get_transform_name());
+        transforms.push_back(z.get_prior()->get_transform_name());
     return transforms;
 }
 
@@ -225,18 +224,18 @@ Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
     return values;
 }
 
-std::vector<Family> LatentVariables::get_z_approx_dist() const {
-    std::vector<Family> dists;
+std::vector<Family*> LatentVariables::get_z_approx_dist() const {
+    std::vector<Family*> dists;
     for (const LatentVariable& z : _z_list)
         dists.push_back(z.get_q());
     return dists;
 }
 
 std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
-    std::vector<Family> approx_dists = get_z_approx_dist();
+    std::vector<Family*> approx_dists = get_z_approx_dist();
     std::vector<std::string> q_list(approx_dists.size());
-    for (const Family& approx : approx_dists)
-        q_list.emplace_back((approx.get_name() == "Normal") ? "Normal" : "Approximate distribution not detected");
+    for (const Family* approx : approx_dists)
+        q_list.emplace_back((approx->get_name() == "Normal") ? "Normal" : "Approximate distribution not detected");
     return q_list;
 }
 
@@ -271,13 +270,13 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
                        "No information on latent variable to plot!");
         if (!indices.has_value() ||
             std::find(indices.value().begin(), indices.value().end(), z) == indices.value().end()) {
-            std::function<double(double)> transform = _z_list[z].get_prior().get_transform();
+            std::function<double(double)> transform = _z_list[z].get_prior()->get_transform();
             if (_z_list[z].get_sample().has_value()) {
                 std::vector<double> x{_z_list[z].get_sample().value()};
                 std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
                 plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), x);
             } else if (_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value()) {
-                if (_z_list[z].get_prior().get_transform_name().empty()) {
+                if (_z_list[z].get_prior()->get_transform_name().empty()) {
                     Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(
                             100, _z_list[z].get_value().value() - _z_list[z].get_std().value() * 3.5,
                             _z_list[z].get_value().value() + _z_list[z].get_std().value() * 3.5);
@@ -326,7 +325,7 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
             size_t iteration = i * 4 + j + 1;
             plt::subplot(static_cast<long>(_z_list.size()), 4, static_cast<long>(iteration));
             if (iteration >= 1 && iteration <= _z_list.size() * 4 + 1) {
-                std::function<double(double)> transform = _z_list[i].get_prior().get_transform();
+                std::function<double(double)> transform = _z_list[i].get_prior()->get_transform();
                 if (iteration % 4 == 1) {
                     std::vector<double> x{chain};
                     std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
