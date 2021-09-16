@@ -92,6 +92,8 @@ public:
 
     [[nodiscard]] virtual std::optional<double> get_loc0() const;
 
+    [[nodiscard]] virtual Family* clone() const;
+
 private:
     /**
      * @brief Apply the logit transformation

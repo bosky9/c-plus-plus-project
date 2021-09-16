@@ -45,3 +45,7 @@ std::string Flat::get_name() const {
 std::string Flat::get_z_name() const {
     return "n/a (non-informative)";
 }
+
+Family* Flat::clone() const {
+    return new Flat(*this);
+}

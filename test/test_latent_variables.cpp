@@ -6,9 +6,8 @@
 #include <memory>
 
 TEST_CASE("LatentVariable creation", "[LatentVariable]") {
-    // FIXME: Errore nell'eliminazione dei puntatori!
-    Normal* prior{new Normal{0, 3}};
-    Normal* q{new Normal{0, 3}};
+    Normal prior{0, 3};
+    Normal q{0, 3};
     LatentVariable lv{"Constant", prior, q};
 
     SECTION("Get methods") {
@@ -30,7 +29,7 @@ TEST_CASE("LatentVariable creation", "[LatentVariable]") {
         lv.set_method("AR");
         REQUIRE(lv.get_method() == "AR");
         Flat prior{};
-        lv.set_prior(&prior);
+        lv.set_prior(prior);
         REQUIRE(lv.get_prior()->get_name() == "Flat");
         std::vector<double> s{2.0, 5.0, 4.0};
         lv.set_sample(s);
@@ -43,8 +42,8 @@ TEST_CASE("LatentVariable creation", "[LatentVariable]") {
 }
 
 TEST_CASE("Plot latent variable", "[plot_z]") {
-    Normal* prior{new Normal{}};
-    Normal* q{new Normal{}};
+    Normal prior{};
+    Normal q{};
     LatentVariable lv{"Constant", prior, q};
     lv.set_sample({1, 2, 3});
     lv.plot_z(600, 400);
@@ -56,16 +55,16 @@ TEST_CASE("LatentVariables creation", "[LatentVariables]") {
 
 TEST_CASE("Plot latent variables", "[plot_z]") {
     LatentVariables lvs{"ARIMA"};
-    Normal* prior{new Normal{0, 1}};
-    Normal* q{new Normal{1, 2}};
+    Normal prior{0, 1};
+    Normal q{1, 2};
     lvs.create("Constant", std::vector<size_t>{2, 3}, prior, q);
     lvs.set_z_values(std::vector<double>{1, 2, 3, 4, 5, 6}, "BBVI", std::vector<double>{2, 4, 6, 8, 10, 12});
     lvs.plot_z(std::vector<size_t>{0, 1, 2, 3}, 600, 400);
 }
 
 TEST_CASE("Trace plot", "[trace_plot]") {
-    Normal* prior{new Normal{0, 1}};
-    Normal* q{new Normal{1, 2}};
+    Normal prior{0, 1};
+    Normal q{1, 2};
     LatentVariables lvs{"ARIMA"};
     lvs.create("Constant", std::vector<size_t>{1, 2}, prior, q);
     std::vector<std::vector<double>> samples{{1, 2}, {3, 4}};

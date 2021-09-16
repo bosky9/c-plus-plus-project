@@ -1,7 +1,7 @@
 #include "latent_variables.hpp"
 
-LatentVariable::LatentVariable(std::string name, Family* prior, Family* q)
-    : _name{std::move(name)}, _prior{prior}, _index{0}, _transform{prior->get_transform()}, _start{0.0}, _q{q} {}
+LatentVariable::LatentVariable(std::string name, const Family& prior, const Family& q)
+    : _name{std::move(name)}, _prior{prior.clone()}, _index{0}, _transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
 
 void LatentVariable::plot_z(size_t width, size_t height) {
     assert((_sample.has_value() || (_value.has_value() && _std.has_value())) &&
@@ -43,7 +43,7 @@ std::string LatentVariable::get_name() const {
 }
 
 Family* LatentVariable::get_prior() const {
-    return _prior.get();
+    return _prior->clone();
 }
 
 std::optional<std::vector<double>> LatentVariable::get_sample() const {
@@ -63,11 +63,11 @@ std::optional<double> LatentVariable::get_value() const {
 }
 
 Family* LatentVariable::get_q() const {
-    return _q.get();
+    return _q->clone();
 }
 
-void LatentVariable::set_prior(Family* prior) {
-    _prior.reset(prior);
+void LatentVariable::set_prior(const Family& prior) {
+    _prior.reset(prior.clone());
 }
 
 void LatentVariable::set_start(double start) {
@@ -120,14 +120,14 @@ inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs
     return stream;
 }
 
-void LatentVariables::add_z(const std::string& name, Family* prior, Family* q, bool index) {
+void LatentVariables::add_z(const std::string& name, const Family& prior, const Family& q, bool index) {
     LatentVariable lv{name, prior, q};
     _z_list.push_back(std::move(lv));
     if (index)
         _z_indices[name] = {{"start", _z_list.size() - 1}, {"end", _z_list.size() - 1}};
 }
 
-void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, Family* prior, Family* q) {
+void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, const Family& prior, const Family& q) {
     // Initialize indices vector
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "(");
@@ -144,7 +144,7 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
         add_z(name + " " + index, prior, q, false);
 }
 
-void LatentVariables::adjust_prior(const std::vector<size_t>& index, Family* prior) {
+void LatentVariables::adjust_prior(const std::vector<size_t>& index, Family& prior) {
     for (size_t item : index) {
         assert(item > _z_list.size() - 1);
         _z_list[item].set_prior(prior);

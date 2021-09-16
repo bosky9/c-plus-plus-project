@@ -194,3 +194,7 @@ std::string Normal::get_z_name() const {
 std::optional<double> Normal::get_mu0() const {
     return _mu0;
 }
+
+Family* Normal::clone() const {
+    return new Normal(*this);
+}

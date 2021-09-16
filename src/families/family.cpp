@@ -135,3 +135,7 @@ std::optional<double> Family::get_mu0() const {
 std::optional<double> Family::get_loc0() const {
     return {};
 }
+
+Family* Family::clone() const {
+    return new Family(*this);
+}

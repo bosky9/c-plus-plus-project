@@ -243,4 +243,6 @@ public:
     [[nodiscard]] std::string get_z_name() const override;
 
     [[nodiscard]] std::optional<double> get_mu0() const override;
+
+    [[nodiscard]] Family* clone() const override;
 };

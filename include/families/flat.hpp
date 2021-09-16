@@ -64,4 +64,6 @@ public:
     [[nodiscard]] std::string get_name() const override;
 
     [[nodiscard]] std::string get_z_name() const override;
+
+    [[nodiscard]] Family* clone() const override;
 };
