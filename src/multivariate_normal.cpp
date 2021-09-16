@@ -44,6 +44,10 @@ Eigen::VectorXd Mvn::sample(unsigned int nr_iterations) const {
     return Q * x + _mean;
 }
 
+double Mvn::cdf(double x, double mean, double sigma) {
+    return std::erfc(-x / std::sqrt(2)) / 2; // std::erfc is the Complementary Error Function
+}
+
 Eigen::VectorXd Mvn::pdf(const Eigen::VectorXd& x, double mean, double sigma) {
     Eigen::VectorXd result{x};
     double sqrt2pi = std::sqrt(2 * M_PI);

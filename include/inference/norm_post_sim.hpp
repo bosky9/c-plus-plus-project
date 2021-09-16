@@ -1,7 +1,9 @@
+#pragma once
+
 #include <algorithm>
-#include <multivariate_normal.hpp>
 
 #include "headers.hpp"
+#include "multivariate_normal.hpp"
 #include "sample.hpp"
 
 /**

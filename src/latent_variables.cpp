@@ -1,15 +1,7 @@
 #include "latent_variables.hpp"
 
-#include "output/tableprinter.hpp"
-#include <list>
-#include <numeric>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
-
-LatentVariable::LatentVariable(std::string name, Family& prior, Family& q)
-    : _name{std::move(name)}, _index{0}, _prior{&prior}, _transform{prior.get_transform()}, _start{0.0}, _q{&q} {}
+LatentVariable::LatentVariable(std::string name, Family* prior, Family* q)
+    : _name{std::move(name)}, _prior{prior}, _index{0}, _transform{prior->get_transform()}, _start{0.0}, _q{q} {}
 
 void LatentVariable::plot_z(size_t width, size_t height) {
     assert((_sample.has_value() || (_value.has_value() && _std.has_value())) &&
@@ -38,8 +30,8 @@ void LatentVariable::plot_z(size_t width, size_t height) {
     }
     plt::xlabel("Value");
     plt::legend();
-    plt::show();
     plt::save("../data/plot_z_single.png");
+    // plt::show();
 }
 
 std::string LatentVariable::get_method() const {
@@ -51,7 +43,7 @@ std::string LatentVariable::get_name() const {
 }
 
 Family* LatentVariable::get_prior() const {
-    return _prior;
+    return _prior.get();
 }
 
 std::optional<std::vector<double>> LatentVariable::get_sample() const {
@@ -71,11 +63,11 @@ std::optional<double> LatentVariable::get_value() const {
 }
 
 Family* LatentVariable::get_q() const {
-    return _q;
+    return _q.get();
 }
 
-void LatentVariable::set_prior(Family& prior) {
-    _prior = &prior;
+void LatentVariable::set_prior(Family* prior) {
+    _prior.reset(prior);
 }
 
 void LatentVariable::set_start(double start) {
@@ -98,14 +90,12 @@ void LatentVariable::set_sample(const std::vector<double>& sample) {
     _sample = sample;
 }
 
-LatentVariables::LatentVariables(std::string model_name) : _model_name{std::move(model_name)} {
-    _z_list    = {};
-    _z_indices = {};
-}
+LatentVariables::LatentVariables(std::string model_name)
+    : _model_name{std::move(model_name)}, _z_list{}, _z_indices{} {};
 
 inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs) {
     std::vector<std::string> z_names{lvs.get_z_names()};
-    //std::vector<Family*> priors{lvs.get_z_priors()};
+    // std::vector<Family*> priors{lvs.get_z_priors()};
     std::pair<std::vector<std::string>, std::vector<std::string>> z_priors_names{lvs.get_z_priors_names()};
     std::vector<std::string> prior_names{z_priors_names.first};
     std::vector<std::string> prior_z_names{z_priors_names.second};
@@ -130,14 +120,14 @@ inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs
     return stream;
 }
 
-void LatentVariables::add_z(const std::string& name, Family& prior, Family& q, bool index) {
+void LatentVariables::add_z(const std::string& name, Family* prior, Family* q, bool index) {
     LatentVariable lv{name, prior, q};
     _z_list.push_back(std::move(lv));
     if (index)
         _z_indices[name] = {{"start", _z_list.size() - 1}, {"end", _z_list.size() - 1}};
 }
 
-void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, Family& prior, Family& q) {
+void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, Family* prior, Family* q) {
     // Initialize indices vector
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "(");
@@ -154,7 +144,7 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
         add_z(name + " " + index, prior, q, false);
 }
 
-void LatentVariables::adjust_prior(const std::vector<size_t>& index, Family& prior) {
+void LatentVariables::adjust_prior(const std::vector<size_t>& index, Family* prior) {
     for (size_t item : index) {
         assert(item > _z_list.size() - 1);
         _z_list[item].set_prior(prior);
@@ -300,7 +290,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
     plt::title("Latent Variable Plot");
     plt::legend(std::map<std::string, std::string>{{"loc", loc}});
     plt::save("../data/plot_z.png");
-    plt::show();
+    // plt::show();
 }
 
 void LatentVariables::trace_plot(size_t width, size_t height) {
@@ -354,7 +344,8 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
                     std::vector<double> x(9);
                     std::iota(x.begin(), x.end(), 1);
                     std::vector<double> y(9);
-                    for (size_t lag = 1; lag < 10; lag++) {
+                    for (size_t lag = 1; lag < 10 && lag < chain.size();
+                         lag++) { // Added lag < chain.size() to avoid index error in acf()
                         Eigen::VectorXd eigen_chain =
                                 Eigen::VectorXd::Map(chain.data(), static_cast<Eigen::Index>(chain.size()));
                         y[lag - 1] = acf(eigen_chain, lag);

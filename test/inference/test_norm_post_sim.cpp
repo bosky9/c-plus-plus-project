@@ -17,7 +17,7 @@ TEST_CASE("norm_post_sim check sizes", "[norm_post_sim]") {
 }
 
 TEST_CASE("norm_post_sim check normal distribution", "[norm_post_sim]") {
-    size_t size           = 3;
+    Eigen::Index size     = 3;
     Eigen::VectorXd modes = Eigen::VectorXd::Zero(size);
     Eigen::MatrixXd cov_matrix{Eigen::MatrixXd::Identity(size, size)};
     Sample data = norm_post_sim(modes, cov_matrix);

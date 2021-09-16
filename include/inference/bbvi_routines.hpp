@@ -1,3 +1,5 @@
+#pragma once
+
 #include "headers.hpp"
 
 double covariance(const Eigen::VectorXd& x, const Eigen::VectorXd& y);

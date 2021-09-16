@@ -1,15 +1,19 @@
 #pragma once
 
+#include <list>
+#include <map>
+#include <numeric>
+#include <optional>
+#include <tuple>
+#include <utility>
+#include <vector>
+
 #include "covariances.hpp"
 #include "families/family.hpp"
+#include "headers.hpp"
 #include "matplotlibcpp.hpp"
 #include "multivariate_normal.hpp"
-
-#include <Eigen/Core>
-#include <map>
-#include <optional>
-#include <string>
-#include <vector>
+#include "output/tableprinter.hpp"
 
 namespace plt = matplotlibcpp;
 
@@ -20,10 +24,10 @@ class LatentVariable final {
 private:
     std::string _name;                        ///< Name of the latent variable
     size_t _index;                            ///< Index of the latent variable
-    Family* _prior;                           ///< The prior for the latent variable, e.g. Normal(0,1)
+    std::shared_ptr<Family> _prior;           ///< The prior for the latent variable, e.g. Normal(0,1)
     std::function<double(double)> _transform; ///< The transform function of the prior
     double _start;                            ///< Starting value
-    Family* _q;                               ///< The variational distribution for the latent variable, e.g. Normal(0,1)
+    std::shared_ptr<Family> _q; ///< The variational distribution for the latent variable, e.g. Normal(0,1)
     // TODO: I seguenti attributi non sono dichiarati nella classe Python ma usate in LatentVariables
     std::string _method;
     std::optional<double> _value               = std::nullopt;
@@ -38,7 +42,7 @@ public:
      * @param prior The prior for the latent variable, e.g. Normal(0,1)
      * @param q The variational distribution for the latent variable, e.g. Normal(0,1)
      */
-    LatentVariable(std::string name, Family& prior, Family& q);
+    LatentVariable(std::string name, Family* prior, Family* q);
 
     /**
      * @brief Function that plots information about the latent variable
@@ -99,7 +103,7 @@ public:
      * @brief Set prior for the latent vairable
      * @param prior Prior
      */
-    void set_prior(Family& prior);
+    void set_prior(Family* prior);
 
     /**
      * @brief Set start
@@ -167,7 +171,7 @@ public:
      * @param q Which distribution to use for variational approximation
      * @param index Whether to index the variable in the z_indices dictionary
      */
-    void add_z(const std::string& name, Family& prior, Family& q, bool index = true);
+    void add_z(const std::string& name, Family* prior, Family* q, bool index = true);
 
     /**
      * @brief Creates multiple latent variables
@@ -176,14 +180,14 @@ public:
      * @param prior Which prior distribution? E.g. Normal(0,1)
      * @param q Which distribution to use for variational approximation
      */
-    void create(const std::string& name, const std::vector<size_t>& dim, Family& prior, Family& q);
+    void create(const std::string& name, const std::vector<size_t>& dim, Family* prior, Family* q);
 
     /**
      * @brief Adjusts priors for the latent variables
      * @param index Which latent variable index/indices to be altered
      * @param prior Which prior distribution? E.g. Normal(0,1)
      */
-    void adjust_prior(const std::vector<size_t>& index, Family& prior);
+    void adjust_prior(const std::vector<size_t>& index, Family* prior);
 
     /**
      * @brief Returns latent variables' names

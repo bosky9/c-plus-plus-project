@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @brief Sample data returned by many functions
  */

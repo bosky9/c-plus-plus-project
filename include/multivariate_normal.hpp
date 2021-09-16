@@ -18,7 +18,7 @@ public:
     Mvn(Eigen::VectorXd mu, const Eigen::MatrixXd& s);
 
     /**
-     * @brief Compute the PDF of the distribution
+     * @brief Compute the PDF (Probabilty Density Function) of the distribution
      * @param x Vector of indices
      * @return PDF value
      */
@@ -30,6 +30,13 @@ public:
      * @return Random sample from the distribution
      */
     [[nodiscard]] Eigen::VectorXd sample(unsigned int nr_iterations = 20) const;
+
+    /**
+     * @brief Compute the CDF (Cumulative Distribution Function) of the distribution (like scipy.stats.norm.cdf)
+     * @param x Value
+     * @return CDF value
+     */
+    [[nodiscard]] static double cdf(double x, double mean = 0.0, double sigma = 1.0);
 
     /**
      * @brief Compute the PDF of a normal distribution (like scipy.stats.norm.pdf)
