@@ -13,7 +13,7 @@ protected:
     std::string _model_type;
     LatentVariables _z;
     Eigen::VectorXd _z_values;
-    std::vector<double> _results; // FIXME: OptimizeResult type in Python (da scipy) ma viene utilizzato solo l'array
+    Eigen::VectorXd _results; // FIXME: OptimizeResult type in Python (da scipy) ma viene utilizzato solo l'array
                                   // non gli altri oggetti al suo interno
     Eigen::MatrixXd _data;        ///< Predicted values for the time series and length-adjusted time series
     int _index;                   // FIXME: Può essere anche una lista di indici
@@ -35,10 +35,11 @@ protected:
     double _bic;
 
     Results(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
-            const std::string& model_type, const LatentVariables& latent_variables, std::vector<double> results,
+            const std::string& model_type, const LatentVariables& latent_variables, Eigen::VectorXd results,
             Eigen::MatrixXd data, int index, bool multivariate_model,
             std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
-            Eigen::VectorXd ihessian = Eigen::VectorXd::Zero(0), Eigen::VectorXd scores = Eigen::VectorXd::Zero(0),
+            Eigen::VectorXd ihessian = Eigen::VectorXd::Zero(0), Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
+            Eigen::VectorXd scores = Eigen::VectorXd::Zero(0),
             Eigen::VectorXd states = Eigen::VectorXd::Zero(0), Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));
 };
 
@@ -48,10 +49,20 @@ private:
 
 public:
     MLEResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
-               const std::string& model_type, LatentVariables latent_variables, std::vector<double> results,
+               const std::string& model_type, LatentVariables latent_variables, Eigen::VectorXd results,
                Eigen::MatrixXd data, int index, bool multivariate_model,
                std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                Eigen::VectorXd ihessian = Eigen::VectorXd::Zero(0), Eigen::VectorXd scores = Eigen::VectorXd::Zero(0),
                Eigen::VectorXd states     = Eigen::VectorXd::Zero(0),
                Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));
+
+    /**
+     * @brief Overload of the stream operation
+     * @param stream The output stream object
+     * @param mle_results The MLEResults object to stream
+     * @return The output stream
+     */
+    friend std::ostream& operator<<(std::ostream& stream, const MLEResults& mle_results);
+
+    void summary_without_hessian() const;
 };
