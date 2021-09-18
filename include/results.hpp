@@ -5,6 +5,8 @@
 #include "tests/nhst.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <utility>
 
 class Results {
 protected:
@@ -62,6 +64,9 @@ protected:
             Eigen::VectorXd scores = Eigen::VectorXd::Zero(0), Eigen::VectorXd states = Eigen::VectorXd::Zero(0),
             Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));
 
+    static [[nodiscard]] double round_to(double x, uint8_t rounding_points);
+
+public:
     virtual void summary(bool transformed) = 0;
 };
 

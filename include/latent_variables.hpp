@@ -190,6 +190,12 @@ public:
     void adjust_prior(const std::vector<size_t>& index, Family& prior);
 
     /**
+     * @brief Returns list of LatentVariable objects
+     * @return List of LatentVariable objects
+     */
+    [[nodiscard]] std::vector<LatentVariable> get_z_list() const;
+
+    /**
      * @brief Returns latent variables' names
      * @return Latent variables' names
      */

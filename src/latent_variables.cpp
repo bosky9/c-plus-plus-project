@@ -1,7 +1,8 @@
 #include "latent_variables.hpp"
 
 LatentVariable::LatentVariable(std::string name, const Family& prior, const Family& q)
-    : _name{std::move(name)}, _prior{prior.clone()}, _index{0}, _transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
+    : _name{std::move(name)}, _prior{prior.clone()}, _index{0},
+      _transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
 
 void LatentVariable::plot_z(size_t width, size_t height) {
     assert((_sample.has_value() || (_value.has_value() && _std.has_value())) &&
@@ -102,10 +103,10 @@ inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs
     std::vector<std::string> vardist_names{lvs.get_z_approx_dist_names()};
     std::vector<std::string> transforms{lvs.get_z_transforms_names()};
 
-    std::list<std::tuple<std::string, std::string, int>> fmt = {
-            std::make_tuple("Index", "z_index", 8),        std::make_tuple("Latent Variable", "z_name", 25),
-            std::make_tuple("Prior", "z_prior", 15),       std::make_tuple("Prior Hyperparameters", "z_hyper", 25),
-            std::make_tuple("V.I. Dist", "z_vardist", 10), std::make_tuple("Transform", "z_transform", 10)};
+    std::vector<std::tuple<std::string, std::string, int>> fmt = {
+            {"Index", "z_index", 8},        {"Latent Variable", "z_name", 25},
+            {"Prior", "z_prior", 15},       {"Prior Hyperparameters", "z_hyper", 25},
+            {"V.I. Dist", "z_vardist", 10}, {"Transform", "z_transform", 10}};
 
     std::list<std::map<std::string, std::string>> z_row;
     for (size_t z{0}; z < lvs._z_list.size(); z++)
@@ -116,7 +117,7 @@ inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs
                          {"z_vardist", vardist_names[z]},
                          {"z_transform", transforms[z]}});
 
-    stream << TablePrinter(fmt, " ", "=")._call_(z_row);
+    stream << TablePrinter{fmt, " ", "="}(z_row);
     return stream;
 }
 
@@ -127,7 +128,8 @@ void LatentVariables::add_z(const std::string& name, const Family& prior, const 
         _z_indices[name] = {{"start", _z_list.size() - 1}, {"end", _z_list.size() - 1}};
 }
 
-void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, const Family& prior, const Family& q) {
+void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, const Family& prior,
+                             const Family& q) {
     // Initialize indices vector
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "(");
@@ -153,6 +155,10 @@ void LatentVariables::adjust_prior(const std::vector<size_t>& index, Family& pri
         if (auto loc0 = _z_list[item].get_prior()->get_loc0())
             _z_list[item].set_start(loc0.value());
     }
+}
+
+std::vector<LatentVariable> LatentVariables::get_z_list() const {
+    return _z_list;
 }
 
 std::vector<std::string> LatentVariables::get_z_names() const {

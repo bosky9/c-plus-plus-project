@@ -28,6 +28,11 @@ Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_
         _rounding_points = 4;
 }
 
+double Results::round_to(double x, uint8_t rounding_points) {
+    const double shift = pow(10.0, rounding_points);
+    return round(x * shift) / shift;
+}
+
 MLEResults::MLEResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                        const std::string& model_type, const LatentVariables& latent_variables, Eigen::VectorXd results,
                        Eigen::MatrixXd data, std::vector<size_t> index, bool multivariate_model,
@@ -116,44 +121,118 @@ void MLEResults::summary_with_hessian(bool transformed) const {
         double z_temp = _z_values[k] / ses[k];
         t_p_std[k]    = t_z[k] / z_temp;
     }*/
+
+    std::vector<std::vector<std::map<std::string, std::string>>> data;
+    std::vector<std::string> z_names{_z.get_z_names()};
+    for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
+        if (_z.get_z_list()[i].get_prior()->get_transform_name().empty())
+            data.push_back(
+                    {{{"z_name", z_names[i]}},
+                     {{"z_value", std::to_string(round_to(_z.get_z_list()[i].get_prior()->get_transform()(_z_values[i]),
+                                                          _rounding_points))}},
+                     {{"z_std", std::to_string(round_to(t_p_std[i], _rounding_points))}},
+                     {{"z_z", std::to_string(round_to(t_z[i] / t_p_std[i], _rounding_points))}},
+                     {{"z_p", std::to_string(round_to(find_p_value(t_z[i] / t_p_std[i]), _rounding_points))}},
+                     {{"ci", "(" + std::to_string(round_to(t_z[i] - t_p_std[i] * 1.96, _rounding_points)) + " | " +
+                                     std::to_string(round_to(t_z[i] + t_p_std[i] * 1.96, _rounding_points)) + ")"}}});
+        else if (transformed)
+            data.push_back(
+                    {{{"z_name", _z.get_z_list()[i].get_name()}},
+                     {{"z_value", std::to_string(round_to(_z.get_z_list()[i].get_prior()->get_transform()(_z_values[i]),
+                                                          _rounding_points))}}});
+        else
+            data.push_back(
+                    {{{"z_name", (_z.get_z_list()[i].get_prior()->get_itransform_name() + "(" +
+                                  _z.get_z_list()[i].get_name() + ")")}},
+                     {{"z_value", (std::to_string(round_to(_z_values[i], _rounding_points)))}},
+                     {{"z_std", (std::to_string(round_to(t_p_std[i], _rounding_points)))}},
+                     {{"z_z", std::to_string(round_to(t_z[i] / t_p_std[i], _rounding_points))}},
+                     {{"z_p", std::to_string(round_to(find_p_value(t_z[i] / t_p_std[i]), _rounding_points))}},
+                     {{"ci", "(" + std::to_string(round_to(t_z[i] - t_p_std[i] * 1.96, _rounding_points)) + " | " +
+                                     std::to_string(round_to(t_z[i] + t_p_std[i] * 1.96, _rounding_points)) + ")"}}
+
+                    });
+    }
+
+    std::vector<std::tuple<std::string, std::string, int>> fmt{{"Latent Variable", "z_name", 40},
+                                                               {"Estimate", "z_value", 10},
+                                                               {"Std Error", "z_std", 10},
+                                                               {"z", "z_z", 8},
+                                                               {"P>|z|", "z_p", 8},
+                                                               {"95% C.I.", "ci", 25}};
+    std::vector<std::tuple<std::string, std::string, int>> model_fmt{{_model_name, "model_details", 55},
+                                                                     {"", "model_results", 50}};
+
+    std::vector<std::vector<std::map<std::string, std::string>>> model_details;
+    std::string obj_desc;
+    if (_method == "MLE" || _method == "OLS")
+        obj_desc = "Log Likelihood" + std::to_string(round_to(-_objective_object(_z_values), 4));
+    else
+        obj_desc = "Unnormalized Log Posterior" + std::to_string(round_to(-_objective_object(_z_values), 4));
+    model_details.push_back(
+            {{{"model_details", "Dependent Variable: " + _data_name}}, {{"model_results", "Method: " + _method}}});
+    model_details.push_back(
+            {{{"model_details", "Start Date: " + std::to_string(_index[_max_lag])}}, {{"model_results", obj_desc}}});
+    model_details.push_back(
+            {{{"model_details", "End Date: " + std::to_string(_index[-1])}},
+             {{"model_results",
+               "AIC: " + std::to_string(round_to(
+                                 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values), 4))}}});
+    model_details.push_back(
+            {{{"model_details", "Number of observations: " + std::to_string(_data_length)}},
+             {{"model_results",
+               "BIC: " + std::to_string(round_to(2 * _objective_object(_z_values) +
+                                                         static_cast<double>(_z_values.size()) * log(_data_length),
+                                                 4))}}});
+
+    std::cout << TablePrinter{model_fmt, " ", "="}(model_details) << "\n";
+    std::cout << std::string(106, '=') << "\n";
+    std::cout << TablePrinter{fmt, " ", "="}(data) << "\n";
+    std::cout << std::string(106, '=') << "\n";
+    if (_model_name.find("Skewt") != std::string::npos) {
+        std::cout << "WARNING: Skew t distribution is not well-suited for MLE or MAP inference\n";
+        std::cout << "Workaround 1: Use a t-distribution instead for MLE/MAP\n";
+        std::cout << "Workaround 2: Use M-H or BBVI inference for Skew t distribution\n";
+    }
 }
 
 void MLEResults::summary_without_hessian() const {
-    Eigen::VectorXd t_z = _z.get_z_values(true);
+    Eigen::VectorXd t_z{_z.get_z_values(true)}; // Never used
     std::cout << "\nHessian not invertible! Consider a different model specification.\n";
 
     // Initialize data
-    std::list<std::map<std::string, std::string>> data;
-    std::vector<std::string> z_names                        = _z.get_z_names();
-    std::vector<std::function<double(double)>> z_transforms = _z.get_z_transforms();
+    std::vector<std::vector<std::map<std::string, std::string>>> data;
+    std::vector<std::string> z_names{_z.get_z_names()};
     for (Eigen::Index i{0}; i < z_names.size(); i++)
-        data.push_back({{"z_name", z_names.at(i)},
-                        {"z_value", std::to_string(round(z_transforms.at(i)(_results(i)) * 10000) / 10000)}});
+        data.push_back({{{"z_name", z_names[i]}},
+                        {{"z_value",
+                          std::to_string(round_to(_z.get_z_list()[i].get_prior()->get_transform()(_results[i]), 4))}}});
 
     // Create fmts
-    std::list<std::tuple<std::string, std::string, int>> fmt       = {std::make_tuple("Latent Variable", "z_name", 40),
-                                                                std::make_tuple("Estimate", "z_value", 10)};
-    std::list<std::tuple<std::string, std::string, int>> model_fmt = {std::make_tuple(_model_name, "model_details", 55),
-                                                                      std::make_tuple("", "model_results", 50)};
+    std::vector<std::tuple<std::string, std::string, int>> fmt{{"Latent Variable", "z_name", 40},
+                                                               {"Estimate", "z_value", 10}};
+    std::vector<std::tuple<std::string, std::string, int>> model_fmt{{_model_name, "model_details", 55},
+                                                                     {"", "model_results", 50}};
     // Initialize model_details
-    std::list<std::map<std::string, std::string>> model_details;
+    std::vector<std::vector<std::map<std::string, std::string>>> model_details;
     std::string obj_desc = (_method == "MLE") ? "Log Likelihood: " : "Unnormalized Log Posterior: ";
-    obj_desc += std::to_string(round(-_objective_object(_results) * 10000) / 10000);
+    obj_desc += std::to_string(round_to(-_objective_object(_results), 4));
     model_details.push_back(
-            {{"model_details", "Dependent Variable: " + _data_name}, {"model_results", "Method: " + _method}});
+            {{{"model_details", "Dependent Variable: " + _data_name}}, {{"model_results", "Method: " + _method}}});
     model_details.push_back(
-            {{"model_details", "Start Date: " + std::to_string(_index.at(_max_lag))}, {"model_results", obj_desc}});
-    model_details.push_back({{"model_details", "End Date: " + std::to_string(_index.at(_index.size() - 1))},
-                             {"model_results", "AIC: " + std::to_string(_aic)}});
-    model_details.push_back({{"model_details", "Number of observations: " + std::to_string(_data_length)},
-                             {"model_results", "BIC: " + std::to_string(_bic)}});
-    std::cout << "\n"
-              << TablePrinter(model_fmt, " ", "=")._call_(model_details) << "\n"
-              << std::string(106, '=') << "\n"
-              << TablePrinter(fmt, " ", "=")._call_(data) << "\n"
-              << std::string(106, '=');
-    if (_model_name.find("Skewt") != std::string::npos)
-        std::cout << "\nWARNING: Skew t distribution is not well-suited for MLE or MAP inference"
-                     "\nWorkaround 1: Use a t-distribution instead for MLE/MAP"
-                     "\nWorkaround 2: Use M-H or BBVI inference for Skew t distribution";
+            {{{"model_details", "Start Date: " + std::to_string(_index[_max_lag])}}, {{"model_results", obj_desc}}});
+    model_details.push_back({{{"model_details", "End Date: " + std::to_string(_index[-1])}},
+                             {{"model_results", "AIC: " + std::to_string(_aic)}}});
+    model_details.push_back({{{"model_details", "Number of observations: " + std::to_string(_data_length)}},
+                             {{"model_results", "BIC: " + std::to_string(_bic)}}});
+
+    std::cout << TablePrinter{model_fmt, " ", "="}(model_details) << "\n";
+    std::cout << std::string(106, '=') << "\n";
+    std::cout << TablePrinter{fmt, " ", "="}(data) << "\n";
+    std::cout << std::string(106, '=') << "\n";
+    if (_model_name.find("Skewt") != std::string::npos) {
+        std::cout << "WARNING: Skew t distribution is not well-suited for MLE or MAP inference\n";
+        std::cout << "Workaround 1: Use a t-distribution instead for MLE/MAP\n";
+        std::cout << "Workaround 2: Use M-H or BBVI inference for Skew t distribution\n";
+    }
 }

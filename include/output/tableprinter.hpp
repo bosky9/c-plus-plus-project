@@ -1,14 +1,14 @@
 #pragma once
 #include "../headers.hpp"
-#include <tuple>
-#include <map>
-#include <sstream>
 #include <cstdio>
 #include <iomanip>
+#include <map>
+#include <sstream>
+#include <tuple>
 
 //@Todo: find a better way to implement key
 
-template< typename T >
+template<typename T>
 struct is_map_str_int final {
     static const bool value = false;
 };
@@ -18,8 +18,8 @@ struct is_map_str_int<std::map<std::basic_string<char>, double>> final {
     static const bool value = true;
 };
 
-template< typename T >
-struct is_map_str_str final{
+template<typename T>
+struct is_map_str_str final {
     static const bool value = false;
 };
 
@@ -34,6 +34,7 @@ private:
     std::map<std::string, std::string> _head;
     std::map<std::string, std::string> _ul;
     std::map<std::string, int> _width;
+
 public:
     /**
     @param fmt: list of tuple(heading, key, width)
@@ -43,9 +44,8 @@ public:
     @param sep: string, separation between columns
     @param ul: string, character to underline column label, or None for no underlining
     */
-    TablePrinter(const std::list<std::tuple<std::string, std::string, int>>& fmt,
-                 const std::string& sep=" ",
-                 const std::string& ul="");
+    explicit TablePrinter(const std::vector<std::tuple<std::string, std::string, int>>& fmt,
+                          const std::string& sep = " ", const std::string& ul = "");
 
     /**
      * \brief Appends every value of data map in a string; the value is taken using the @var _width key.
@@ -55,11 +55,10 @@ public:
      * @return string, where all the values are appended together
      */
     template<typename T, std::enable_if_t<is_map_str_int<T>::value, int> = 0>
-    std::string row(const T& data); //SFINAE
+    std::string row(const T& data); // SFINAE
 
     template<typename T, std::enable_if_t<is_map_str_str<T>::value, int> = 0>
-    std::string row(const T& data); //SFINAE
+    std::string row(const T& data); // SFINAE
 
-    std::string _call_(const std::list<std::map<std::string /*key*/, std::string>>& dataList);
-
+    std::string operator()(const std::vector<std::vector<std::map<std::string /*key*/, std::string>>>& dataList);
 };
