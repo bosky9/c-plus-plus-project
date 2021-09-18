@@ -4,14 +4,14 @@ Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_
                  const std::string& model_type, const LatentVariables& latent_variables, Eigen::VectorXd results,
                  Eigen::MatrixXd data, std::vector<size_t> index, bool multivariate_model,
                  std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
-                 Eigen::VectorXd ihessian, Eigen::VectorXd signal, Eigen::VectorXd scores, Eigen::VectorXd states,
+                 Eigen::MatrixXd ihessian, Eigen::VectorXd signal, Eigen::VectorXd scores, Eigen::VectorXd states,
                  Eigen::VectorXd states_var)
     : _X_names{std::move(X_names)}, _model_name{std::move(model_name)}, _model_type{model_type}, _z{latent_variables},
       _z_values{latent_variables.get_z_values()}, _results{std::move(results)}, _data{std::move(std::move(data))},
       _index{std::move(index)}, _multivariate_model{multivariate_model},
       _objective_object{std::move(objective_object)}, _method{std::move(method)}, _z_hide{static_cast<uint8_t>(z_hide)},
-      _max_lag{max_lag}, _ihessian{std::move(ihessian)}, _signal{std::move(signal)}, _scores{std::move(scores)},
-      _states{std::move(states)}, _states_var{std::move(states_var)} {
+      _max_lag{max_lag}, _ihessian{std::move(std::move(ihessian))}, _signal{std::move(signal)},
+      _scores{std::move(scores)}, _states{std::move(states)}, _states_var{std::move(states_var)} {
     if (_multivariate_model) {
         _data_length = _data.row(0).size();
     } else {
@@ -37,7 +37,7 @@ MLEResults::MLEResults(std::vector<std::string> data_name, std::vector<std::stri
                        const std::string& model_type, const LatentVariables& latent_variables, Eigen::VectorXd results,
                        Eigen::MatrixXd data, std::vector<size_t> index, bool multivariate_model,
                        std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
-                       int max_lag, Eigen::VectorXd ihessian, Eigen::VectorXd signal, Eigen::VectorXd scores,
+                       int max_lag, Eigen::MatrixXd ihessian, Eigen::VectorXd signal, Eigen::VectorXd scores,
                        Eigen::VectorXd states, Eigen::VectorXd states_var)
     : Results{std::move(data_name),
               std::move(X_names),
@@ -52,7 +52,7 @@ MLEResults::MLEResults(std::vector<std::string> data_name, std::vector<std::stri
               std::move(method),
               z_hide,
               max_lag,
-              std::move(ihessian),
+              std::move(std::move(ihessian)),
               std::move(signal),
               std::move(scores),
               std::move(states),
