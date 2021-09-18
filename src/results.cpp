@@ -122,7 +122,7 @@ void MLEResults::summary_with_hessian(bool transformed) const {
         t_p_std[k]    = t_z[k] / z_temp;
     }*/
 
-    std::vector<std::vector<std::map<std::string, std::string>>> data;
+    std::vector<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names{_z.get_z_names()};
     for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
         if (_z.get_z_list()[i].get_prior()->get_transform_name().empty())
@@ -163,7 +163,7 @@ void MLEResults::summary_with_hessian(bool transformed) const {
     std::vector<std::tuple<std::string, std::string, int>> model_fmt{{_model_name, "model_details", 55},
                                                                      {"", "model_results", 50}};
 
-    std::vector<std::vector<std::map<std::string, std::string>>> model_details;
+    std::vector<std::map<std::string, std::string>> model_details;
     std::string obj_desc;
     if (_method == "MLE" || _method == "OLS")
         obj_desc = "Log Likelihood" + std::to_string(round_to(-_objective_object(_z_values), 4));
@@ -201,7 +201,7 @@ void MLEResults::summary_without_hessian() const {
     std::cout << "\nHessian not invertible! Consider a different model specification.\n";
 
     // Initialize data
-    std::vector<std::vector<std::map<std::string, std::string>>> data;
+    std::vector<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names{_z.get_z_names()};
     for (Eigen::Index i{0}; i < z_names.size(); i++)
         data.push_back({{{"z_name", z_names[i]}},
@@ -214,7 +214,7 @@ void MLEResults::summary_without_hessian() const {
     std::vector<std::tuple<std::string, std::string, int>> model_fmt{{_model_name, "model_details", 55},
                                                                      {"", "model_results", 50}};
     // Initialize model_details
-    std::vector<std::vector<std::map<std::string, std::string>>> model_details;
+    std::vector<std::map<std::string, std::string>> model_details;
     std::string obj_desc = (_method == "MLE") ? "Log Likelihood: " : "Unnormalized Log Posterior: ";
     obj_desc += std::to_string(round_to(-_objective_object(_results), 4));
     model_details.push_back(

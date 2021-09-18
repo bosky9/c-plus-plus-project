@@ -59,7 +59,7 @@ std::string TablePrinter::row(const T& data) {
 }
 
 std::string
-TablePrinter::operator()(const std::vector<std::vector<std::map<std::string /*key*/, std::string>>>& dataList) {
+TablePrinter::operator()(const std::vector<std::map<std::string /*key*/, std::string>>& dataList) {
     std::list<std::string> res;
     for (auto const& dl : dataList)
         res.push_back(row(dl));
