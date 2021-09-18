@@ -60,5 +60,5 @@ public:
     template<typename T, std::enable_if_t<is_map_str_str<T>::value, int> = 0>
     std::string row(const T& data); // SFINAE
 
-    std::string operator()(const std::vector<std::vector<std::map<std::string /*key*/, std::string>>>& dataList);
+    std::string operator()(const std::list<std::map<std::string /*key*/, std::string>>& dataList);
 };
