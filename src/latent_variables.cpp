@@ -4,6 +4,84 @@ LatentVariable::LatentVariable(std::string name, const Family& prior, const Fami
     : _name{std::move(name)}, _prior{prior.clone()}, _index{0},
       _transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
 
+LatentVariable::LatentVariable(const LatentVariable& lv) :
+      _name{lv.get_name()},
+      _index{lv._index},
+      _prior{lv.get_prior()},
+      _transform{lv._transform},
+      _start{lv.get_start()},
+      _q{lv.get_q()},
+      _method{lv.get_method()},
+      _value{lv.get_value()},
+      _std{lv.get_std()},
+      _sample{lv.get_sample()}
+{}
+
+LatentVariable::LatentVariable(LatentVariable&& lv) noexcept {
+    _name = lv.get_name();
+    _index = lv._index;
+    _prior.reset(lv.get_prior());
+    _transform = lv._transform;
+    _start = lv.get_start();
+    _q.reset(lv.get_q());
+    _method = lv.get_method();
+    _value = lv.get_value();
+    _std = lv.get_std();
+    _sample = lv.get_sample();
+    lv._name = nullptr;
+    lv._index = 0;
+    lv._prior = nullptr;
+    lv._transform = {};
+    lv._start = 0;
+    lv._q = nullptr;
+    lv._method = nullptr;
+    lv._value = std::nullopt;
+    lv._std = std::nullopt;
+    lv._sample = std::nullopt;
+}
+
+LatentVariable& LatentVariable::operator=(const LatentVariable& lv) {
+    if (this == &lv)
+        return *this;
+    _name = lv.get_name();
+    _index = lv._index;
+    _prior.reset(lv.get_prior());
+    _transform = lv._transform;
+    _start = lv.get_start();
+    _q.reset(lv.get_q());
+    _method = lv.get_method();
+    _value = lv.get_value();
+    _std = lv.get_std();
+    _sample = lv.get_sample();
+    return *this;
+}
+
+LatentVariable& LatentVariable::operator=(LatentVariable&& lv) noexcept {
+    _name = lv.get_name();
+    _index = lv._index;
+    _prior.reset(lv.get_prior());
+    _transform = lv._transform;
+    _start = lv.get_start();
+    _q.reset(lv.get_q());
+    _method = lv.get_method();
+    _value = lv.get_value();
+    _std = lv.get_std();
+    _sample = lv.get_sample();
+    lv._name = nullptr;
+    lv._index = 0;
+    lv._prior = nullptr;
+    lv._transform = {};
+    lv._start = 0;
+    lv._q = nullptr;
+    lv._method = nullptr;
+    lv._value = std::nullopt;
+    lv._std = std::nullopt;
+    lv._sample = std::nullopt;
+    return *this;
+}
+
+LatentVariable::~LatentVariable() = default;
+
 void LatentVariable::plot_z(size_t width, size_t height) {
     assert((_sample.has_value() || (_value.has_value() && _std.has_value())) &&
            "No information on latent variables to plot!");
@@ -92,7 +170,7 @@ void LatentVariable::set_sample(const std::vector<double>& sample) {
 }
 
 LatentVariables::LatentVariables(std::string model_name)
-    : _model_name{std::move(model_name)}, _z_list{}, _z_indices{} {};
+    : _model_name{std::move(model_name)}, _z_list{}, _z_indices{} {}
 
 inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs) {
     std::vector<std::string> z_names{lvs.get_z_names()};

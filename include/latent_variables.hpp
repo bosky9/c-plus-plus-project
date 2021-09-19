@@ -45,6 +45,37 @@ public:
     LatentVariable(std::string name, const Family& prior, const Family& q);
 
     /**
+     * @brief Copy constructor
+     * @param lv The LatentVariable object to copy
+     */
+    LatentVariable(const LatentVariable& lv);
+
+    /**
+     * @brief Move constructor
+     * @param lv The LatentVariable object to move
+     */
+    LatentVariable(LatentVariable&& lv) noexcept;
+
+    /**
+     * @brief Assignment operator
+     * @param lv The LatentVariable object to assign
+     * @return The self modified object
+     */
+    LatentVariable& operator=(const LatentVariable& lv);
+
+    /**
+     * @brief Move assignment operator
+     * @param lv The LatentVariable object to move
+     * @return The self modified object
+     */
+    LatentVariable& operator=(LatentVariable&& lv) noexcept;
+
+    /**
+     * @brief Destructor
+     */
+    ~LatentVariable();
+
+    /**
      * @brief Function that plots information about the latent variable
      * @param width The width of the figure to plot
      * @param height The height of the figure to plot
