@@ -15,8 +15,6 @@ protected:
     std::string _model_type;
     LatentVariables _z;
     Eigen::VectorXd _z_values;
-    Eigen::VectorXd _results; // FIXME: OptimizeResult type in Python (da scipy) ma viene utilizzato solo l'array
-                              // non gli altri oggetti al suo interno
     Eigen::MatrixXd _data;    ///< Predicted values for the time series and length-adjusted time series
     std::vector<size_t> _index;
     bool _multivariate_model;
@@ -57,7 +55,7 @@ protected:
      * @param states_var
      */
     Results(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
-            const std::string& model_type, const LatentVariables& latent_variables, Eigen::VectorXd results,
+            const std::string& model_type, const LatentVariables& latent_variables,
             Eigen::MatrixXd data, std::vector<size_t> index, bool multivariate_model,
             std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
             Eigen::MatrixXd ihessian = Eigen::MatrixXd::Zero(0, 0), Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
@@ -72,6 +70,8 @@ public:
 
 class MLEResults : Results {
 private:
+    Eigen::VectorXd _results; // FIXME: OptimizeResult type in Python (da scipy) ma viene utilizzato solo l'array
+                              // non gli altri oggetti al suo interno
     double _loglik;
 
     /**

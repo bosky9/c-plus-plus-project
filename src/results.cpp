@@ -1,13 +1,13 @@
 #include "results.hpp"
 
 Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
-                 const std::string& model_type, const LatentVariables& latent_variables, Eigen::VectorXd results,
+                 const std::string& model_type, const LatentVariables& latent_variables,
                  Eigen::MatrixXd data, std::vector<size_t> index, bool multivariate_model,
                  std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                  Eigen::MatrixXd ihessian, Eigen::VectorXd signal, Eigen::VectorXd scores, Eigen::VectorXd states,
                  Eigen::VectorXd states_var)
     : _x_names{std::move(X_names)}, _model_name{std::move(model_name)}, _model_type{model_type}, _z{latent_variables},
-      _z_values{latent_variables.get_z_values()}, _results{std::move(results)}, _data{std::move(std::move(data))},
+      _z_values{latent_variables.get_z_values()}, _data{std::move(std::move(data))},
       _index{std::move(index)}, _multivariate_model{multivariate_model},
       _objective_object{std::move(objective_object)}, _method{std::move(method)}, _z_hide{static_cast<uint8_t>(z_hide)},
       _max_lag{max_lag}, _ihessian{std::move(std::move(ihessian))}, _signal{std::move(signal)},
@@ -22,7 +22,7 @@ Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_
     std::copy(data_name.begin(), data_name.end(), std::ostream_iterator<std::string>(oss, ","));
     _data_name = oss.str();
 
-    if (_model_type == "LLT" || model_type == "LLEV")
+    if (_model_type == "LLT" || _model_type == "LLEV")
         _rounding_points = 10;
     else
         _rounding_points = 4;
@@ -44,7 +44,6 @@ MLEResults::MLEResults(std::vector<std::string> data_name, std::vector<std::stri
               std::move(model_name),
               model_type,
               latent_variables,
-              std::move(results),
               std::move(data),
               std::move(index),
               multivariate_model,
@@ -56,14 +55,16 @@ MLEResults::MLEResults(std::vector<std::string> data_name, std::vector<std::stri
               std::move(signal),
               std::move(scores),
               std::move(states),
-              std::move(states_var)} {
+              std::move(states_var)},
+      _results{std::move(results)}
+{
     if (_method == "MLE" || _method == "OLS") {
         _loglik = -_objective_object(_z_values);
         _aic    = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
-        _bic    = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) + log(_data_length);
+        _bic    = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
     } else if (_method == "PML") {
         _aic = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
-        _bic = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) + log(_data_length);
+        _bic = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
     }
 }
 
@@ -235,4 +236,34 @@ void MLEResults::summary_without_hessian() const {
         std::cout << "Workaround 1: Use a t-distribution instead for MLE/MAP\n";
         std::cout << "Workaround 2: Use M-H or BBVI inference for Skew t distribution\n";
     }
+}
+
+BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
+                         const std::string& model_type, LatentVariables latent_variables, Eigen::MatrixXd data,
+                         int index, bool multivariate_model, std::function<double(Eigen::VectorXd)> objective_object,
+                         std::string method, bool z_hide, int max_lag, Eigen::VectorXd ses, Eigen::VectorXd signal,
+                         Eigen::VectorXd scores, Eigen::VectorXd elbo_records, Eigen::VectorXd states,
+                         Eigen::VectorXd states_var) :
+      Results{std::move(data_name),
+              std::move(X_names),
+              std::move(model_name),
+              model_type,
+              latent_variables,
+              std::move(data),
+              std::move(index),
+              multivariate_model,
+              std::move(objective_object),
+              std::move(method),
+              z_hide,
+              max_lag,
+              std::move(std::move(ses.exp().pow(2).diagonal())),
+              std::move(signal),
+              std::move(scores),
+              std::move(states),
+              std::move(states_var)},
+      _ses{std::move(ses)},
+      _elbo_records{std::move(elbo_records)}
+{
+    _aic = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
+    _bic = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
 }
