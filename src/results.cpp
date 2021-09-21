@@ -524,7 +524,7 @@ void LaplaceResults::summary(bool transformed) {
     })
 
     std::cout << TablePrinter{model_fmt, " ", "="}(model_details) << "\n";
-std::cout << std::string(106, '=') << "\n";
-std::cout << TablePrinter{fmt, " ", "="}(data) << "\n";
-std::cout << std::string(106, '=') << "\n";
+    std::cout << std::string(106, '=') << "\n";
+    std::cout << TablePrinter{fmt, " ", "="}(data) << "\n";
+    std::cout << std::string(106, '=') << "\n";
 }

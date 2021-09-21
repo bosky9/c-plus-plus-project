@@ -270,7 +270,8 @@ public:
 
 class LaplaceResults : Results {
 private:
-    Eigen::MatrixXd _chains;
+    Eigen::MatrixXd _chain;
+    Eigen::MatrixXd _ihessian;
 
     Eigen::VectorXd _mean_est;       ///< Mean values for each parameter
     Eigen::VectorXd _median_est;     ///< Median values for each parameter
