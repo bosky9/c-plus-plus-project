@@ -2,6 +2,4 @@
 
 #include "results.hpp"
 
-TEST_CASE("MLEResults creation", "[MLEResults]") {
-    MLEResults res;
-}
+TEST_CASE("Create MLEResults object", "[MLEResults]") {}
