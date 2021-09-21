@@ -508,20 +508,20 @@ void LaplaceResults::summary(bool transformed) {
 
     model_details.push_back({
         {"model_details", "Dependent Variable: " + _data_name},
-        {"model_results", "Method: " + std::to_string(_method)}
-    })
+        {"model_results", "Method: " + _method}
+    });
     model_details.push_back({
         {"model_details", "Start Date: " + std::to_string(_index[_max_lag])},
-        {"model_results", obj_desc)}
-    })
+        {"model_results", obj_desc}
+    });
     model_details.push_back({
         {"model_details", "End Date: " + std::to_string(_index.back())},
         {"model_results", "AIC: " + std::to_string(_aic)}
-    })
+    });
     model_details.push_back({
         {"model_details", "Number of observations: " + std::to_string(_data_length)},
         {"model_results", "BIC: " + std::to_string(_bic)}
-    })
+    });
 
     std::cout << TablePrinter{model_fmt, " ", "="}(model_details) << "\n";
     std::cout << std::string(106, '=') << "\n";
