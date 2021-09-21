@@ -36,7 +36,7 @@ constexpr bool NSIMS_ODD() {
  * @param cov_matrix Covariances matrix
  * @return A NormPostSimData structure
  */
-Sample norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& cov_matrix) {
+inline Sample norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& cov_matrix) {
     Mvn mul_norm{modes, cov_matrix};
     Eigen::Index modes_len = modes.size();
     Eigen::Matrix<double, NSIMS, Eigen::Dynamic> phi =
