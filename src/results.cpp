@@ -1,5 +1,10 @@
 #include "results.hpp"
 
+#include "inference/sample.hpp"
+#include "inference/norm_post_sim.hpp"
+
+#include <algorithm>
+
 Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                  const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
                  std::vector<size_t> index, bool multivariate_model,
@@ -259,6 +264,111 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
       _ses{std::move(ses)}, _elbo_records{std::move(elbo_records)} {
     _aic = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
     _bic = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
+
+    Sample samp = norm_post_sim(_z_values, _ihessian);
+    _chain = samp.chain;
+    _mean_est = samp.mean_est;
+    _median_est = samp.median_est;
+    _upper_95_est = samp.upper_95_est;
+    _lower_5_est = samp.lower_5_est;
+    _t_chain = _chain;
+    std::vector<Family*> z_priors = _z.get_z_priors();
+    for (size_t k{0}; k < _mean_est.size(); k++) {
+        //_t_chain(k) = z_priors.at(k)->get_transform()(_chain(k));
+        _t_mean_est(k) = z_priors.at(k)->get_transform()(_mean_est(k));
+        _t_median_est(k) = z_priors.at(k)->get_transform()(_median_est(k));
+        _t_upper_95_est(k) = z_priors.at(k)->get_transform()(_upper_95_est(k));
+        _t_lower_5_est(k) = z_priors.at(k)->get_transform()(_lower_5_est(k));
+    }
+}
+
+inline std::ostream& operator<<(std::ostream& stream, const BBVIResults& results) {
+    stream << "BBVI Results Object"
+              "\n=========================="
+              "\nDependent variable: "
+              << results._data_name << "\nRegressors: ";
+    for (const std::string& s : results._x_names)
+        stream << s << " ";
+    stream << "\n=========================="
+              "\nLatent Variable Attributes: "
+              "\n.z : LatentVariables() object"
+              "\n.results : optimizer results"
+              "\n\nImplied Model Attributes: "
+              "\n.aic: Akaike Information Criterion"
+              "\n.bic: Bayesian Information Criterion"
+              "\n.data: Model Data"
+              "\n.index: Model Index";
+    if (results._scores.size() > 0)
+        stream << "\n.scores: Model Scores";
+    if (results._signal.size() > 0)
+        stream << "\n.signal: Model Signal";
+    if (results._states.size() > 0)
+        stream << "\n.states: Model States";
+    if (results._states_var.size() > 0)
+        stream << "\n.states_var: Model State Variances";
+    stream << "\n\nMethods: "
+              "\n.summary() : printed results";
+    return stream;
+}
+
+void BBVIResults::plot_elbo(size_t width, size_t height) const {
+    plt::figure_size(width, height);
+    std::vector<double> elbo_records{&_elbo_records[0], _elbo_records.data()};
+    plt::plot(elbo_records);
+    plt::xlabel("Iterations");
+    plt::ylabel("ELBO");
+    plt::show();
+}
+
+void BBVIResults::summary(bool transformed) {
+    // Initialize data
+    std::list<std::map<std::string, std::string>> data;
+    std::vector<std::string> z_names = _z.get_z_names();
+    if (transformed) {
+        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
+            data.push_back(
+                    {{"z_name", z_names[i]},
+                     {"z_mean", std::to_string(round_to(_t_mean_est(i), _rounding_points))},
+                     {"z_median", std::to_string(round_to(_t_median_est(i), _rounding_points))},
+                     {"ci", "(" + std::to_string(round_to(_t_lower_5_est(i), _rounding_points)) + "|"
+                     + std::to_string(round_to(_t_upper_95_est(i), _rounding_points)) + ")"}
+                    });
+        }
+    } else {
+        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
+            data.push_back(
+                    {{"z_name", z_names[i]},
+                     {"z_mean", std::to_string(round_to(_mean_est(i), _rounding_points))},
+                     {"z_median", std::to_string(round_to(_median_est(i), _rounding_points))},
+                     {"ci", "(" + std::to_string(round_to(_lower_5_est(i), _rounding_points)) + "|"
+                     + std::to_string(round_to(_upper_95_est(i), _rounding_points)) + ")"}
+                    });
+        }
+    }
+    // Create fmts
+    std::vector<std::tuple<std::string, std::string, int>> fmt{{"Latent Variable", "z_name", 40},
+                                                               {"Median", "z_median", 18},
+                                                               {"Mean", "z_mean", 18},
+                                                               {"95% Credibility Interval", "ci", 25}};
+    std::vector<std::tuple<std::string, std::string, int>> model_fmt{{_model_name, "model_details", 55},
+                                                                     {"", "model_results", 50}};
+    // Initialize model_details
+    std::list<std::map<std::string, std::string>> model_details;
+    std::string obj_desc = (_method == "MLE") ? "Log Likelihood: " : "Unnormalized Log Posterior: ";
+    obj_desc += std::to_string(round_to(-_objective_object(_z_values), 4));
+    model_details.push_back(
+            {{"model_details", "Dependent Variable: " + _data_name}, {"model_results", "Method: " + _method}});
+    model_details.push_back(
+            {{"model_details", "Start Date: " + std::to_string(_index[_max_lag])}, {"model_results", obj_desc}});
+    model_details.push_back({{"model_details", "End Date: " + std::to_string(_index[-1])},
+                             {"model_results", "AIC: " + std::to_string(_aic)}});
+    model_details.push_back({{"model_details", "Number of observations: " + std::to_string(_data_length)},
+                             {"model_results", "BIC: " + std::to_string(_bic)}});
+    // Print the summary
+    std::cout << TablePrinter{model_fmt, " ", "="}(model_details) << "\n";
+    std::cout << std::string(106, '=') << "\n";
+    std::cout << TablePrinter{fmt, " ", "="}(data) << "\n";
+    std::cout << std::string(106, '=') << "\n";
 }
 
 std::ostream& operator<<(std::ostream& stream, const BBVIResults& results) {
