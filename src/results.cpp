@@ -262,6 +262,7 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
               std::move(states),
               std::move(states_var)},
       _ses{std::move(ses)}, _elbo_records{std::move(elbo_records)} {
+    _ihessian = ses.array().exp().pow(2).matrix().diagonal();
     _aic = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
     _bic = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
 
@@ -273,7 +274,7 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
     _lower_5_est = samp.lower_5_est;
     _t_chain = _chain;
     std::vector<Family*> z_priors = _z.get_z_priors();
-    for (size_t k{0}; k < _mean_est.size(); k++) {
+    for (Eigen::Index k{0}; k < _mean_est.size(); k++) {
         //_t_chain(k) = z_priors.at(k)->get_transform()(_chain(k));
         _t_mean_est(k) = z_priors.at(k)->get_transform()(_mean_est(k));
         _t_median_est(k) = z_priors.at(k)->get_transform()(_median_est(k));
@@ -370,33 +371,4 @@ void BBVIResults::summary(bool transformed) {
     std::cout << std::string(106, '=') << "\n";
     std::cout << TablePrinter{fmt, " ", "="}(data) << "\n";
     std::cout << std::string(106, '=') << "\n";
-}
-
-std::ostream& operator<<(std::ostream& stream, const BBVIResults& results) {
-    stream << "BBVI Results Object";
-    stream << "\n=========================="
-              "\nDependent variable: "
-           << results._data_name << "\nRegressors: ";
-    for (const std::string& s : results._x_names)
-        stream << s << " ";
-    stream << "\n=========================="
-              "\nLatent Variable Attributes: ";
-    stream << "\n.z : LatentVariables() object";
-    stream << "\n.results : optimizer results";
-    stream << "\n\nImplied Model Attributes: "
-              "\n.aic: Akaike Information Criterion"
-              "\n.bic: Bayesian Information Criterion"
-              "\n.data: Model Data"
-              "\n.index: Model Index";
-    if (results._scores.size() > 0)
-        stream << "\n.scores: Model Scores";
-    if (results._signal.size() > 0)
-        stream << "\n.signal: Model Signal";
-    if (results._states.size() > 0)
-        stream << "\n.states: Model States";
-    if (results._states_var.size() > 0)
-        stream << "\n.states_var: Model State Variances";
-    stream << "\n\nMethods: "
-              "\n.summary() : printed results";
-    return stream;
 }
