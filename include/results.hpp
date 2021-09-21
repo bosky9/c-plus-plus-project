@@ -131,19 +131,19 @@ public:
 
 class BBVIResults : Results {
 private:
+    Eigen::MatrixXd _ihessian;
     Eigen::VectorXd _ses;
     std::vector<double> _elbo_records;
-    Eigen::MatrixXd _chains;
-    Eigen::VectorXd _mean_est;
-    Eigen::VectorXd _median_est;
-    Eigen::VectorXd _upper_95_est;
-    Eigen::VectorXd _lower_5_est;
-
-    Eigen::MatrixXd _t_chains;
-    Eigen::VectorXd _t_mean_est;
-    Eigen::VectorXd _t_median_est;
-    Eigen::VectorXd _t_upper_95_est;
-    Eigen::VectorXd _t_lower_5_est;
+    Eigen::MatrixXd _chain;          ///< Chains for each parameter
+    Eigen::VectorXd _mean_est;       ///< Mean values for each parameter
+    Eigen::VectorXd _median_est;     ///< Median values for each parameter
+    Eigen::VectorXd _upper_95_est;   ///< Upper 95% credibility interval for each parameter
+    Eigen::VectorXd _lower_5_est;    ///< Lower 95% credibility interval for each parameter
+    Eigen::MatrixXd _t_chain;        ///< Transformed chains for each parameter
+    Eigen::VectorXd _t_mean_est;     ///< Transformed mean values for each parameter
+    Eigen::VectorXd _t_median_est;   ///< Transformed median values for each parameter
+    Eigen::VectorXd _t_upper_95_est; ///< Transformed upper 95% credibility interval for each parameter
+    Eigen::VectorXd _t_lower_5_est;  ///< Transformed lower 95% credibility interval for each parameter
 
 public:
     /**
@@ -270,21 +270,8 @@ public:
 
 class LaplaceResults : Results {
 private:
-    uint _data_length;
-
     Eigen::MatrixXd _chains;
-    Eigen::MatrixXd _ihessian;
 
-    Eigen::VectorXd _mean_est;
-    Eigen::VectorXd _median_est;
-    Eigen::VectorXd _upper_95_est;
-    Eigen::VectorXd _lower_5_est;
-
-    Eigen::MatrixXd _t_chains;
-    Eigen::VectorXd _t_mean_est;
-    Eigen::VectorXd _t_median_est;
-    Eigen::VectorXd _t_upper_95_est;
-    Eigen::VectorXd _t_lower_5_est;
 public:
     /**
      * Constructor for LaplaceResults

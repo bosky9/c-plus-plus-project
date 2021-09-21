@@ -262,6 +262,7 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
               std::move(states),
               std::move(states_var)},
       _ses{std::move(ses)}, _elbo_records{std::move(elbo_records)} {
+    _ihessian = ses.array().exp().pow(2).matrix().diagonal();
     _aic = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
     _bic = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
 
@@ -273,7 +274,7 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
     _lower_5_est = samp.lower_5_est;
     _t_chain = _chain;
     std::vector<Family*> z_priors = _z.get_z_priors();
-    for (size_t k{0}; k < _mean_est.size(); k++) {
+    for (Eigen::Index k{0}; k < _mean_est.size(); k++) {
         //_t_chain(k) = z_priors.at(k)->get_transform()(_chain(k));
         _t_mean_est(k) = z_priors.at(k)->get_transform()(_mean_est(k));
         _t_median_est(k) = z_priors.at(k)->get_transform()(_median_est(k));
@@ -366,190 +367,6 @@ void BBVIResults::summary(bool transformed) {
     model_details.push_back({{"model_details", "Number of observations: " + std::to_string(_data_length)},
                              {"model_results", "BIC: " + std::to_string(_bic)}});
     // Print the summary
-    std::cout << TablePrinter{model_fmt, " ", "="}(model_details) << "\n";
-    std::cout << std::string(106, '=') << "\n";
-    std::cout << TablePrinter{fmt, " ", "="}(data) << "\n";
-    std::cout << std::string(106, '=') << "\n";
-}
-
-std::ostream& operator<<(std::ostream& stream, const BBVIResults& results) {
-    stream << "BBVI Results Object";
-    stream << "\n=========================="
-              "\nDependent variable: "
-           << results._data_name << "\nRegressors: ";
-    for (const std::string& s : results._x_names)
-        stream << s << " ";
-    stream << "\n=========================="
-              "\nLatent Variable Attributes: ";
-    stream << "\n.z : LatentVariables() object";
-    stream << "\n.results : optimizer results";
-    stream << "\n\nImplied Model Attributes: "
-              "\n.aic: Akaike Information Criterion"
-              "\n.bic: Bayesian Information Criterion"
-              "\n.data: Model Data"
-              "\n.index: Model Index";
-    if (results._scores.size() > 0)
-        stream << "\n.scores: Model Scores";
-    if (results._signal.size() > 0)
-        stream << "\n.signal: Model Signal";
-    if (results._states.size() > 0)
-        stream << "\n.states: Model States";
-    if (results._states_var.size() > 0)
-        stream << "\n.states_var: Model State Variances";
-    stream << "\n\nMethods: "
-              "\n.summary() : printed results";
-    return stream;
-}
-
-LaplaceResults::LaplaceResults(std::vector<std::string> data_name, std::vector<std::string> X_names,
-                               std::string model_name, const std::string &model_type, LatentVariables latent_variables,
-                               Eigen::MatrixXd data, std::vector<size_t> index, bool multivariate_model,
-                               std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
-                               int max_lag, Eigen::MatrixXd ihessian, Eigen::VectorXd signal, Eigen::VectorXd scores,
-                               Eigen::VectorXd states, Eigen::VectorXd states_var)
-                               : Results{std::move(data_name),
-                                         std::move(X_names),
-                                         std::move(model_name),
-                                         model_type,
-                                         latent_variables,
-                                         std::move(data),
-                                         std::move(index),
-                                         multivariate_model,
-                                         std::move(objective_object),
-                                         std::move(method),
-                                         z_hide,
-                                         max_lag,
-                                         std::move(signal),
-                                         std::move(scores),
-                                         std::move(states),
-                                         std::move(states_var)},
-                                         _ihessian{std::move(ihessian)} {
-    if(_multivariate_model){
-        _data_length = _data.rows();
-        _data_name.push_back(',');
-    }
-    else
-        _data_length = _data.size();
-
-    _z_values = _z.get_z_values(false);
-    _aic = 2*static_cast<double>(_z_values.size()) + 2*_objective_object(_z_values);
-    _bic = 2*_objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
-
-    if (_model_type == "LLT" || _model_type == "LLEV")
-        _rounding_points = 10;
-    else
-        _rounding_points = 4;
-
-    Sample samp = norm_post_sim(_z_values, _ihessian);
-    _chain = samp.chain;
-    _mean_est = samp.mean_est;
-    _median_est = samp.median_est;
-    _upper_95_est = samp.upper_95_est;
-    _lower_5_est = samp.lower_5_est;
-    _t_chain = _chain;
-    std::vector<Family*> z_priors = _z.get_z_priors();
-    for (size_t k{0}; k < _mean_est.size(); k++) {
-        //_t_chain(k) = z_priors.at(k)->get_transform()(_chain(k));
-        _t_mean_est(k) = z_priors.at(k)->get_transform()(_mean_est(k));
-        _t_median_est(k) = z_priors.at(k)->get_transform()(_median_est(k));
-        _t_upper_95_est(k) = z_priors.at(k)->get_transform()(_upper_95_est(k));
-        _t_lower_5_est(k) = z_priors.at(k)->get_transform()(_lower_5_est(k));
-    }
-
-}
-
-std::ostream& operator<<(std::ostream& stream, const LaplaceResults& results) {
-    stream << "Laplace Results Object";
-    stream << "\n=========================="
-              "\nDependent variable: "
-              << results._data_name << "\nRegressors: ";
-    for (const std::string& s : results._x_names)
-        stream << s << " ";
-    stream << "\n=========================="
-              "\nLatent Variable Attributes: ";
-    if (results._ihessian.size() > 0)
-        stream << "\n.ihessian: Inverse Hessian";
-    stream << "\n.z : LatentVariables() object";
-    stream << "\n.results : optimizer results";
-    stream << "\n\nImplied Model Attributes: "
-              "\n.aic: Akaike Information Criterion"
-              "\n.bic: Bayesian Information Criterion"
-              "\n.data: Model Data"
-              "\n.index: Model Index";
-    if (results._scores.size() > 0)
-        stream << "\n.scores: Model Scores";
-    if (results._signal.size() > 0)
-        stream << "\n.signal: Model Signal";
-    if (results._states.size() > 0)
-        stream << "\n.states: Model States";
-    if (results._states_var.size() > 0)
-        stream << "\n.states_var: Model State Variances";
-    stream << "\n\nMethods: "
-              "\n.summary() : printed results";
-    return stream;
-}
-
-void LaplaceResults::summary(bool transformed) {
-    //_z_values = _z.get_z_values(false);
-    std::list<std::map<std::string, std::string>> data;
-    std::vector<std::string> z_names = _z.get_z_names();
-    if (transformed) {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
-            data.push_back(
-                    {{"z_name", z_names[i]},
-                     {"z_mean", std::to_string(round_to(_t_mean_est(i), _rounding_points))},
-                     {"z_median", std::to_string(round_to(_t_median_est(i), _rounding_points))},
-                     {"ci", "(" + std::to_string(round_to(_t_lower_5_est(i), _rounding_points)) + "|"
-                     + std::to_string(round_to(_t_upper_95_est(i), _rounding_points)) + ")"}
-                    });
-        }
-    } else {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
-            data.push_back(
-                    {{"z_name", z_names[i]},
-                     {"z_mean", std::to_string(round_to(_mean_est(i), _rounding_points))},
-                     {"z_median", std::to_string(round_to(_median_est(i), _rounding_points))},
-                     {"ci", "(" + std::to_string(round_to(_lower_5_est(i), _rounding_points)) + "|"
-                     + std::to_string(round_to(_upper_95_est(i), _rounding_points)) + ")"}
-                    });
-        }
-    }
-
-    // Create fmts
-    std::vector<std::tuple<std::string, std::string, int>> fmt{{"Latent Variable", "z_name", 40},
-                                                               {"Median", "z_median", 18},
-                                                               {"Mean", "z_mean", 18},
-                                                               {"95% Credibility Interval", "ci", 25}};
-    std::vector<std::tuple<std::string, std::string, int>> model_fmt{{_model_name, "model_details", 55},
-                                                                     {"", "model_results", 50}};
-    // Initialize model_details
-    std::list<std::map<std::string, std::string>> model_details;
-
-    std::string obj_desc;
-    if (_method == "MLE")
-        obj_desc = ("Log Likelihood: " +
-                std::to_string(round_to(-1*_objective_object(_z_values), 4)));
-    else
-        obj_desc = "Unnormalized Log Posterior: " +
-                std::to_string(round_to(_objective_object(_z_values), 4));
-
-    model_details.push_back({
-        {"model_details", "Dependent Variable: " + _data_name},
-        {"model_results", "Method: " + std::to_string(_method)}
-    })
-    model_details.push_back({
-        {"model_details", "Start Date: " + std::to_string(_index[_max_lag])},
-        {"model_results", obj_desc)}
-    })
-    model_details.push_back({
-        {"model_details", "End Date: " + std::to_string(_index.back())},
-        {"model_results", "AIC: " + std::to_string(_aic)}
-    })
-    model_details.push_back({
-        {"model_details", "Number of observations: " + std::to_string(_data_length)},
-        {"model_results", "BIC: " + std::to_string(_bic)}
-    })
-
     std::cout << TablePrinter{model_fmt, " ", "="}(model_details) << "\n";
     std::cout << std::string(106, '=') << "\n";
     std::cout << TablePrinter{fmt, " ", "="}(data) << "\n";
