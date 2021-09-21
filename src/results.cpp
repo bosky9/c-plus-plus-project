@@ -317,7 +317,8 @@ void BBVIResults::plot_elbo(size_t width, size_t height) const {
     plt::plot(elbo_records);
     plt::xlabel("Iterations");
     plt::ylabel("ELBO");
-    plt::show();
+    plt::save("../data/BBVIResults_plot_elbo.png");
+    // plt::show();
 }
 
 void BBVIResults::summary(bool transformed) {
@@ -398,13 +399,4 @@ std::ostream& operator<<(std::ostream& stream, const BBVIResults& results) {
     stream << "\n\nMethods: "
               "\n.summary() : printed results";
     return stream;
-}
-
-void BBVIResults::plot_elbo(size_t width, size_t height) const {
-    plt::figure_size(width, height);
-    plt::plot(_elbo_records);
-    plt::xlabel("Iterations");
-    plt::ylabel("ELBO");
-    plt::save("../data/BBVIResults_plot_elbo.png");
-    // plt::show();
 }
