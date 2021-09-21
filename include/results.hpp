@@ -134,6 +134,16 @@ private:
     Eigen::VectorXd _ses;
     std::vector<double> _elbo_records;
     Eigen::MatrixXd _chains;
+    Eigen::VectorXd _mean_est;
+    Eigen::VectorXd _median_est;
+    Eigen::VectorXd _upper_95_est;
+    Eigen::VectorXd _lower_5_est;
+
+    Eigen::MatrixXd _t_chains;
+    Eigen::VectorXd _t_mean_est;
+    Eigen::VectorXd _t_median_est;
+    Eigen::VectorXd _t_upper_95_est;
+    Eigen::VectorXd _t_lower_5_est;
 
 public:
     /**
@@ -260,8 +270,21 @@ public:
 
 class LaplaceResults : Results {
 private:
-    Eigen::MatrixXd _chains;
+    uint _data_length;
 
+    Eigen::MatrixXd _chains;
+    Eigen::MatrixXd _ihessian;
+
+    Eigen::VectorXd _mean_est;
+    Eigen::VectorXd _median_est;
+    Eigen::VectorXd _upper_95_est;
+    Eigen::VectorXd _lower_5_est;
+
+    Eigen::MatrixXd _t_chains;
+    Eigen::VectorXd _t_mean_est;
+    Eigen::VectorXd _t_median_est;
+    Eigen::VectorXd _t_upper_95_est;
+    Eigen::VectorXd _t_lower_5_est;
 public:
     /**
      * Constructor for LaplaceResults
