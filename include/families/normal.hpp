@@ -244,5 +244,7 @@ public:
 
     [[nodiscard]] std::optional<double> get_mu0() const override;
 
+    [[nodiscard]] std::optional<double> get_sigma0() const;
+
     [[nodiscard]] Family* clone() const override;
 };

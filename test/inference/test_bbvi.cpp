@@ -97,8 +97,8 @@ TEST_CASE("Get means and scales from q", "[get_means_and_scales_from_q]") {
     std::vector<Normal> q{Normal(), Normal(2.0, 2.5)};
     BBVI bbvi         = BBVI(neg_posterior, q, 3);
     auto means_scales = bbvi.get_means_and_scales_from_q();
-    REQUIRE(means_scales.first == Eigen::Vector2d{q[0].vi_return_param(0), q[1].vi_return_param(0)});
-    REQUIRE(means_scales.second == Eigen::Vector2d{q[0].vi_return_param(1), q[1].vi_return_param(1)});
+    REQUIRE(means_scales.first == Eigen::Vector2d{q[0].get_mu0().value(), q[1].get_mu0().value()});
+    REQUIRE(means_scales.second == Eigen::Vector2d{q[0].get_sigma0().value(), q[1].get_sigma0().value()});
 }
 
 TEST_CASE("Get means and scales", "[get_means_and_scales_from_q, get_means_and_scales]") {
@@ -107,8 +107,8 @@ TEST_CASE("Get means and scales", "[get_means_and_scales_from_q, get_means_and_s
     BBVI bbvi = BBVI(neg_posterior, q, 3);
 
     auto means_scales = bbvi.get_means_and_scales_from_q();
-    REQUIRE(means_scales.first == Eigen::Vector2d{q[0].vi_return_param(0), q[1].vi_return_param(0)});
-    REQUIRE(means_scales.second == Eigen::Vector2d{q[0].vi_return_param(1), q[1].vi_return_param(1)});
+    REQUIRE(means_scales.first == Eigen::Vector2d{q[0].get_mu0().value(), q[1].get_mu0().value()});
+    REQUIRE(means_scales.second == Eigen::Vector2d{q[0].get_sigma0().value(), q[1].get_sigma0().value()});
 
     bbvi._optim  = std::make_unique<RMSProp>(bbvi.current_parameters(), Eigen::Vector4d::Zero(),
                                             bbvi.get_learning_rate(), 0.99);

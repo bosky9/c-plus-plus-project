@@ -105,7 +105,7 @@ Eigen::MatrixXd Mvn::random(Eigen::VectorXd mean, Eigen::VectorXd scale, size_t 
     Eigen::MatrixXd rands(n, mean.size());
     for (Eigen::Index i{0}; i < n; i++) {
         for (Eigen::Index j{0}; j < n; j++) {
-            std::normal_distribution<double> distribution{mean[j], scale[j]};
+            std::normal_distribution<double> distribution{mean(j), scale(j)};
             rands(i, j) = distribution(generator);
         }
     }

@@ -181,8 +181,8 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales_from_q() 
     Eigen::VectorXd scale = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_q.size()));
 
     for (Eigen::Index i = 0; i < _q.size(); i++) {
-        means(i) = _q[i].vi_return_param(0);
-        scale(i) = _q[i].vi_return_param(1);
+        means(i) = _q[i].get_mu0().value();
+        scale(i) = _q[i].get_sigma0().value();
     }
 
     return std::move(std::pair{means, scale});
