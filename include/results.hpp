@@ -201,8 +201,10 @@ public:
 
 class BBVISSResults : Results {
 private:
-    Eigen::VectorXd _elbo_records;
+    double _objective_value;
+    Eigen::MatrixXd _ihessian;
     Eigen::VectorXd _ses;
+    Eigen::VectorXd _elbo_records;
     Eigen::MatrixXd _chain;          ///< Chains for each parameter
     Eigen::VectorXd _mean_est;       ///< Mean values for each parameter
     Eigen::VectorXd _median_est;     ///< Median values for each parameter
@@ -239,7 +241,7 @@ public:
     BBVISSResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                   const std::string& model_type, LatentVariables latent_variables, Eigen::MatrixXd data,
                   std::vector<size_t> index, bool multivariate_model,
-                  std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
+                  double objective_value, std::string method, bool z_hide, int max_lag,
                   Eigen::VectorXd ses, Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
                   Eigen::VectorXd scores       = Eigen::VectorXd::Zero(0),
                   Eigen::VectorXd elbo_records = Eigen::VectorXd::Zero(0),
