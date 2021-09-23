@@ -50,6 +50,8 @@ protected:
     size_t _ylen;
     bool _is_pandas;
 
+    TSM(std::string model_type);
+
     //TODO: I seguenti metodi sono presenti solo nella sottoclasse VAR
     // Limitare i metodi che li usano solo alla classe VAR ?
     //_create_B_direct();
@@ -82,7 +84,7 @@ protected:
     BBVIResults _bbvi_fit(const std::function<double(Eigen::VectorXd)>& posterior,
                           const std::string& optimizer = "RMSProp", size_t iterations = 1000, bool map_start = true,
                           size_t batch_size = 12, std::optional<size_t> mini_batch = std::nullopt,
-                          double learning_rate = 0.001, bool record_elbo = false, bool quiet progress = false);
+                          double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false);
 
     /**
      * @brief Performs a Laplace approximation to the posterior
