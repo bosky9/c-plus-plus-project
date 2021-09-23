@@ -1,13 +1,13 @@
 #pragma once
 
+#include "headers.hpp"
+#include "inference/bbvi.hpp"
 #include "latent_variables.hpp"
 #include "results.hpp"
 
-#include <Eigen/Core>
-#include <vector>
-#include <string>
 #include <functional>
 #include <optional>
+#include <string>
 
 /**
  * @brief Struct that represents the model output
@@ -35,8 +35,8 @@ protected:
     std::function<double(Eigen::VectorXd)> _neg_loglik;
     // Not used in Python
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior;
-    std::function<double(Eigen::VectorXd)> _mb_neg_logposterior; //TODO: Check function parameters
-    std::function<double(Eigen::VectorXd)> _mb_neg_loglik; //TODO: Check function parameters
+    std::function<double(Eigen::VectorXd)> _mb_neg_logposterior; // TODO: Check function parameters
+    std::function<double(Eigen::VectorXd)> _mb_neg_loglik;       // TODO: Check function parameters
     bool _z_hide;
     int _max_lag;
     LatentVariables _latent_variables; ///< Holding variables for model output
@@ -52,15 +52,15 @@ protected:
 
     TSM(std::string model_type);
 
-    //TODO: I seguenti metodi sono presenti solo nella sottoclasse VAR
-    // Limitare i metodi che li usano solo alla classe VAR ?
+    // TODO: I seguenti metodi sono presenti solo nella sottoclasse VAR
+    //  Limitare i metodi che li usano solo alla classe VAR ?
     //_create_B_direct();
     //_ols_covariance();
     //_estimator_cov();
     //_preoptimize_model();
     //_custom_covariance();
 
-    //TODO: Implement this function for each subclass of TSM (each model return different data)
+    // TODO: Implement this function for each subclass of TSM (each model return different data)
     /**
      * @brief Return output data of the model
      * @param z Untransformed starting values for the latent variables
@@ -81,10 +81,11 @@ protected:
      * @param quiet
      * @return A BBVIResults object
      */
-    BBVIResults _bbvi_fit(const std::function<double(Eigen::VectorXd)>& posterior,
-                          const std::string& optimizer = "RMSProp", size_t iterations = 1000, bool map_start = true,
-                          size_t batch_size = 12, std::optional<size_t> mini_batch = std::nullopt,
-                          double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false);
+    BBVIResults bbvi_fit(const std::function<double(Eigen::VectorXd)>& posterior,
+                         const std::string& optimizer = "RMSProp", size_t iterations = 1000, bool map_start = true,
+                         size_t batch_size = 12, std::optional<size_t> mini_batch = std::nullopt,
+                         double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false,
+                         Eigen::VectorXd start = Eigen::VectorXd::Zero(0));
 
     /**
      * @brief Performs a Laplace approximation to the posterior
@@ -105,7 +106,7 @@ protected:
      * @return A MCMCResults object
      */
     MCMCResults _mcmc_fit(double scale = 1.0, size_t nsims = 10000, bool printer = true,
-                          const std::string& method = "M-H",
+                          const std::string& method                        = "M-H",
                           const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt, bool map_start = true,
                           bool quiet_progress = false);
 
@@ -155,7 +156,8 @@ public:
     void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5);
 
     // Not used in Python
-    // void plot_parameters(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5);
+    // void plot_parameters(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t
+    // height = 5);
 
     /**
      * @brief Adjusts priors for the latent variables
