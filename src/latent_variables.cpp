@@ -4,79 +4,71 @@ LatentVariable::LatentVariable(std::string name, const Family& prior, const Fami
     : _name{std::move(name)}, _prior{prior.clone()}, _index{0},
       _transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
 
-LatentVariable::LatentVariable(const LatentVariable& lv) :
-      _name{lv.get_name()},
-      _index{lv._index},
-      _prior{lv.get_prior()},
-      _transform{lv._transform},
-      _start{lv.get_start()},
-      _q{lv.get_q()},
-      _method{lv.get_method()},
-      _value{lv.get_value()},
-      _std{lv.get_std()},
-      _sample{lv.get_sample()}
-{}
+LatentVariable::LatentVariable(const LatentVariable& lv)
+    : _name{lv.get_name()}, _index{lv._index}, _prior{lv.get_prior()},
+      _transform{lv._transform}, _start{lv.get_start()}, _q{lv.get_q()}, _method{lv.get_method()},
+      _value{lv.get_value()}, _std{lv.get_std()}, _sample{lv.get_sample()} {}
 
 LatentVariable::LatentVariable(LatentVariable&& lv) noexcept {
-    _name = lv.get_name();
+    _name  = lv.get_name();
     _index = lv._index;
     _prior.reset(lv.get_prior());
     _transform = lv._transform;
-    _start = lv.get_start();
+    _start     = lv.get_start();
     _q.reset(lv.get_q());
-    _method = lv.get_method();
-    _value = lv.get_value();
-    _std = lv.get_std();
-    _sample = lv.get_sample();
-    lv._name = nullptr;
-    lv._index = 0;
-    lv._prior = nullptr;
+    _method       = lv.get_method();
+    _value        = lv.get_value();
+    _std          = lv.get_std();
+    _sample       = lv.get_sample();
+    lv._name      = "";
+    lv._index     = 0;
+    lv._prior     = nullptr;
     lv._transform = {};
-    lv._start = 0;
-    lv._q = nullptr;
-    lv._method = nullptr;
-    lv._value = std::nullopt;
-    lv._std = std::nullopt;
-    lv._sample = std::nullopt;
+    lv._start     = 0;
+    lv._q         = nullptr;
+    lv._method    = "";
+    lv._value     = std::nullopt;
+    lv._std       = std::nullopt;
+    lv._sample    = std::nullopt;
 }
 
 LatentVariable& LatentVariable::operator=(const LatentVariable& lv) {
     if (this == &lv)
         return *this;
-    _name = lv.get_name();
+    _name  = lv.get_name();
     _index = lv._index;
     _prior.reset(lv.get_prior());
     _transform = lv._transform;
-    _start = lv.get_start();
+    _start     = lv.get_start();
     _q.reset(lv.get_q());
     _method = lv.get_method();
-    _value = lv.get_value();
-    _std = lv.get_std();
+    _value  = lv.get_value();
+    _std    = lv.get_std();
     _sample = lv.get_sample();
     return *this;
 }
 
 LatentVariable& LatentVariable::operator=(LatentVariable&& lv) noexcept {
-    _name = lv.get_name();
+    _name  = lv.get_name();
     _index = lv._index;
     _prior.reset(lv.get_prior());
     _transform = lv._transform;
-    _start = lv.get_start();
+    _start     = lv.get_start();
     _q.reset(lv.get_q());
-    _method = lv.get_method();
-    _value = lv.get_value();
-    _std = lv.get_std();
-    _sample = lv.get_sample();
-    lv._name = nullptr;
-    lv._index = 0;
-    lv._prior = nullptr;
+    _method       = lv.get_method();
+    _value        = lv.get_value();
+    _std          = lv.get_std();
+    _sample       = lv.get_sample();
+    lv._name      = "";
+    lv._index     = 0;
+    lv._prior     = nullptr;
     lv._transform = {};
-    lv._start = 0;
-    lv._q = nullptr;
-    lv._method = nullptr;
-    lv._value = std::nullopt;
-    lv._std = std::nullopt;
-    lv._sample = std::nullopt;
+    lv._start     = 0;
+    lv._q         = nullptr;
+    lv._method    = "";
+    lv._value     = std::nullopt;
+    lv._std       = std::nullopt;
+    lv._sample    = std::nullopt;
     return *this;
 }
 
