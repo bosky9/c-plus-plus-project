@@ -30,9 +30,9 @@ private:
     std::unique_ptr<Family> _q; ///< The variational distribution for the latent variable, e.g. Normal(0,1)
     // TODO: I seguenti attributi non sono dichiarati nella classe Python ma usate in LatentVariables
     std::string _method;
-    std::optional<double> _value               = std::nullopt;
-    std::optional<double> _std                 = std::nullopt;
-    std::optional<std::vector<double>> _sample = std::nullopt;
+    std::optional<double> _value           = std::nullopt;
+    std::optional<double> _std             = std::nullopt;
+    std::optional<Eigen::VectorXd> _sample = std::nullopt;
 
 public:
     /**
@@ -104,7 +104,7 @@ public:
      * @brief Returns the sample (optional)
      * @return Sample
      */
-    [[nodiscard]] std::optional<std::vector<double>> get_sample() const;
+    [[nodiscard]] std::optional<Eigen::VectorXd> get_sample() const;
 
     /**
      * @brief Returns start
@@ -164,7 +164,13 @@ public:
      * @brief Set sample
      * @param sample Sample
      */
-    void set_sample(const std::vector<double>& sample);
+    void set_sample(const Eigen::VectorXd& sample);
+
+    /**
+     * @brief Sets a new family object in q
+     * @param family Family object
+     */
+    void set_q(Family* q);
 };
 
 /**
@@ -283,21 +289,27 @@ public:
     [[nodiscard]] std::vector<std::string> get_z_approx_dist_names() const;
 
     /**
+     * @brief Sets estimation method
+     * @param method Estimation method
+     */
+    void set_estimation_method(std::string method);
+
+    /**
      * @brief Set values to latent variables
      * @param values Vector of values to set
      * @param method Method name
      * @param stds Vector of STDs
      * @param samples Vector of samples
      */
-    void set_z_values(const std::vector<double>& values, const std::string& method,
-                      const std::optional<std::vector<double>>& stds                 = std::nullopt,
-                      const std::optional<std::vector<std::vector<double>>>& samples = std::nullopt);
+    void set_z_values(const Eigen::VectorXd& values, const std::string& method,
+                      const std::optional<Eigen::VectorXd>& stds                 = std::nullopt,
+                      const std::optional<std::vector<Eigen::VectorXd>>& samples = std::nullopt);
 
     /**
      * @brief Set starting values to latent variables
      * @param values Vector of starting values to set
      */
-    void set_z_starting_values(const std::vector<double>& values);
+    void set_z_starting_values(const Eigen::VectorXd& values);
 
     /**
      * @brief Plots the latent variables

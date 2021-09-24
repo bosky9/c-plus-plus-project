@@ -35,15 +35,17 @@ TEST_CASE("Alpha recursion", "[alpha_recursion]") {
 }
 
 TEST_CASE("Log p posterior", "[log_p_posterior]") {
-    Eigen::MatrixXd z                                    = Eigen::MatrixXd::Identity(2, 2);
-    std::function<double(Eigen::VectorXd)> neg_posterior = [](Eigen::VectorXd v) { return v[0]; };
+    Eigen::MatrixXd z = Eigen::MatrixXd::Identity(2, 2);
+    std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior =
+            [](Eigen::VectorXd v, std::optional<size_t> n) { return v[0]; };
 
     REQUIRE(log_p_posterior(z, neg_posterior) == Eigen::Vector2d{-1, -0});
 }
 
 TEST_CASE("Mini batch log p posterior", "[mb_log_p_posterior]") {
-    Eigen::MatrixXd z                                         = Eigen::MatrixXd::Identity(2, 2);
-    std::function<double(Eigen::VectorXd, int)> neg_posterior = [](Eigen::VectorXd v, int n) { return v[n]; };
+    Eigen::MatrixXd z = Eigen::MatrixXd::Identity(2, 2);
+    std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior =
+            [](Eigen::VectorXd v, std::optional<size_t> n) { return v[n.value()]; };
 
     REQUIRE(mb_log_p_posterior(z, neg_posterior, 1) == Eigen::Vector2d{-0, -1});
 }

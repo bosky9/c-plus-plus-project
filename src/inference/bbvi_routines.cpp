@@ -19,18 +19,20 @@ void alpha_recursion(Eigen::VectorXd& alpha0, const Eigen::MatrixXd& grad_log_q,
     return;
 }
 
-Eigen::VectorXd log_p_posterior(Eigen::MatrixXd& z, const std::function<double(Eigen::VectorXd)>& neg_posterior) {
+Eigen::VectorXd log_p_posterior(Eigen::MatrixXd& z,
+                                const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& neg_posterior) {
     Eigen::Index i         = 0;
     Eigen::VectorXd result = Eigen::VectorXd::Zero(z.rows());
 
     for (; i < z.rows(); i++)
-        result[i] = -neg_posterior(z.row(i));
+        result[i] = -neg_posterior(z.row(i), std::nullopt);
 
     return std::move(result);
 }
 
-Eigen::VectorXd mb_log_p_posterior(Eigen::MatrixXd& z, const std::function<double(Eigen::VectorXd, int)>& neg_posterior,
-                                   int mini_batch) {
+Eigen::VectorXd mb_log_p_posterior(Eigen::MatrixXd& z,
+                                   const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& neg_posterior,
+                                   size_t mini_batch) {
     Eigen::Index i         = 0;
     Eigen::VectorXd result = Eigen::VectorXd::Zero(z.rows());
 

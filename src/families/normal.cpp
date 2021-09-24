@@ -188,15 +188,8 @@ std::string Normal::get_name() const {
 }
 
 std::string Normal::get_z_name() const {
-    return "mu0: " + std::to_string(round(_mu0*10000)/10000) + ", sigma0: " + std::to_string(round(_sigma0*10000)/10000);
-}
-
-std::optional<double> Normal::get_mu0() const {
-    return _mu0;
-}
-
-std::optional<double> Normal::get_sigma0() const {
-    return _sigma0;
+    return "mu0: " + std::to_string(round(_mu0 * 10000) / 10000) +
+           ", sigma0: " + std::to_string(round(_sigma0 * 10000) / 10000);
 }
 
 Family* Normal::clone() const {

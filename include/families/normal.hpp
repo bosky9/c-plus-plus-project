@@ -130,7 +130,7 @@ public:
      * @param size How many simulations to perform
      * @return Array of Normal random variable
      */
-    [[nodiscard]] Eigen::VectorXd draw_variable_local(size_t size) const;
+    [[nodiscard]] Eigen::VectorXd draw_variable_local(size_t size) const override;
 
     /**
      * @brief Log PDF for Normal prior
@@ -181,20 +181,20 @@ public:
      * @param index 0 or 1 depending on which latent variable
      * @param value What to change the latent variable to
      */
-    void vi_change_param(size_t index, double value);
+    void vi_change_param(size_t index, double value) override;
 
     /**
      * @brief Wrapper function for selecting appropriate latent variable for variational inference
      * @param index 0 or 1 depending on which latent variable
      * @return The appropriate indexed parameter
      */
-    [[nodiscard]] double vi_return_param(size_t index) const;
+    [[nodiscard]] double vi_return_param(size_t index) const override;
 
     /**
      * @brief Return the number of parameters
      * @return The number of parameters
      */
-    [[nodiscard]] short unsigned int get_param_no() const;
+    [[nodiscard]] short unsigned int get_param_no() const override;
 
     /**
      * @brief Return the covariance prior
@@ -241,10 +241,6 @@ public:
     [[nodiscard]] std::string get_name() const override;
 
     [[nodiscard]] std::string get_z_name() const override;
-
-    [[nodiscard]] std::optional<double> get_mu0() const override;
-
-    [[nodiscard]] std::optional<double> get_sigma0() const;
 
     [[nodiscard]] Family* clone() const override;
 };

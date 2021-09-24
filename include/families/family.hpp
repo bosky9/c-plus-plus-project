@@ -77,20 +77,44 @@ public:
     [[nodiscard]] std::function<double(double)> get_itransform() const;
 
     /**
+     * @brief Wrapper function for changing latent variables for variational inference
+     * @param size How many simulations to perform
+     * @return Array of Family random variable
+     */
+    [[nodiscard]] virtual Eigen::VectorXd draw_variable_local(size_t size) const;
+
+    /**
+     * @brief Returns the number of parameters
+     * @return The number of parameters
+     */
+    [[nodiscard]] virtual short unsigned int get_param_no() const;
+
+    /**
+     * @brief Changes parameter at index with value specified
+     * @param index Parameter's index
+     * @param value New value
+     */
+    virtual void vi_change_param(size_t index, double value);
+
+    /**
+     * @brief Wrapper function for selecting appropriate latent variable for variational inference
+     * @param index 0 or 1 depending on which latent variable
+     * @return The appropriate indexed parameter
+     */
+    [[nodiscard]] virtual double vi_return_param(size_t index) const;
+
+    /**
      * @brief Get the name of the distribution family for the get_z_priors_names() method of LatentVariables
      * @return Name of the distribution family
      */
     [[nodiscard]] virtual std::string get_name() const;
 
     /**
-     * @brief Get the description of the parameters of the distribution family for the get_z_priors_names() method of LatentVariables
+     * @brief Get the description of the parameters of the distribution family for the get_z_priors_names() method of
+     * LatentVariables
      * @return Description of the parameters of the distribution family
      */
     [[nodiscard]] virtual std::string get_z_name() const;
-
-    [[nodiscard]] virtual std::optional<double> get_mu0() const;
-
-    [[nodiscard]] virtual std::optional<double> get_loc0() const;
 
     [[nodiscard]] virtual Family* clone() const;
 

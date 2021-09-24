@@ -50,7 +50,7 @@ protected:
     size_t _ylen;
     bool _is_pandas;
 
-    TSM(std::string model_type);
+    TSM(const std::string& model_type);
 
     // TODO: I seguenti metodi sono presenti solo nella sottoclasse VAR
     //  Limitare i metodi che li usano solo alla classe VAR ?
@@ -70,7 +70,7 @@ protected:
 
     /**
      * @brief Performs Black Box Variational Inference
-     * @param posterior Hands bbvi_fit a posterior object
+     * @param posterior Hands _bbvi_fit a posterior object
      * @param optimizer Stochastic optimizer: one of RMSProp or ADAM
      * @param iterations How many iterations for BBVI
      * @param map_start Whether to start values from a MAP estimate (if False, uses default starting values)
@@ -81,11 +81,11 @@ protected:
      * @param quiet
      * @return A BBVIResults object
      */
-    BBVIResults bbvi_fit(const std::function<double(Eigen::VectorXd)>& posterior,
-                         const std::string& optimizer = "RMSProp", size_t iterations = 1000, bool map_start = true,
-                         size_t batch_size = 12, std::optional<size_t> mini_batch = std::nullopt,
-                         double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false,
-                         Eigen::VectorXd start = Eigen::VectorXd::Zero(0));
+    BBVIResults _bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
+                          const std::string& optimizer = "RMSProp", size_t iterations = 1000, bool map_start = true,
+                          size_t batch_size = 12, std::optional<size_t> mini_batch = std::nullopt,
+                          double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false,
+                          const Eigen::VectorXd& start = Eigen::VectorXd::Zero(0));
 
     /**
      * @brief Performs a Laplace approximation to the posterior
@@ -126,10 +126,10 @@ protected:
 public:
     /**
      * @brief Fits a model
-     * @param method A fitting method (e.g 'MLE')
+     * @param method A fitting method (e.g. 'MLE')
      * @return Results of the fit
      */
-    Results* fit(const std::string& method = _default);
+    Results* fit(const std::string& method = "");
 
     /**
      * @brief Auxiliary function for creating dates for forecasts

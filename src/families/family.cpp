@@ -128,13 +128,20 @@ std::string Family::get_z_name() const {
     return "";
 }
 
-std::optional<double> Family::get_mu0() const {
+Eigen::VectorXd Family::draw_variable_local(size_t size) const {
     return {};
 }
 
-std::optional<double> Family::get_loc0() const {
-    return {};
+void Family::vi_change_param(size_t index, double value) {}
+
+double Family::vi_return_param(size_t index) const {
+    return 0.0;
 }
+
+short unsigned int Family::get_param_no() const {
+    return 0;
+}
+
 
 Family* Family::clone() const {
     return new Family(*this);

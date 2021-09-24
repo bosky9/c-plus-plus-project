@@ -79,7 +79,7 @@ void LatentVariable::plot_z(size_t width, size_t height) {
            "No information on latent variables to plot!");
     std::function<double(double)> transform = _prior->get_transform();
     if (_sample.has_value()) {
-        std::vector<double> x{_sample.value()};
+        std::vector<double> x{&_sample.value()[0], _sample.value().data()};
         std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
         plt::named_plot(_method + " estimate of " + _name, x);
     } else if (_value.has_value() && _std.has_value()) {
@@ -117,7 +117,7 @@ Family* LatentVariable::get_prior() const {
     return _prior->clone();
 }
 
-std::optional<std::vector<double>> LatentVariable::get_sample() const {
+std::optional<Eigen::VectorXd> LatentVariable::get_sample() const {
     return _sample;
 }
 
@@ -157,8 +157,12 @@ void LatentVariable::set_std(double std) {
     _std = std;
 }
 
-void LatentVariable::set_sample(const std::vector<double>& sample) {
+void LatentVariable::set_sample(const Eigen::VectorXd& sample) {
     _sample = sample;
+}
+
+void LatentVariable::set_q(Family* q) {
+    _q.reset(q);
 }
 
 LatentVariables::LatentVariables(std::string model_name)
@@ -220,10 +224,10 @@ void LatentVariables::adjust_prior(const std::vector<size_t>& index, Family& pri
     for (size_t item : index) {
         assert(item > _z_list.size() - 1);
         _z_list[item].set_prior(prior);
-        if (auto mu0 = _z_list[item].get_prior()->get_mu0())
-            _z_list[item].set_start(mu0.value());
-        if (auto loc0 = _z_list[item].get_prior()->get_loc0())
-            _z_list[item].set_start(loc0.value());
+        if (typeid(prior).name() == "Normal") { // TODO: Controllare che funzioni correttamente
+            _z_list[item].set_start(_z_list[item].get_prior()->vi_return_param(0));
+            _z_list[item].set_start(_z_list[item].get_prior()->vi_return_param(1));
+        }
     }
 }
 
@@ -305,9 +309,13 @@ std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
     return q_list;
 }
 
-void LatentVariables::set_z_values(const std::vector<double>& values, const std::string& method,
-                                   const std::optional<std::vector<double>>& stds,
-                                   const std::optional<std::vector<std::vector<double>>>& samples) {
+void LatentVariables::set_estimation_method(std::string method) {
+    _estimation_method = method;
+}
+
+void LatentVariables::set_z_values(const Eigen::VectorXd& values, const std::string& method,
+                                   const std::optional<Eigen::VectorXd>& stds,
+                                   const std::optional<std::vector<Eigen::VectorXd>>& samples) {
     assert(values.size() == _z_list.size());
     for (size_t i{0}; i < _z_list.size(); i++) {
         _z_list[i].set_method(method);
@@ -320,7 +328,7 @@ void LatentVariables::set_z_values(const std::vector<double>& values, const std:
     _estimated = true;
 }
 
-void LatentVariables::set_z_starting_values(const std::vector<double>& values) {
+void LatentVariables::set_z_starting_values(const Eigen::VectorXd& values) {
     assert(values.size() == _z_list.size());
     for (size_t i{0}; i < _z_list.size(); i++) {
         _z_list[i].set_start(values[i]);
@@ -338,7 +346,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
             std::find(indices.value().begin(), indices.value().end(), z) == indices.value().end()) {
             std::function<double(double)> transform = _z_list[z].get_prior()->get_transform();
             if (_z_list[z].get_sample().has_value()) {
-                std::vector<double> x{_z_list[z].get_sample().value()};
+                std::vector<double> x{&_z_list[z].get_sample().value()[0], _z_list[z].get_sample().value().data()};
                 std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
                 plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), x);
             } else if (_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value()) {
@@ -386,27 +394,27 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
                                      "mediumpurple", "goldenrod",      "skyblue"};
 
     for (size_t i = 0; i < _z_list.size(); i++) {
-        std::vector<double> chain = _z_list[i].get_sample().value();
+        Eigen::VectorXd chain{_z_list[i].get_sample().value()};
         for (size_t j = 0; j < 4; j++) {
             size_t iteration = i * 4 + j + 1;
             plt::subplot(static_cast<long>(_z_list.size()), 4, static_cast<long>(iteration));
             if (iteration >= 1 && iteration <= _z_list.size() * 4 + 1) {
                 std::function<double(double)> transform = _z_list[i].get_prior()->get_transform();
                 if (iteration % 4 == 1) {
-                    std::vector<double> x{chain};
+                    std::vector<double> x{&chain[0], chain.data()};
                     std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
                     plt::plot(x, palette[i]);
                     plt::ylabel(_z_list[i].get_name());
                     if (iteration == 1)
                         plt::title("Density Estimate");
                 } else if (iteration % 4 == 2) {
-                    std::vector<double> x{chain};
+                    std::vector<double> x{&chain[0], chain.data()};
                     std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
                     plt::plot(x, palette[i]);
                     if (iteration == 2)
                         plt::title("Trace Plot");
                 } else if (iteration % 4 == 3) {
-                    std::vector<double> x{chain};
+                    std::vector<double> x{&chain[0], chain.data()};
                     std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
                     std::partial_sum(x.begin(), x.end(), x.begin());
                     std::vector<double> indices(chain.size());

@@ -21,7 +21,8 @@ void alpha_recursion(Eigen::VectorXd& alpha0, const Eigen::MatrixXd& grad_log_q,
  * @param neg_posterior A function which takes a vector (Eigen::VectorXd) and returns a double
  * @return An array of doubles (using std::move())
  */
-Eigen::VectorXd log_p_posterior(Eigen::MatrixXd& z, const std::function<double(Eigen::VectorXd)>& neg_posterior);
+Eigen::VectorXd log_p_posterior(Eigen::MatrixXd& z,
+                                const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& neg_posterior);
 
 /**
  * @brief This function is used inside the BBVI classes
@@ -30,5 +31,6 @@ Eigen::VectorXd log_p_posterior(Eigen::MatrixXd& z, const std::function<double(E
  * @param mini_batch An integer
  * @return An array of doubles (using std::move())
  */
-Eigen::VectorXd mb_log_p_posterior(Eigen::MatrixXd& z, const std::function<double(Eigen::VectorXd, int)>& neg_posterior,
-                                   int mini_batch);
+Eigen::VectorXd mb_log_p_posterior(Eigen::MatrixXd& z,
+                                   const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& neg_posterior,
+                                   size_t mini_batch);

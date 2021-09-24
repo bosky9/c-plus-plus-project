@@ -133,7 +133,7 @@ class BBVIResults : Results {
 private:
     Eigen::MatrixXd _ihessian;
     Eigen::VectorXd _ses;
-    std::vector<double> _elbo_records;
+    Eigen::VectorXd _elbo_records;
     Eigen::MatrixXd _chain;          ///< Chains for each parameter
     Eigen::VectorXd _mean_est;       ///< Mean values for each parameter
     Eigen::VectorXd _median_est;     ///< Median values for each parameter
@@ -172,10 +172,10 @@ public:
                 std::vector<size_t> index, bool multivariate_model,
                 std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                 Eigen::VectorXd ses, Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
-                Eigen::VectorXd scores           = Eigen::VectorXd::Zero(0),
-                std::vector<double> elbo_records = std::vector<double>(0),
-                Eigen::VectorXd states           = Eigen::VectorXd::Zero(0),
-                Eigen::VectorXd states_var       = Eigen::VectorXd::Zero(0));
+                Eigen::VectorXd scores       = Eigen::VectorXd::Zero(0),
+                Eigen::VectorXd elbo_records = Eigen::VectorXd::Zero(0),
+                Eigen::VectorXd states       = Eigen::VectorXd::Zero(0),
+                Eigen::VectorXd states_var   = Eigen::VectorXd::Zero(0));
 
     /**
      * @brief Stream operator for BBVIResults

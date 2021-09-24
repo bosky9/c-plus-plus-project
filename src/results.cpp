@@ -243,7 +243,7 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
                          std::vector<size_t> index, bool multivariate_model,
                          std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
                          int max_lag, Eigen::VectorXd ses, Eigen::VectorXd signal, Eigen::VectorXd scores,
-                         std::vector<double> elbo_records, Eigen::VectorXd states, Eigen::VectorXd states_var)
+                         Eigen::VectorXd elbo_records, Eigen::VectorXd states, Eigen::VectorXd states_var)
     : Results{std::move(data_name),
               std::move(X_names),
               std::move(model_name),
