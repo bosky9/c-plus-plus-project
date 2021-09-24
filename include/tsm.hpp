@@ -132,15 +132,45 @@ protected:
      * @param obj_type method
      * @return A MLEResults object
      */
-    MLEResults _optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type = {});
+    MLEResults _optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type = {},
+                             const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
+                             const std::optional<size_t> iterations = 1000,
+                             const std::optional<size_t> nsims = 10000,
+                             const std::optional<StochOptim> optimizer = std::nullopt,
+                             const std::optional<u_int8_t> batch_size = 12,
+                             const std::optional<size_t> mininbatch = std::nullopt,
+                             const std::optional<bool> map_start = true,
+                             const std::optional<double> learning_rate = 1e-03,
+                             const std::optional<bool> record_elbo = std::nullopt,
+                             const std::optional<bool> quiet_progress = false);
 
 public:
+    //@Todo: consider using only optional on None parameters
     /**
      * @brief Fits a model
      * @param method A fitting method (e.g. 'MLE')
      * @return Results of the fit
+     * Since the python function receives a list of kwargs,
+     * we decided to translate it explicitly as parameters,
+     * some of them tagged as "optional" because by default
+     * the python version inits them as None.
+     *
+     * Since the return type is "Results*",
+     * in order to return pointer to Results (an abstract class) subclasses
+     * it is necessary to declare their extension as public.
+     * es. "class MLEResults : public Results {...}".
      */
-    Results* fit(const std::string& method = "");
+    Results* fit(std::string method = "",
+                 const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
+                 const std::optional<size_t> iterations = 1000,
+                 const std::optional<size_t> nsims = 10000,
+                 const std::optional<StochOptim> optimizer = std::nullopt,
+                 const std::optional<u_int8_t> batch_size = 12,
+                 const std::optional<size_t> mininbatch = std::nullopt,
+                 const std::optional<bool> map_start = true,
+                 const std::optional<double> learning_rate = 1e-03,
+                 const std::optional<bool> record_elbo = std::nullopt,
+                 const std::optional<bool> quiet_progress = false);
 
     /**
      * @brief Auxiliary function for creating dates for forecasts

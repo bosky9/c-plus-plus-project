@@ -61,13 +61,16 @@ protected:
             Eigen::VectorXd scores = Eigen::VectorXd::Zero(0), Eigen::VectorXd states = Eigen::VectorXd::Zero(0),
             Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));
 
+
+
     [[nodiscard]] static double round_to(double x, uint8_t rounding_points);
 
 public:
     virtual void summary(bool transformed) = 0;
 };
 
-class MLEResults : Results {
+// Public is necessary for pointers (Return* p = &MLEResults{...})
+class MLEResults : public Results {
 private:
     Eigen::VectorXd _results; // FIXME: OptimizeResult type in Python (da scipy) ma viene utilizzato solo l'array
                               // non gli altri oggetti al suo interno

@@ -69,3 +69,37 @@ BBVIResults TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opti
             _z_hide,           _max_lag,       data.final_ses,      output.theta,      output.scores,
             data.elbo_records, output.states,  output.states_var};
 }
+
+Results* TSM::fit(std::string method, const std::optional<Eigen::MatrixXd> &cov_matrix,
+                  const std::optional<size_t> iterations, const std::optional<size_t> nsims,
+                  const std::optional<StochOptim> optimizer, const std::optional<u_int8_t> batch_size,
+                  const std::optional<size_t> mininbatch, const std::optional<bool> map_start,
+                  const std::optional<double> learning_rate, const std::optional<bool> record_elbo,
+                  const std::optional<bool> quiet_progress) {
+    if (method == "")
+        method = _default_method;
+    else if (std::find(_supported_methods.begin(),
+                       _supported_methods.end(), method) != _supported_methods.end())
+        std::cout << "Method not supported!" << '\n';
+
+    if (method == "MLE"){
+        MLEResults mr = _optimize_fit(_neg_loglik);
+        Results* r = &mr;
+        return r;
+    }
+
+}
+
+
+MLEResults TSM::_optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type,
+                            const std::optional<Eigen::MatrixXd>& cov_matrix,
+                            const std::optional<size_t> iterations,
+                            const std::optional<size_t> nsims,
+                            const std::optional<StochOptim> optimizer,
+                            const std::optional<u_int8_t> batch_size,
+                            const std::optional<size_t> mininbatch,
+                            const std::optional<bool> map_start,
+                            const std::optional<double> learning_rate,
+                            const std::optional<bool> record_elbo,
+                            const std::optional<bool> quiet_progress) {
+}
