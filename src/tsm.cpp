@@ -1,6 +1,10 @@
 #include "tsm.hpp"
 
-#include <memory>
+Posterior::Posterior(const std::function<double(Eigen::VectorXd)>& posterior) : _posterior{_posterior} {}
+
+Posterior::scalar_t Posterior::operator()(const vector_t& x) const {
+    return _posterior(x);
+}
 
 TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_variables{model_type} {};
 
@@ -13,9 +17,12 @@ BBVIResults TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opti
     Eigen::VectorXd start_loc;
     if ((_model_type != "GPNARX" || _model_type != "GPR" || _model_type != "GP" || _model_type != "GASRank") &&
         !mini_batch.has_value()) {
-        // Eigen::VectorXd p = optimize.minimize(posterior, phi, method='L-BFGS-B') --> lbfgs search from d lib // PML
-        // starting values
-        // start_loc = 0.8 * p + 0.2 * phi;
+        // TODO: Controllare che il procedimento sia corretto!
+        Posterior function{[posterior](Eigen::VectorXd x) { return posterior(x, std::nullopt); }};
+        cppoptlib::solver::Lbfgsb<Posterior> solver(Eigen::VectorXd::Zero(phi.size()),
+                                                    Eigen::VectorXd::Ones(phi.size()));
+        auto [solution, solver_state] = solver.Minimize(function, phi); // PML starting values
+        start_loc                     = 0.8 * solution.x + 0.2 * phi;
     } else
         start_loc = phi;
     Eigen::VectorXd start_ses{};

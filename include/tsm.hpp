@@ -1,11 +1,13 @@
 #pragma once
 
+#include "cppoptlib/solver/lbfgsb.h"
 #include "headers.hpp"
 #include "inference/bbvi.hpp"
 #include "latent_variables.hpp"
 #include "results.hpp"
 
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -19,6 +21,15 @@ struct ModelOutput final {
     Eigen::VectorXd states;
     Eigen::VectorXd states_var;
     std::vector<std::string> x_names;
+};
+
+class Posterior : public cppoptlib::function::Function<double> {
+    std::function<double(Eigen::VectorXd)> _posterior;
+
+public:
+    Posterior(const std::function<double(Eigen::VectorXd)>& posterior);
+
+    scalar_t operator()(const vector_t& x) const;
 };
 
 /**
