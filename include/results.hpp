@@ -132,7 +132,7 @@ public:
     void summary(bool transformed) override;
 };
 
-class BBVIResults : Results {
+class BBVIResults : public Results {
 private:
     Eigen::MatrixXd _ihessian;
     Eigen::VectorXd _ses;
@@ -202,7 +202,7 @@ public:
     void summary(bool transformed) override;
 };
 
-class BBVISSResults : Results {
+class BBVISSResults : public Results {
 private:
     double _objective_value;
     Eigen::MatrixXd _ihessian;
@@ -272,7 +272,7 @@ public:
     void summary(bool transformed) override;
 };
 
-class LaplaceResults : Results {
+class LaplaceResults : public Results {
 private:
     Eigen::MatrixXd _chain;
     Eigen::MatrixXd _ihessian;
@@ -331,7 +331,7 @@ public:
     void summary(bool transformed) override;
 };
 
-class MCMCResults : Results {
+class MCMCResults : public Results {
 private:
     Eigen::MatrixXd _samples;
     Eigen::VectorXd _mean_est;

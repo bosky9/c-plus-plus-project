@@ -92,7 +92,7 @@ protected:
      * @param quiet
      * @return A BBVIResults object
      */
-    BBVIResults _bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
+    BBVIResults* _bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
                           const std::string& optimizer = "RMSProp", size_t iterations = 1000, bool map_start = true,
                           size_t batch_size = 12, std::optional<size_t> mini_batch = std::nullopt,
                           double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false,
@@ -103,7 +103,7 @@ protected:
      * @param obj_type method, whether a likelihood or a posterior
      * @return A LaplaceResults object
      */
-    LaplaceResults _laplace_fit(const std::function<double(Eigen::VectorXd)>& obj_type);
+    LaplaceResults* _laplace_fit(const std::function<double(Eigen::VectorXd)>& obj_type);
 
     /**
      * @brief Performs random walk Metropolis-Hastings
@@ -116,23 +116,24 @@ protected:
      * @param quiet_progress
      * @return A MCMCResults object
      */
-    MCMCResults _mcmc_fit(double scale = 1.0, size_t nsims = 10000, bool printer = true,
+    MCMCResults* _mcmc_fit(double scale = 1.0, std::optional<size_t> nsims = 10000, bool printer = true,
                           const std::string& method                        = "M-H",
-                          const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt, bool map_start = true,
-                          bool quiet_progress = false);
+                          const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
+                          std::optional<bool> map_start = true,
+                          std::optional<bool> quiet_progress = false);
 
     /**
      * @brief Performs OLS
      * @return A MLEResults object
      */
-    MLEResults _ols_fit();
+    MLEResults* _ols_fit();
 
     /**
      * @brief Fits models using Maximum Likelihood or Penalized Maximum Likelihood
      * @param obj_type method
      * @return A MLEResults object
      */
-    MLEResults _optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type = {},
+    MLEResults* _optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type = {},
                              const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
                              const std::optional<size_t> iterations = 1000,
                              const std::optional<size_t> nsims = 10000,
