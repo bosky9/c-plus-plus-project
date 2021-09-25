@@ -9,9 +9,9 @@ Posterior::scalar_t Posterior::operator()(const vector_t& x) const {
 TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_variables{model_type} {};
 
 BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
-                           const std::string& optimizer, size_t iterations, bool map_start, size_t batch_size,
-                           std::optional<size_t> mini_batch, double learning_rate, bool record_elbo,
-                           bool quiet_progress, const Eigen::VectorXd& start) {
+                            const std::string& optimizer, size_t iterations, bool map_start, size_t batch_size,
+                            std::optional<size_t> mini_batch, double learning_rate, bool record_elbo,
+                            bool quiet_progress, const Eigen::VectorXd& start) {
     Eigen::VectorXd phi{(start.size() > 0) ? start : _latent_variables.get_z_starting_values()}; // If user supplied
 
     Eigen::VectorXd start_loc;
@@ -65,12 +65,12 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     // LatentVariables latent_variables_store = _latent_variables; // No sense
 
     return new BBVIResults{_data_name,        output.x_names, _model_name,         _model_type,       _latent_variables,
-            output.y,          _index,         _multivariate_model, _neg_logposterior, "BBVI",
-            _z_hide,           _max_lag,       data.final_ses,      output.theta,      output.scores,
-            data.elbo_records, output.states,  output.states_var};
+                           output.y,          _index,         _multivariate_model, _neg_logposterior, "BBVI",
+                           _z_hide,           _max_lag,       data.final_ses,      output.theta,      output.scores,
+                           data.elbo_records, output.states,  output.states_var};
 }
 
-Results* TSM::fit(std::string method, const std::optional<Eigen::MatrixXd> &cov_matrix,
+Results* TSM::fit(std::string method, const std::optional<Eigen::MatrixXd>& cov_matrix,
                   const std::optional<size_t> iterations, const std::optional<size_t> nsims,
                   const std::optional<StochOptim> optimizer, const std::optional<u_int8_t> batch_size,
                   const std::optional<size_t> mininbatch, const std::optional<bool> map_start,
@@ -78,50 +78,39 @@ Results* TSM::fit(std::string method, const std::optional<Eigen::MatrixXd> &cov_
                   const std::optional<bool> quiet_progress) {
     if (method == "")
         method = _default_method;
-    else if (std::find(_supported_methods.begin(),
-                       _supported_methods.end(), method) != _supported_methods.end())
+    else if (std::find(_supported_methods.begin(), _supported_methods.end(), method) != _supported_methods.end())
         std::cout << "Method not supported!" << '\n';
 
     if (method == "MLE")
-        return _optimize_fit(_neg_loglik, cov_matrix, iterations, nsims,
-                             optimizer, batch_size, mininbatch, map_start,
+        return _optimize_fit(_neg_loglik, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch, map_start,
                              learning_rate, record_elbo, quiet_progress);
 
     else if (method == "PML")
-        return _optimize_fit(_neg_logposterior, cov_matrix, iterations, nsims,
-                             optimizer, batch_size, mininbatch, map_start,
-                             learning_rate, record_elbo, quiet_progress);
+        return _optimize_fit(_neg_logposterior, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch,
+                             map_start, learning_rate, record_elbo, quiet_progress);
 
     else if (method == "M-H")
         return _mcmc_fit(1.0, nsims, true, "M-H",
 
                          cov_matrix, map_start, quiet_progress);
-    else if(method == "Laplace")
+    else if (method == "Laplace")
         return _laplace_fit(_neg_logposterior);
 
-    else if(method == "BBVI"){
-        std::function<double(Eigen::VectorXd)> posterior;
-        if(!mininbatch)
-            posterior = _neg_logposterior;
-        else
+    else if (method == "BBVI") {
+        std::function<double(Eigen::VectorXd, std::optional<size_t>)> posterior;
+        if (!mininbatch) {
+            posterior = change_function_params(_neg_logposterior);
+        } else
             posterior = _mb_neg_logposterior;
         return _bbvi_fit(posterior);
-    }
-    else if (method == "OLS")
+    } else if (method == "OLS")
         return _ols_fit();
-
 }
 
 
 MLEResults* TSM::_optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type,
-                            const std::optional<Eigen::MatrixXd>& cov_matrix,
-                            const std::optional<size_t> iterations,
-                            const std::optional<size_t> nsims,
-                            const std::optional<StochOptim> optimizer,
-                            const std::optional<u_int8_t> batch_size,
-                            const std::optional<size_t> mininbatch,
-                            const std::optional<bool> map_start,
-                            const std::optional<double> learning_rate,
-                            const std::optional<bool> record_elbo,
-                            const std::optional<bool> quiet_progress) {
-}
+                               const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
+                               const std::optional<size_t> nsims, const std::optional<StochOptim> optimizer,
+                               const std::optional<u_int8_t> batch_size, const std::optional<size_t> mininbatch,
+                               const std::optional<bool> map_start, const std::optional<double> learning_rate,
+                               const std::optional<bool> record_elbo, const std::optional<bool> quiet_progress) {}
