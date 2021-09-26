@@ -17,7 +17,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     Eigen::VectorXd start_loc;
     if ((_model_type != "GPNARX" || _model_type != "GPR" || _model_type != "GP" || _model_type != "GASRank") &&
         !mini_batch.has_value()) {
-        // TODO: Controllare che il procedimento sia corretto!
+        // TODO: Controllare che il procedimento sia corretto e i bounds!
         Posterior function{[posterior](Eigen::VectorXd x) { return posterior(x, std::nullopt); }};
         cppoptlib::solver::Lbfgsb<Posterior> solver(Eigen::VectorXd::Zero(phi.size()),
                                                     Eigen::VectorXd::Ones(phi.size()));
@@ -64,10 +64,69 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
     // LatentVariables latent_variables_store = _latent_variables; // No sense
 
-    return new BBVIResults{_data_name,        output.x_names, _model_name,         _model_type,       _latent_variables,
-                           output.y,          _index,         _multivariate_model, _neg_logposterior, "BBVI",
+    return new BBVIResults{_data_name,        output.X_names, _model_name,         _model_type,       _latent_variables,
+                           output.Y,          _index,         _multivariate_model, _neg_logposterior, "BBVI",
                            _z_hide,           _max_lag,       data.final_ses,      output.theta,      output.scores,
                            data.elbo_records, output.states,  output.states_var};
+}
+
+MLEResults* TSM::_optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type,
+                               const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
+                               const std::optional<size_t> nsims, const std::optional<StochOptim> optimizer,
+                               const std::optional<u_int8_t> batch_size, const std::optional<size_t> mininbatch,
+                               const std::optional<bool> map_start, const std::optional<double> learning_rate,
+                               const std::optional<bool> record_elbo, const std::optional<bool> quiet_progress,
+                               const std::optional<bool> preopt_search, const std::optional<Eigen::VectorXd> start) {
+
+    std::string method;
+    if (obj_type == _neg_loglik) // TODO: Serve un modo metodo per confrontare le funzioni
+        method = "MLE";
+    else
+        method = "PML";
+
+    // Starting values - Check to see if model has preoptimize method, if not, simply use default starting values
+    Eigen::VectorXd phi;
+    bool preoptimized{false};
+    if (start != std::nullopt)
+        phi = start.value();
+    else {
+        // TODO: _preoptimize_model() non trovato -> Si può eliminare l'if?
+        if (preopt_search) {
+            // Eigen::VectorXd phi = _preoptimize_model(_latent_variables.get_z_starting_values(), method);
+            // bool preoptimized{true};
+            // TODO: _preoptimize_model() non trovato
+            phi = _latent_variables.get_z_starting_values();
+        } else
+            phi = _latent_variables.get_z_starting_values();
+    }
+
+    // Optimize using L-BFGS-B
+    // TODO: Controllare che il procedimento sia corretto e i bounds!
+    Posterior function{obj_type};
+    cppoptlib::solver::Lbfgsb<Posterior> solver(Eigen::VectorXd::Zero(phi.size()), Eigen::VectorXd::Ones(phi.size()));
+    auto [p, solver_state] = solver.Minimize(function, phi);
+
+    if (preoptimized) {
+        auto [p2, solver_state2] = solver.Minimize(function, _latent_variables.get_z_starting_values());
+        if (_neg_loglik(p2.x) < _neg_loglik(p.x))
+            p = p2;
+    }
+
+    ModelOutput output{_categorize_model_output(p.x)};
+
+    // Check that matrix is non-singular, act accordingly
+    // TRY
+    Eigen::MatrixXd ihessian{(nd.Hessian(obj_type)(p.x)).inverse()}; // TODO: Find a function to compute Hessian
+    Eigen::MatrixXd ses{ihessian.diagonal().cwiseAbs().array().pow(0.5)};
+    _latent_variables.set_z_values(p.x, method, ses);
+    // EXCEPT
+    _latent_variables.set_z_values(p.x, method);
+
+    _latent_variables.set_estimation_method(method);
+
+    return new MLEResults(_data_name, output.X_names, _model_name, _model_type, _latent_variables, p.x, output.Y,
+                          _index, _multivariate_model, obj_type, method, _z_hide, _max_lag, ihessian, output.theta,
+                          output.scores, output.states, output.states_var);
 }
 
 Results* TSM::fit(std::string method, const std::optional<Eigen::MatrixXd>& cov_matrix,
@@ -78,8 +137,8 @@ Results* TSM::fit(std::string method, const std::optional<Eigen::MatrixXd>& cov_
                   const std::optional<bool> quiet_progress) {
     if (method == "")
         method = _default_method;
-    else if (std::find(_supported_methods.begin(), _supported_methods.end(), method) != _supported_methods.end())
-        std::cout << "Method not supported!" << '\n';
+    assert(std::find(_supported_methods.begin(), _supported_methods.end(), method) != _supported_methods.end() &&
+           "Method not supported!");
 
     if (method == "MLE")
         return _optimize_fit(_neg_loglik, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch, map_start,
@@ -106,11 +165,3 @@ Results* TSM::fit(std::string method, const std::optional<Eigen::MatrixXd>& cov_
     } else if (method == "OLS")
         return _ols_fit();
 }
-
-
-MLEResults* TSM::_optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type,
-                               const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
-                               const std::optional<size_t> nsims, const std::optional<StochOptim> optimizer,
-                               const std::optional<u_int8_t> batch_size, const std::optional<size_t> mininbatch,
-                               const std::optional<bool> map_start, const std::optional<double> learning_rate,
-                               const std::optional<bool> record_elbo, const std::optional<bool> quiet_progress) {}

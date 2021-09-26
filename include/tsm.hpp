@@ -17,11 +17,11 @@
  */
 struct ModelOutput final {
     Eigen::VectorXd theta;
-    Eigen::MatrixXd y;
+    Eigen::MatrixXd Y;
     Eigen::VectorXd scores;
     Eigen::VectorXd states;
     Eigen::VectorXd states_var;
-    std::vector<std::string> x_names;
+    std::vector<std::string> X_names;
 };
 
 class Posterior : public cppoptlib::function::Function<double> {
@@ -134,16 +134,16 @@ protected:
      * @param obj_type method
      * @return A MLEResults object
      */
-    MLEResults* _optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type = {},
-                              const std::optional<Eigen::MatrixXd>& cov_matrix       = std::nullopt,
-                              const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
-                              const std::optional<StochOptim> optimizer = std::nullopt,
-                              const std::optional<u_int8_t> batch_size  = 12,
-                              const std::optional<size_t> mininbatch    = std::nullopt,
-                              const std::optional<bool> map_start       = true,
-                              const std::optional<double> learning_rate = 1e-03,
-                              const std::optional<bool> record_elbo     = std::nullopt,
-                              const std::optional<bool> quiet_progress  = false);
+    MLEResults*
+    _optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type = {},
+                  const std::optional<Eigen::MatrixXd>& cov_matrix       = std::nullopt,
+                  const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
+                  const std::optional<StochOptim> optimizer = std::nullopt,
+                  const std::optional<u_int8_t> batch_size = 12, const std::optional<size_t> mininbatch = std::nullopt,
+                  const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
+                  const std::optional<bool> record_elbo    = std::nullopt,
+                  const std::optional<bool> quiet_progress = false, const std::optional<bool> preopt_search = true,
+                  const std::optional<Eigen::VectorXd> start = std::nullopt);
 
 public:
     //@Todo: consider using only optional on None parameters
