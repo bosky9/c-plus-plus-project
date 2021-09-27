@@ -315,15 +315,15 @@ void LatentVariables::set_estimation_method(std::string method) {
 
 void LatentVariables::set_z_values(const Eigen::VectorXd& values, const std::string& method,
                                    const std::optional<Eigen::VectorXd>& stds,
-                                   const std::optional<std::vector<Eigen::VectorXd>>& samples) {
+                                   const std::optional<Eigen::MatrixXd>& samples) {
     assert(values.size() == _z_list.size());
     for (size_t i{0}; i < _z_list.size(); i++) {
         _z_list[i].set_method(method);
         _z_list[i].set_value(values[i]);
         if (stds)
             _z_list[i].set_std(stds.value()[i]);
-        if (samples)
-            _z_list[i].set_sample(samples.value()[i]);
+        if (samples.has_value())
+            _z_list[i].set_sample(samples.value().row(i));
     }
     _estimated = true;
 }

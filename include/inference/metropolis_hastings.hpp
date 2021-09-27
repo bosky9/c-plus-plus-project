@@ -12,7 +12,7 @@ class MetropolisHastings final {
 private:
     std::function<double(Eigen::VectorXd)> _posterior; ///< A posterior function
     double _scale;                                     ///< The scale for the random walk
-    int _nsims;                                        ///< The number of iterations to perform
+    size_t _nsims;                                     ///< The number of iterations to perform
     Eigen::VectorXd _initials;                         ///< Where to start the MCMC chain
     Eigen::Index _param_no;                            ///< Number of paramters
     int _thinning;               ///< By how much to thin the chains (2 means drop every other point)
@@ -35,7 +35,7 @@ public:
      * // TODO: TSM model_object A model object (for use in SPDK sampling)
      * @param quiet_progress Whether to print progress to console or stay quiet
      */
-    MetropolisHastings(std::function<double(Eigen::VectorXd)>& posterior, double scale, int nsims,
+    MetropolisHastings(std::function<double(Eigen::VectorXd)>& posterior, double scale, size_t nsims,
                        const Eigen::VectorXd& initials, const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
                        int thinning = 2, bool warm_up_period = true, // TODO: TSM model_object = nullptr,
                        bool quiet_progress = false);

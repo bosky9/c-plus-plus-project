@@ -61,12 +61,22 @@ protected:
             Eigen::VectorXd scores = Eigen::VectorXd::Zero(0), Eigen::VectorXd states = Eigen::VectorXd::Zero(0),
             Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));
 
-
-
+    /**
+     * @brief Rounds given specific rounding points
+     * @param x Value to round
+     * @param rounding_points Rounding points
+     * @return Value rounded up to rounding points
+     */
     [[nodiscard]] static double round_to(double x, uint8_t rounding_points);
 
 public:
     virtual void summary(bool transformed) = 0;
+
+    /**
+     * @brief Returns latent variables
+     * @return Latent variables in _z
+     */
+    [[nodiscard]] LatentVariables get_z() const;
 };
 
 // Public is necessary for pointers (Return* p = &MLEResults{...})
@@ -87,6 +97,13 @@ private:
      * @brief Prints results without hessian
      */
     void summary_without_hessian() const;
+
+public:
+    /**
+     * @brief Returns the Inverse Hessian matrix
+     * @return Inverse Hessian matrix
+     */
+    [[nodiscard]] Eigen::MatrixXd get_ihessian() const;
 
 public:
     /**
@@ -369,7 +386,7 @@ public:
                 std::vector<size_t> index, bool multivariate_model,
                 std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                 Eigen::MatrixXd samples, Eigen::VectorXd mean_est, Eigen::VectorXd median_est,
-                Eigen::VectorXd lower_95_est, Eigen::VectorXd upper_95_est,
+                Eigen::VectorXd upper_95_est, Eigen::VectorXd lower_95_est,
                 Eigen::VectorXd signal = Eigen::VectorXd::Zero(0), Eigen::VectorXd scores = Eigen::VectorXd::Zero(0),
                 Eigen::VectorXd states     = Eigen::VectorXd::Zero(0),
                 Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));

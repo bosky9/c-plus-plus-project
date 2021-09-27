@@ -35,6 +35,10 @@ double Results::round_to(double x, uint8_t rounding_points) {
     return round(x * shift) / shift;
 }
 
+LatentVariables Results::get_z() const {
+    return _z;
+}
+
 MLEResults::MLEResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                        const std::string& model_type, const LatentVariables& latent_variables, Eigen::VectorXd results,
                        Eigen::MatrixXd data, std::vector<size_t> index, bool multivariate_model,
@@ -238,6 +242,10 @@ void MLEResults::summary_without_hessian() const {
     }
 }
 
+Eigen::MatrixXd MLEResults::get_ihessian() const {
+    return _ihessian;
+}
+
 BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                          const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
                          std::vector<size_t> index, bool multivariate_model,
@@ -270,7 +278,7 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
     _mean_est                     = samp.mean_est;
     _median_est                   = samp.median_est;
     _upper_95_est                 = samp.upper_95_est;
-    _lower_5_est                  = samp.lower_5_est;
+    _lower_5_est                  = samp.lower_95_est;
     _t_chain                      = _chain;
     std::vector<Family*> z_priors = _z.get_z_priors();
     for (Eigen::Index k{0}; k < _mean_est.size(); k++) {
@@ -400,7 +408,7 @@ BBVISSResults::BBVISSResults(std::vector<std::string> data_name, std::vector<std
     _mean_est                     = samp.mean_est;
     _median_est                   = samp.median_est;
     _upper_95_est                 = samp.upper_95_est;
-    _lower_5_est                  = samp.lower_5_est;
+    _lower_5_est                  = samp.lower_95_est;
     _t_chain                      = _chain;
     std::vector<Family*> z_priors = _z.get_z_priors();
     for (Eigen::Index k{0}; k < _mean_est.size(); k++) {
@@ -541,7 +549,7 @@ LaplaceResults::LaplaceResults(std::vector<std::string> data_name, std::vector<s
     _mean_est                     = samp.mean_est;
     _median_est                   = samp.median_est;
     _upper_95_est                 = samp.upper_95_est;
-    _lower_5_est                  = samp.lower_5_est;
+    _lower_5_est                  = samp.lower_95_est;
     _t_chain                      = _chain;
     std::vector<Family*> z_priors = _z.get_z_priors();
     for (Eigen::Index k{0}; k < _mean_est.size(); k++) {
@@ -642,7 +650,7 @@ MCMCResults::MCMCResults(std::vector<std::string> data_name, std::vector<std::st
                          std::vector<size_t> index, bool multivariate_model,
                          std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
                          int max_lag, Eigen::MatrixXd samples, Eigen::VectorXd mean_est, Eigen::VectorXd median_est,
-                         Eigen::VectorXd lower_95_est, Eigen::VectorXd upper_95_est, Eigen::VectorXd signal,
+                         Eigen::VectorXd upper_95_est, Eigen::VectorXd lower_95_est, Eigen::VectorXd signal,
                          Eigen::VectorXd scores, Eigen::VectorXd states, Eigen::VectorXd states_var)
     : Results{std::move(data_name),
               std::move(X_names),

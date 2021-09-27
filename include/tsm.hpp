@@ -3,6 +3,7 @@
 #include "cppoptlib/solver/lbfgsb.h"
 #include "headers.hpp"
 #include "inference/bbvi.hpp"
+#include "inference/metropolis_hastings.hpp"
 #include "latent_variables.hpp"
 #include "posterior.hpp"
 #include "results.hpp"
@@ -119,8 +120,8 @@ protected:
      * @return A MCMCResults object
      */
     MCMCResults* _mcmc_fit(double scale = 1.0, std::optional<size_t> nsims = 10000, bool printer = true,
-                           const std::string& method                        = "M-H",
-                           const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
+                           const std::string& method                  = "M-H",
+                           std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
                            std::optional<bool> map_start = true, std::optional<bool> quiet_progress = false);
 
     /**
@@ -138,12 +139,12 @@ protected:
     _optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type = {},
                   const std::optional<Eigen::MatrixXd>& cov_matrix       = std::nullopt,
                   const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
-                  const std::optional<StochOptim> optimizer = std::nullopt,
+                  const std::optional<StochOptim>& optimizer = std::nullopt,
                   const std::optional<u_int8_t> batch_size = 12, const std::optional<size_t> mininbatch = std::nullopt,
                   const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
                   const std::optional<bool> record_elbo    = std::nullopt,
                   const std::optional<bool> quiet_progress = false, const std::optional<bool> preopt_search = true,
-                  const std::optional<Eigen::VectorXd> start = std::nullopt);
+                  const std::optional<Eigen::VectorXd>& start = std::nullopt);
 
 public:
     //@Todo: consider using only optional on None parameters
@@ -161,9 +162,10 @@ public:
      * it is necessary to declare their extension as public.
      * es. "class MLEResults : public Results {...}".
      */
-    Results* fit(std::string method = "", const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
+    Results* fit(std::string method = "", bool printer = true,
+                 std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
                  const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
-                 const std::optional<StochOptim> optimizer = std::nullopt,
+                 const std::optional<StochOptim>& optimizer = std::nullopt,
                  const std::optional<u_int8_t> batch_size = 12, const std::optional<size_t> mininbatch = std::nullopt,
                  const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
                  const std::optional<bool> record_elbo    = std::nullopt,

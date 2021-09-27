@@ -302,8 +302,8 @@ public:
      * @param samples Vector of samples
      */
     void set_z_values(const Eigen::VectorXd& values, const std::string& method,
-                      const std::optional<Eigen::VectorXd>& stds                 = std::nullopt,
-                      const std::optional<std::vector<Eigen::VectorXd>>& samples = std::nullopt);
+                      const std::optional<Eigen::VectorXd>& stds    = std::nullopt,
+                      const std::optional<Eigen::MatrixXd>& samples = std::nullopt);
 
     /**
      * @brief Set starting values to latent variables

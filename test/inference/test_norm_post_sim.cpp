@@ -13,7 +13,7 @@ TEST_CASE("norm_post_sim check sizes", "[norm_post_sim]") {
     REQUIRE(data.mean_est.size() == 3);
     REQUIRE(data.median_est.size() == 3);
     REQUIRE(data.upper_95_est.size() == 3);
-    REQUIRE(data.lower_5_est.size() == 3);
+    REQUIRE(data.lower_95_est.size() == 3);
 }
 
 TEST_CASE("norm_post_sim check normal distribution", "[norm_post_sim]") {
@@ -26,6 +26,6 @@ TEST_CASE("norm_post_sim check normal distribution", "[norm_post_sim]") {
         REQUIRE((data.mean_est[i] > -0.1) & (data.mean_est[i] < 0.1));
         REQUIRE((data.median_est[i] > -0.2) & (data.median_est[i] < 0.2));
         REQUIRE((data.upper_95_est[i] > 1));
-        REQUIRE((data.lower_5_est[i] < -1));
+        REQUIRE((data.lower_95_est[i] < -1));
     }
 }
