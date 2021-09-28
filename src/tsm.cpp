@@ -228,3 +228,51 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
     } else if (method == "OLS")
         return _ols_fit();
 }
+
+std::vector<size_t> TSM::shift_dates(size_t h) {
+    std::vector<size_t> date_index(_index.begin() + _max_lag, _index.end());
+    // TODO
+}
+
+Eigen::VectorXd TSM::transform_z() const {
+    return _latent_variables.get_z_values(true);
+}
+
+void TSM::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width, size_t height) {
+    _latent_variables.plot_z(indices, width, height);
+}
+
+void TSM::adjust_prior(const std::vector<size_t>& index, Family& prior) {
+    _latent_variables.adjust_prior(index, prior);
+}
+
+Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) {
+    assert(_latent_variables.get_estimation_method());
+    assert(_latent_variables.get_estimation_method().value() == "BBVI" || _latent_variables.get_estimation_method().value() == "M-H");
+    if (_latent_variables.get_estimation_method().value() == "BBVI") {
+        std::vector<Family*> q_vec = _latent_variables.get_z_approx_dist();
+        Eigen::MatrixXd output(q_vec.size(), nsims);
+        size_t r = 0;
+        for (Family* f : q_vec) {
+            output.row(r) = f->draw_variable_local(nsims);
+            r++;
+        }
+        return output;
+    } else {
+        std::vector<LatentVariable> lvs = _latent_variables.get_z_list();
+        // TODO: Fissare la dimensione dei vettori _sample in LatentVariable (e qui usare quella)
+        size_t cols = lvs.at(0).get_sample().value().size();
+        Eigen::MatrixXd chain(lvs.size(), cols);
+        for (size_t i{0}; i < lvs.size(); i++) {
+            assert(lvs.at(i).get_sample());
+            chain.row(i) = lvs.at(i).get_sample().value();
+        }
+        std::vector<size_t> ind;
+        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+        std::default_random_engine generator(seed);
+        std::uniform_int_distribution<int> distribution{0, cols};
+        for (size_t n{0}; n < nsims; n++)
+            ind.push_back(distribution(generator));
+        return chain(Eigen::all, ind);
+    }
+}

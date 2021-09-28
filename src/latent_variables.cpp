@@ -309,6 +309,10 @@ std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
     return q_list;
 }
 
+std::optional<std::string> LatentVariables::get_estimation_method() const {
+    return _estimation_method;
+}
+
 void LatentVariables::set_estimation_method(std::string method) {
     _estimation_method = method;
 }

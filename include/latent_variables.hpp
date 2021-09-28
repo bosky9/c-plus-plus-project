@@ -184,7 +184,7 @@ private:
     std::vector<LatentVariable> _z_list;                             ///< List of latent variables
     std::map<std::string, std::map<std::string, size_t>> _z_indices; ///<
     bool _estimated = false;                                         ///<
-    std::string _estimation_method;                                  ///<
+    std::optional<std::string> _estimation_method = std::nullopt;    ///<
 
 public:
     /**
@@ -287,6 +287,12 @@ public:
      * @return Approximate distributions' names
      */
     [[nodiscard]] std::vector<std::string> get_z_approx_dist_names() const;
+
+    /**
+     * @brief Get the estimation method if setted
+     * @return The estimation method if setted, std::nullopt_t otherwise
+     */
+    [[nodiscard]] std::optional<std::string> get_estimation_method() const;
 
     /**
      * @brief Sets estimation method
