@@ -135,20 +135,14 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
                            output.theta, output.scores, output.states, output.states_var);
 }
 
-MLEResults* TSM::_optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type,
+MLEResults* TSM::_optimize_fit(const std::string& method,
+                               const std::function<double(Eigen::VectorXd)>& obj_type,
                                const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
                                const std::optional<size_t> nsims, const std::optional<StochOptim>& optimizer,
                                const std::optional<u_int8_t> batch_size, const std::optional<size_t> mininbatch,
                                const std::optional<bool> map_start, const std::optional<double> learning_rate,
                                const std::optional<bool> record_elbo, const std::optional<bool> quiet_progress,
                                const std::optional<bool> preopt_search, const std::optional<Eigen::VectorXd>& start) {
-
-    std::string method;
-    if (obj_type == _neg_loglik) // TODO: Serve un modo metodo per confrontare le funzioni
-        method = "MLE";
-    else
-        method = "PML";
-
     // Starting values - Check to see if model has preoptimize method, if not, simply use default starting values
     Eigen::VectorXd phi;
     bool preoptimized{false};
@@ -206,11 +200,11 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
            "Method not supported!");
 
     if (method == "MLE")
-        return _optimize_fit(_neg_loglik, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch, map_start,
+        return _optimize_fit(method, _neg_loglik, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch, map_start,
                              learning_rate, record_elbo, quiet_progress);
 
     else if (method == "PML")
-        return _optimize_fit(_neg_logposterior, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch,
+        return _optimize_fit(method, _neg_logposterior, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch,
                              map_start, learning_rate, record_elbo, quiet_progress);
 
     else if (method == "M-H")
