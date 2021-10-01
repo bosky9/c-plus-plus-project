@@ -43,15 +43,15 @@ protected:
     std::vector<std::string> _data_name;
     std::string _model_name;
     std::string _model_type; ///< The type of model (e.g. 'ARIMA', 'GARCH')
-    std::vector<size_t> _index;
+    std::vector<double> _index; ///< The times of the input data (years, days or seconds)
     bool _multivariate_model;
     std::function<double(Eigen::VectorXd)> _neg_logposterior;
     std::function<double(Eigen::VectorXd)> _neg_loglik;
     // Not used in Python
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior;
     std::function<double(Eigen::VectorXd, std::optional<size_t>)>
-            _mb_neg_logposterior;                                                 // TODO: Check function parameters
-    std::function<double(Eigen::VectorXd, std::optional<size_t>)> _mb_neg_loglik; // TODO: Check function parameters
+            _mb_neg_logposterior;
+    std::function<double(Eigen::VectorXd, std::optional<size_t>)> _mb_neg_loglik;
     bool _z_hide;
     int _max_lag;
     LatentVariables _latent_variables; ///< Holding variables for model output
@@ -174,10 +174,10 @@ public:
 
     /**
      * @brief Auxiliary function for creating dates for forecasts
-     * @param h How many steps to forecast
+     * @param n How many steps to forecast
      * @return A transformed date_index object
      */
-    std::vector<size_t> shift_dates(size_t h);
+    std::vector<double> shift_dates(size_t n);
 
     /**
      * @brief Transforms latent variables to actual scale by applying link function
