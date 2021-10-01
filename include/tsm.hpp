@@ -2,6 +2,7 @@
 
 #include "cppoptlib/solver/lbfgsb.h"
 #include "headers.hpp"
+#include "hessian.hpp"
 #include "inference/bbvi.hpp"
 #include "inference/metropolis_hastings.hpp"
 #include "latent_variables.hpp"
@@ -10,6 +11,7 @@
 
 #include <functional>
 #include <memory>
+#include <numeric_limits>
 #include <optional>
 #include <string>
 
@@ -136,8 +138,8 @@ protected:
      * @return A MLEResults object
      */
     MLEResults*
-    _optimize_fit(const std::function<double(Eigen::VectorXd)>& obj_type = {},
-                  const std::optional<Eigen::MatrixXd>& cov_matrix       = std::nullopt,
+    _optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type = {},
+                  const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
                   const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
                   const std::optional<StochOptim>& optimizer = std::nullopt,
                   const std::optional<u_int8_t> batch_size = 12, const std::optional<size_t> mininbatch = std::nullopt,

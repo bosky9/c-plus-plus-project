@@ -19,10 +19,10 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     Eigen::VectorXd start_loc;
     if ((_model_type != "GPNARX" || _model_type != "GPR" || _model_type != "GP" || _model_type != "GASRank") &&
         !mini_batch.has_value()) {
-        // TODO: Controllare che il procedimento sia corretto e i bounds!
         Posterior function{[posterior](Eigen::VectorXd x) { return posterior(std::move(x), std::nullopt); }};
-        cppoptlib::solver::Lbfgsb<Posterior> solver(Eigen::VectorXd::Zero(phi.size()),
-                                                    Eigen::VectorXd::Ones(phi.size()));
+        cppoptlib::solver::Lbfgsb<Posterior> solver(
+                Eigen::VectorXd::Constant(phi.size(), std::numeric_limits<double>::min()),
+                Eigen::VectorXd::Constant(phi.size(), std::numeric_limits<double>::max()));
         auto [solution, solver_state] = solver.Minimize(function, phi); // PML starting values
         start_loc                     = 0.8 * solution.x + 0.2 * phi;
     } else
@@ -96,11 +96,9 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
         MLEResults* y{dynamic_cast<MLEResults*>(fit("PML", false))};
         starting_values = y->get_z().get_z_values();
 
-        // TRY
         Eigen::VectorXd ses = y->get_ihessian().diagonal().cwiseAbs();
         ses.unaryExpr([](double v) { return std::isnan(v) ? 1.0 : v; });
         cov_matrix.emplace(ses.asDiagonal());
-        // EXCEPT (pass)
     } else
         starting_values = _latent_variables.get_z_starting_values();
 
@@ -135,8 +133,7 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
                            output.theta, output.scores, output.states, output.states_var);
 }
 
-MLEResults* TSM::_optimize_fit(const std::string& method,
-                               const std::function<double(Eigen::VectorXd)>& obj_type,
+MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
                                const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
                                const std::optional<size_t> nsims, const std::optional<StochOptim>& optimizer,
                                const std::optional<u_int8_t> batch_size, const std::optional<size_t> mininbatch,
@@ -149,20 +146,16 @@ MLEResults* TSM::_optimize_fit(const std::string& method,
     if (start != std::nullopt)
         phi = start.value();
     else {
-        // TODO: _preoptimize_model() non trovato -> Si può eliminare l'if?
-        if (preopt_search) {
-            // Eigen::VectorXd phi = _preoptimize_model(_latent_variables.get_z_starting_values(), method);
-            // bool preoptimized{true};
-            // TODO: _preoptimize_model() non trovato
-            phi = _latent_variables.get_z_starting_values();
-        } else
-            phi = _latent_variables.get_z_starting_values();
+        // Possible call to  _preoptimize_model() (from subclass)
+        phi = _latent_variables.get_z_starting_values();
     }
 
     // Optimize using L-BFGS-B
-    // TODO: Controllare che il procedimento sia corretto e i bounds!
     Posterior function{obj_type};
-    cppoptlib::solver::Lbfgsb<Posterior> solver(Eigen::VectorXd::Zero(phi.size()), Eigen::VectorXd::Ones(phi.size()));
+    // the python solver equivalent has no bounds
+    cppoptlib::solver::Lbfgsb<Posterior> solver(
+            Eigen::VectorXd::Constant(phi.size(), std::numeric_limits<double>::min()),
+            Eigen::VectorXd::Constant(phi.size(), std::numeric_limits<double>::max()));
     auto [p, solver_state] = solver.Minimize(function, phi);
 
     if (preoptimized) {
@@ -174,18 +167,20 @@ MLEResults* TSM::_optimize_fit(const std::string& method,
     ModelOutput output{_categorize_model_output(p.x)};
 
     // Check that matrix is non-singular, act accordingly
-    // TRY
-    Eigen::MatrixXd ihessian{(nd.Hessian(obj_type)(p.x)).inverse()}; // TODO: Find a function to compute Hessian
+    Eigen::MatrixXd ihessian{hessian(obj_type, p.x).inverse()};
     Eigen::MatrixXd ses{ihessian.diagonal().cwiseAbs().array().pow(0.5)};
     _latent_variables.set_z_values(p.x, method, ses);
-    // EXCEPT
-    _latent_variables.set_z_values(p.x, method);
+    // _latent_variables.set_z_values(p.x, method);
 
     _latent_variables.set_estimation_method(method);
 
     return new MLEResults(_data_name, output.X_names, _model_name, _model_type, _latent_variables, p.x, output.Y,
                           _index, _multivariate_model, obj_type, method, _z_hide, _max_lag, ihessian, output.theta,
                           output.scores, output.states, output.states_var);
+}
+
+MLEResults* TSM::_ols_fit() {
+    // TODO
 }
 
 Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixXd>& cov_matrix,
@@ -200,12 +195,12 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
            "Method not supported!");
 
     if (method == "MLE")
-        return _optimize_fit(method, _neg_loglik, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch, map_start,
-                             learning_rate, record_elbo, quiet_progress);
+        return _optimize_fit(method, _neg_loglik, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch,
+                             map_start, learning_rate, record_elbo, quiet_progress);
 
     else if (method == "PML")
-        return _optimize_fit(method, _neg_logposterior, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch,
-                             map_start, learning_rate, record_elbo, quiet_progress);
+        return _optimize_fit(method, _neg_logposterior, cov_matrix, iterations, nsims, optimizer, batch_size,
+                             mininbatch, map_start, learning_rate, record_elbo, quiet_progress);
 
     else if (method == "M-H")
         return _mcmc_fit(1.0, nsims, true, "M-H", cov_matrix, map_start, quiet_progress);
@@ -242,7 +237,8 @@ void TSM::adjust_prior(const std::vector<size_t>& index, Family& prior) {
 
 Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) {
     assert(_latent_variables.get_estimation_method());
-    assert(_latent_variables.get_estimation_method().value() == "BBVI" || _latent_variables.get_estimation_method().value() == "M-H");
+    assert(_latent_variables.get_estimation_method().value() == "BBVI" ||
+           _latent_variables.get_estimation_method().value() == "M-H");
     if (_latent_variables.get_estimation_method().value() == "BBVI") {
         std::vector<Family*> q_vec = _latent_variables.get_z_approx_dist();
         Eigen::MatrixXd output(q_vec.size(), nsims);
@@ -254,8 +250,9 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) {
         return output;
     } else {
         std::vector<LatentVariable> lvs = _latent_variables.get_z_list();
-        // TODO: Fissare la dimensione dei vettori _sample in LatentVariable (e qui usare quella)
-        size_t cols = lvs.at(0).get_sample().value().size();
+        size_t cols                     = 0;
+        if (!lvs.empty())
+            cols = lvs.at(0).get_sample().value().size();
         Eigen::MatrixXd chain(lvs.size(), cols);
         for (size_t i{0}; i < lvs.size(); i++) {
             assert(lvs.at(i).get_sample());
@@ -264,7 +261,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) {
         std::vector<size_t> ind;
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine generator(seed);
-        std::uniform_int_distribution<int> distribution{0, cols};
+        std::uniform_int_distribution<size_t> distribution{0, cols};
         for (size_t n{0}; n < nsims; n++)
             ind.push_back(distribution(generator));
         return chain(Eigen::all, ind);
