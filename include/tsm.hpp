@@ -11,7 +11,6 @@
 
 #include <functional>
 #include <memory>
-#include <numeric_limits>
 #include <optional>
 #include <string>
 
@@ -130,7 +129,7 @@ protected:
      * @brief Performs OLS
      * @return A MLEResults object
      */
-    MLEResults* _ols_fit();
+    virtual MLEResults* _ols_fit(); // Defined in VAR
 
     /**
      * @brief Fits models using Maximum Likelihood or Penalized Maximum Likelihood

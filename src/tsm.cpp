@@ -133,6 +133,8 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
                            output.theta, output.scores, output.states, output.states_var);
 }
 
+MLEResults* TSM::_ols_fit() {}
+
 MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
                                const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
                                const std::optional<size_t> nsims, const std::optional<StochOptim>& optimizer,
@@ -177,10 +179,6 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
     return new MLEResults(_data_name, output.X_names, _model_name, _model_type, _latent_variables, p.x, output.Y,
                           _index, _multivariate_model, obj_type, method, _z_hide, _max_lag, ihessian, output.theta,
                           output.scores, output.states, output.states_var);
-}
-
-MLEResults* TSM::_ols_fit() {
-    // TODO
 }
 
 Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixXd>& cov_matrix,
@@ -255,7 +253,10 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) {
             cols = lvs.at(0).get_sample().value().size();
         Eigen::MatrixXd chain(lvs.size(), cols);
         for (size_t i{0}; i < lvs.size(); i++) {
+            // Check that the samples exists (since they are optional)
             assert(lvs.at(i).get_sample());
+            // Check that the samples have the same size
+            assert(lvs.at(i).get_sample().value().size() == cols);
             chain.row(i) = lvs.at(i).get_sample().value();
         }
         std::vector<size_t> ind;
