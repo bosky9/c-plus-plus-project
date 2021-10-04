@@ -230,9 +230,17 @@ public:
      * @param x A vector of random variables
      * @return The gradient of the location latent variable mu at x, for each variable
      *
-     * @details The template implementation allows x to be a double,
-     *          or a dinamic Eigen:Vector of doubles.
+     * @details In python, x could be a float or an array;
+     *          if x was an array, the code would work anyawy,
+     *          using element-wise operations.
+     *
+     *          The template implementation allows x to be a double,
+     *          or a dynamic Eigen:Vector of doubles.
      *          Both definition and specialization are included in the .cpp file.
+     *
+     *          Notice how, in order to implement element-wise operations,
+     *          we need to cast x as an Eigen:Array:
+     *          ... x.array() + 4 ... adds 4 to each element of x.
      */
     template<typename T>
     T vi_loc_score(const T& x) const;
@@ -244,9 +252,17 @@ public:
      * @param x A random variable, or a vector of random variables
      * @return The gradient of the scale latent variable at x, for each variable
      *
-     * @details The template implementation allows x to be a double,
-     *          or a dinamic Eigen:Vector of doubles.
+     * @details In python, x could be a float or an array;
+     *          if x was an array, the code would work anyawy,
+     *          using element-wise operations.
+     *
+     *          The template implementation allows x to be a double,
+     *          or a dynamic Eigen:Vector of doubles.
      *          Both definition and specialization are included in the .cpp file.
+     *
+     *          Notice how, in order to implement element-wise operations,
+     *          we need to cast x as an Eigen:Array:
+     *          ... x.array() + 4 ... adds 4 to each element of x.
      */
     // @Todo: chiedere a Busato
     template<typename T>
