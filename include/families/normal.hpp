@@ -33,7 +33,11 @@ public:
  *   since it is of type Normal and it is inside the Normal class.
  */
         double zero = 0;
-    };     ///<  Necessary for "build_latent_variables()" function
+    };     /**<  Necessary for "build_latent_variables()" function.
+ *   The python code appends to a list another list, this one:
+ *   (['Normal Scale', Flat(transform='exp'), Normal(0, 3), 0.0])
+ *   To translate the list above, we used this structure.
+ */
 
     /**
      * @brief Constructor for Normal distribution
