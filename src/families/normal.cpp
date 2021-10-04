@@ -83,7 +83,7 @@ Normal::approximating_model_reg(const Eigen::VectorXd& beta, const Eigen::Matrix
 std::list<Normal::lv_to_build> Normal::build_latent_variables() {
     std::list<Normal::lv_to_build> lvs_to_build;
     lvs_to_build.push_back(Normal::lv_to_build{});
-    return lvs_to_build;
+    return std::move(lvs_to_build); // return lvs_to_build
 }
 
 Eigen::VectorXd Normal::draw_variable(double loc, double scale, double shape, double skewness, int nsims) {
@@ -122,7 +122,7 @@ double Normal::neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd
 }
 
 double Normal::pdf(double mu) {
-    if (!_transform_name.empty())
+    if (!_transform_name.empty()) // We need to transform mu if transform != ""
         mu = _transform(mu);
     return (1.0 / _sigma0) * exp(-((0.5 * std::pow(mu - _mu0, 2)) / std::pow(_sigma0, 2)));
 }
