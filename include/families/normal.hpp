@@ -28,7 +28,10 @@ public:
     struct lv_to_build {
         std::string name = "Normal scale";
         Flat flat{"exp"};
-        std::unique_ptr<Normal> n{new Normal(0.0, 3.0)}; ///< Using a unique pointer avoids duoble deletes
+        std::unique_ptr<Normal> n{new Normal(0.0, 3.0)}; /**< Using a unique pointer avoids double deletes;
+ *   the pointer is needed because otherwise parameter n could not be initialized,
+ *   since it is of type Normal and it is inside the Normal class.
+ */
         double zero = 0;
     };     ///<  Necessary for "build_latent_variables()" function
 
