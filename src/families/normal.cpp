@@ -87,7 +87,7 @@ std::list<Normal::lv_to_build> Normal::build_latent_variables() {
 }
 
 Eigen::VectorXd Normal::draw_variable(double loc, double scale, double shape, double skewness, int nsims) {
-    std::normal_distribution<double> my_normal{loc, scale};
+    std::normal_distribution<double> my_normal{loc, scale}; //Uses the normal library function
     Eigen::VectorXd sims(nsims);
     std::random_device rd{};
     std::mt19937 gen{rd()};

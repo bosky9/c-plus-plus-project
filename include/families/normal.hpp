@@ -131,7 +131,7 @@ public:
      * @param shape Not actually used
      * @param skewness Not actually used
      * @param nsims Number of draws to take from the distribution
-     * @return Random draws from the distribution
+     * @return Random draws from the distribution, obtained thanks to the std::normal_distribution library.
      */
     static Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness, int nsims);
 
