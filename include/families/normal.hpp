@@ -11,23 +11,26 @@
 
 /**
  * @brief Normal distribution for time series
+ *
+ * @details Since this project won't cover GAS models,
+ *          the involved chunk of code has not been translated.
  */
 class Normal final : public Family {
 private:
-    double _mu0;
-    double _sigma0;
+    double _mu0; ///< The mean of the Gaussian
+    double _sigma0; ///< The variance of the Gaussian
     short unsigned int _param_no;
     bool _covariance_prior;
     // gradient_only won't be used (no GAS models)
 
 public:
-    // Necessary for "build_latent_variables()" function
+
     struct lv_to_build {
         std::string name = "Normal scale";
         Flat flat{"exp"};
         std::unique_ptr<Normal> n{new Normal(0.0, 3.0)};
         double zero = 0;
-    };
+    };     ///<  Necessary for "build_latent_variables()" function
 
     /**
      * @brief Constructor for Normal distribution
@@ -147,6 +150,19 @@ public:
      * @param shape Tail thickness parameter for Normal distribution
      * @param skewness Skewness parameter for the Normal distribution
      * @return Markov blanket of the Normal family
+     *
+     * @details The original python code is
+     *
+     *          return ss.norm.logpdf(y, loc=mean, scale=scale)
+     *
+     *          Which returns the log of the probability density function at y of the given RV.
+     *          Since mean can be a vector (in python),
+     *          the RV can be multi-dimensional, so,
+     *          in order to translate this scipy.stats function,
+     *          we implemented the Mvn class.
+     *
+     *          The Mvn class (MultiVariate Normal) is needed to return
+     *          samples obtained by a multi-dimensional Gaussian function.
      */
     static Eigen::VectorXd markov_blanket(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale,
                                           double shape, double skewness);
@@ -154,6 +170,11 @@ public:
     /**
      * @brief Returns the attributes of this family if using in a probabilistic model
      * @return A struct with attributes of the family
+     *
+     * @details Since the attributes link, mean_transform
+     *          are np.array in the original code,
+     *          we could not get what their purpose was;
+     *          we translated them as y = x functions.
      */
     static FamilyAttributes setup();
 
@@ -208,6 +229,10 @@ public:
      *  (python code works with both a single float and a vector of floats)
      * @param x A vector of random variables
      * @return The gradient of the location latent variable mu at x, for each variable
+     *
+     * @details The template implementation allows x to be a double,
+     *          or a dinamic Eigen:Vector of doubles.
+     *          Both definition and specialization are included in the .cpp file.
      */
     template<typename T>
     T vi_loc_score(const T& x) const;
@@ -218,6 +243,10 @@ public:
      *  (python code works with both a single float and a vector of floats)
      * @param x A random variable, or a vector of random variables
      * @return The gradient of the scale latent variable at x, for each variable
+     *
+     * @details The template implementation allows x to be a double,
+     *          or a dinamic Eigen:Vector of doubles.
+     *          Both definition and specialization are included in the .cpp file.
      */
     // @Todo: chiedere a Busato
     template<typename T>
@@ -229,6 +258,7 @@ public:
      * @param index 0 or 1 depending on which latent variable
      * @return The gradient of the scale latent variable at x
      */
+     // @Todo: (NEW) perché è stata implementata qui?
     template<typename T>
     T vi_score(const T& x, size_t index) const {
         static_assert(std::is_same_v<T, double> || std::is_same_v<T, Eigen::VectorXd>);
@@ -242,5 +272,8 @@ public:
 
     [[nodiscard]] std::string get_z_name() const override;
 
-    [[nodiscard]] Family* clone() const override;
+
+    [[nodiscard]] Family* clone() const override; /**< override the family one,
+ * returns a new Normal object by deep copy of the current one.
+ */
 };
