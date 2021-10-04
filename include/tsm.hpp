@@ -42,7 +42,9 @@ class TSM {
 protected:
     std::vector<std::string> _data_name;
     std::string _model_name;
+    std::string _model_name_short; ///< The self.model_name2 variable in python
     std::string _model_type;    ///< The type of model (e.g. 'ARIMA', 'GARCH')
+    std::vector<double> _data;  ///< The univariate time series data that will be used
     std::vector<double> _index; ///< The times of the input data (years, days or seconds)
     bool _multivariate_model;
     std::function<double(Eigen::VectorXd)> _neg_logposterior;
@@ -55,7 +57,6 @@ protected:
     int _max_lag;
     LatentVariables _latent_variables; ///< Holding variables for model output
     size_t _z_no;
-    Eigen::MatrixXd _data; ///< The univariate time series data that will be used
     double _norm_std;
     double _norm_mean;
     std::string _default_method;                 ///< Default method for fitting

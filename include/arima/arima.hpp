@@ -7,6 +7,10 @@
 #include "tests/nhst.hpp"
 #include "tsm.hpp"
 
+#include <string>
+#include <map>
+#include <vector>
+
 /**
  * @brief Mean function applied to a vector
  * @param v Vector of double
@@ -14,6 +18,13 @@
  */
 inline double mean(Eigen::VectorXd v) {
     return std::accumulate(v.begin(), v.end(), 0) / v.size();
+}
+
+inline std::vector<double> diff(const std::vector<double>& v) {
+    std::vector<double> new_v(v.size()-1);
+    for (size_t i{0}; i < new_v.size(); i++)
+        new_v.at(i) = v.at(i+1) - v.at(i);
+    return std::move(new_v);
 }
 
 /**
@@ -27,13 +38,20 @@ private:
     size_t _integ;  ///< How many times to difference the time series (default 0)
     size_t _target; ///< Which array index to use. By default, first array index will be selected as the dependent
                     ///< variable.
-    Family _family; ///< E.g. Normal()
+    std::unique_ptr<Family> _family; ///< E.g. Normal()
+    Eigen::MatrixXd _x;
+    std::function<double(double)> _link;
+    bool _scale;
+    bool _shape;
+    bool _skewness;
+    std::function<double(double)> _mean_transform; ///< a function which transforms the location parameter
+    bool _cythonized;
 
     /**
      * @brief Creates the Autoregressive Matrix for the model
      * @return Autoregressive Matrix
      */
-    Eigen::VectorXd ar_matrix();
+    Eigen::MatrixXd ar_matrix();
 
     /**
      * @brief Creates the model's latent variables
@@ -180,13 +198,25 @@ public:
     /**
      * @brief Constructor for ARIMA object
      * @param data The univariate time series data that will be used
+     * @param index The times of the input data (years, days or seconds)
      * @param ar How many AR lags the model will have
      * @param ma How many MA lags the model will have
      * @param integ How many times to difference the time series (default 0)
-     * @param target Which array index to use (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(Eigen::MatrixXd data, size_t ar, size_t ma, size_t integ = 0, size_t target = 0, Family family = Normal());
+    ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
+
+    /**
+     * @brief Constructor for ARIMA object
+     * @param data The univariate time series data that will be used
+     * @param target Which array index to use
+     * @param index The times of the input data (years, days or seconds)
+     * @param ar How many AR lags the model will have
+     * @param ma How many MA lags the model will have
+     * @param integ How many times to difference the time series (default 0)
+     * @param family E.g. Normal() (default)
+     */
+    ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index, const std::string& target, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
 
     /**
      * @brief Calculates the negative log-likelihood of the model for Normal family
