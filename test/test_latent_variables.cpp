@@ -57,7 +57,7 @@ TEST_CASE("Plot latent variables", "[plot_z]") {
     LatentVariables lvs{"ARIMA"};
     Normal prior{0, 1};
     Normal q{1, 2};
-    lvs.create("Constant", std::vector<size_t>{2, 3}, prior, q);
+    lvs.create("Constant", std::vector<size_t>{2, 3}, q, prior);
     lvs.set_z_values(Eigen::Matrix<double, 6, 1>{1, 2, 3, 4, 5, 6}, "BBVI",
                      Eigen::Matrix<double, 6, 1>{2, 4, 6, 8, 10, 12});
     lvs.plot_z(std::vector<size_t>{0, 1, 2, 3}, 600, 400);
@@ -67,7 +67,7 @@ TEST_CASE("Trace plot", "[trace_plot]") {
     Normal prior{0, 1};
     Normal q{1, 2};
     LatentVariables lvs{"ARIMA"};
-    lvs.create("Constant", std::vector<size_t>{1, 2}, prior, q);
+    lvs.create("Constant", std::vector<size_t>{1, 2}, q, prior);
     Eigen::MatrixXd samples(2, 2);
     samples << 1, 2, 3, 4;
     lvs.set_z_values(Eigen::Vector2d{1, 2}, "BBVI", Eigen::Vector2d{2, 4}, samples);

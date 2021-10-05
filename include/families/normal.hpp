@@ -1,13 +1,15 @@
 #pragma once
 
+#include "arima/arima.hpp"
+#include "families/family.hpp"
+#include "families/flat.hpp"
+#include "families/lv_to_build.hpp"
+#include "headers.hpp"
+
 #include <cassert>
 #include <chrono>
 #include <memory>
 #include <random>
-
-#include "../headers.hpp"
-#include "family.hpp"
-#include "flat.hpp"
 
 /**
  * @brief Normal distribution for time series
@@ -17,7 +19,7 @@
  */
 class Normal final : public Family {
 private:
-    double _mu0; ///< The mean of the Gaussian
+    double _mu0;    ///< The mean of the Gaussian
     double _sigma0; ///< The variance of the Gaussian
     short unsigned int _param_no;
     bool _covariance_prior;
@@ -118,7 +120,7 @@ public:
      * @param nsims Number of draws to take from the distribution
      * @return Random draws from the distribution, obtained thanks to the std::normal_distribution library.
      */
-    static Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness, int nsims);
+    Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness, int nsims) override;
 
     /**
      * @brief Wrapper function for changing latent variables for variational inference
@@ -266,7 +268,7 @@ public:
      * @param index 0 or 1 depending on which latent variable
      * @return The gradient of the scale latent variable at x
      */
-     // @Todo: (NEW) perché è stata implementata qui?
+    // TODO: (NEW) perché è stata implementata qui?
     template<typename T>
     T vi_score(const T& x, size_t index) const {
         static_assert(std::is_same_v<T, double> || std::is_same_v<T, Eigen::VectorXd>);
@@ -282,12 +284,6 @@ public:
 
 
     [[nodiscard]] Family* clone() const override; /**< override the family one,
- * returns a new Normal object by deep copy of the current one.
- */
-
-    /**
-     * @brief Set the likelihood functions for the ARIMA model according to the Normal family (used in ARIMA contructors)
-     * @param arima The ARIMA model to set
-     */
-    void set_functions(ARIMA& arima) const override;
+                                                   * returns a new Normal object by deep copy of the current one.
+                                                   */
 };

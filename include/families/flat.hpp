@@ -1,6 +1,7 @@
 #pragma once
 
-#include "family.hpp"
+#include "families/family.hpp"
+#include "headers.hpp"
 
 /**
  * @brief This class contains methods relating to the flat prior distribution for time series

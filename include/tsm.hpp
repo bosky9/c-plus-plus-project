@@ -45,9 +45,9 @@ protected:
     std::vector<std::string> _data_name;
     std::string _model_name;
     std::string _model_name_short; ///< The self.model_name2 variable in python
-    std::string _model_type;    ///< The type of model (e.g. 'ARIMA', 'GARCH')
-    std::vector<double> _data;  ///< The univariate time series data that will be used
-    std::vector<double> _index; ///< The times of the input data (years, days or seconds)
+    std::string _model_type;       ///< The type of model (e.g. 'ARIMA', 'GARCH')
+    std::vector<double> _data;     ///< The univariate time series data that will be used
+    std::vector<double> _index;    ///< The times of the input data (years, days or seconds)
     bool _multivariate_model;
     std::function<double(Eigen::VectorXd)> _neg_logposterior;
     std::function<double(Eigen::VectorXd)> _neg_loglik;
@@ -216,7 +216,7 @@ public:
      * @param nsims How many draws to take
      * @return Matrix of draws
      */
-    Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000);
+    virtual Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000);
 
     void set_model(std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd)> model);
 

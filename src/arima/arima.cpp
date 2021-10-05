@@ -1,24 +1,23 @@
 #include "arima/arima.hpp"
 
 #include "data_check.hpp"
-#include "families/family.hpp"
 
 ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ,
-             const Family& family)
-    : TSM{"ARIMA"}, _ar{ar}, _ma{ma}, _integ{integ} {
+             Family* family)
+    : TSM{"ARIMA"} {
     // Latent Variable information
     _z_no               = _ar + _ma + 2;
-    _max_lag            = std::max(_ar, _ma);
-    _z_hide             = 0;
+    _max_lag            = std::max(static_cast<int>(_ar), static_cast<int>(_ma));
+    _z_hide             = false; // Whether to cutoff latent variables from results table
     _supported_methods  = {"MLE", "PML", "Laplace", "M-H", "BBVI"};
     _default_method     = "MLE";
     _multivariate_model = false;
 
     // Format the data
-    CheckedData c_data = data_check(data, index);
-    _data              = c_data.transformed_data;
-    _data_name         = c_data.data_name;
-    _index             = c_data.data_index;
+    CheckedData* c_data = data_check(data, index);
+    _data               = *c_data->transformed_data;
+    _data_name          = *c_data->data_name;
+    _index              = *c_data->data_index;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
@@ -28,8 +27,8 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
     _x = ar_matrix();
     create_latent_variables();
 
-    _family             = family;
-    FamilyAttributes fa = family.setup();
+    _family.reset(family);
+    FamilyAttributes fa = family->setup();
     _model_name_short   = fa.name;
     _link               = fa.link;
     _scale              = fa.scale;
@@ -43,35 +42,35 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
     // Build any remaining latent variables that are specific to the family chosen
     std::vector<Lv_to_build> lvs = _family->build_latent_variables();
     for (size_t no{0}; no < lvs.size(); no++) {
-        Lv_to_build lv = lvs.at(no);
-        _latent_variables.add_z(lv.name, lv.flat, lv.normal);
-        _latent_variables.set_z_starting_value(1+no+_ar+_ma, lv.value);
+        Lv_to_build lv = lvs[no];
+        _latent_variables.add_z(lv._name, reinterpret_cast<Family*>(lv._flat.get()),
+                                reinterpret_cast<Family*>(lv._normal.get()));
+        _latent_variables.set_z_starting_value(1 + no + _ar + _ma, lv._value);
     }
-    _latent_variables.set_z_starting_value(0,_mean_transform(static_cast<double>(std::reduce(_data.begin(), _data.end())) / _data.size()));
+    _latent_variables.set_z_starting_value(
+            0, _mean_transform(static_cast<double>(std::reduce(_data.begin(), _data.end())) /
+                               static_cast<double>(_data.size())));
 
     _family_z_no = lvs.size();
-    _z_no = _latent_variables.get_z_list().size();
-
-    // If Normal family is selected, we use faster likelihood functions
-    _family->set_functions(this);
+    _z_no        = _latent_variables.get_z_list().size();
 }
 
 ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index,
-             const std::string& target, size_t ar, size_t ma, size_t integ, const Family& family)
+             const std::string& target, size_t ar, size_t ma, size_t integ, Family* family)
     : TSM{"ARIMA"}, _ar{ar}, _ma{ma}, _integ{integ} {
     // Latent Variable information
     _z_no               = _ar + _ma + 2;
-    _max_lag            = std::max(_ar, _ma);
-    _z_hide             = 0;
+    _max_lag            = std::max(static_cast<int>(_ar), static_cast<int>(_ma));
+    _z_hide             = false;
     _supported_methods  = {"MLE", "PML", "Laplace", "M-H", "BBVI"};
     _default_method     = "MLE";
     _multivariate_model = false;
 
     // Format the data
-    CheckedData c_data = data_check(data, index, target);
-    _data              = c_data.transformed_data;
-    _data_name         = c_data.data_name;
-    _index             = c_data.data_index;
+    CheckedData* c_data = data_check(data, index, target);
+    _data               = *c_data->transformed_data;
+    _data_name          = *c_data->data_name;
+    _index              = *c_data->data_index;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
@@ -81,8 +80,8 @@ ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::
     _x = ar_matrix();
     create_latent_variables();
 
-    _family             = family;
-    FamilyAttributes fa = family.setup();
+    _family.reset(family);
+    FamilyAttributes fa = family->setup();
     _model_name_short   = fa.name;
     _link               = fa.link;
     _scale              = fa.scale;
@@ -91,32 +90,32 @@ ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::
     _mean_transform     = fa.mean_transform;
     _cythonized         = fa.cythonized;
     _model_name         = _model_name_short + " ARIMA(" + std::to_string(_ar) + "," + std::to_string(_integ) + "," +
-            std::to_string(_ma) + ")";
+                  std::to_string(_ma) + ")";
 
     // Build any remaining latent variables that are specific to the family chosen
     std::vector<Lv_to_build> lvs = _family->build_latent_variables();
     for (size_t no{0}; no < lvs.size(); no++) {
-        Lv_to_build lv = lvs.at(no);
-        _latent_variables.add_z(lv.name, lv.flat, lv.normal);
-        _latent_variables.set_z_starting_value(1+no+_ar+_ma, lv.value);
+        Lv_to_build lv = lvs[no];
+        _latent_variables.add_z(lv._name, reinterpret_cast<Family*>(lv._flat.get()),
+                                reinterpret_cast<Family*>(lv._normal.get()));
+        _latent_variables.set_z_starting_value(1 + no + _ar + _ma, lv._value);
     }
-    _latent_variables.set_z_starting_value(0,_mean_transform(static_cast<double>(std::reduce(_data.begin(), _data.end())) / _data.size()));
+    _latent_variables.set_z_starting_value(
+            0, _mean_transform(static_cast<double>(std::reduce(_data.begin(), _data.end())) /
+                               static_cast<double>(_data.size())));
 
     _family_z_no = lvs.size();
-    _z_no = _latent_variables.get_z_list().size();
-
-    // If Normal family is selected, we use faster likelihood functions
-    _family->set_functions(this);
+    _z_no        = _latent_variables.get_z_list().size();
 }
 
 Eigen::MatrixXd ARIMA::ar_matrix() {
-    Eigen::MatrixXd X{Eigen::VectorXd::Zero(_data_length - _max_lag)};
+    Eigen::MatrixXd X{Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_data_length - _max_lag))};
     std::vector<double> data{};
 
     if (_ar != 0) {
         for (Eigen::Index i{0}; i < _ar; i++) {
             std::copy(_data.begin() + _max_lag - i - 1, _data.begin() + i - 1, std::back_inserter(data));
-            X.row(i + 1) = Eigen::VectorXd::Map(data.data(), data.size());
+            X.row(i + 1) = Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()));
         }
     }
 
@@ -124,16 +123,21 @@ Eigen::MatrixXd ARIMA::ar_matrix() {
 }
 
 void ARIMA::create_latent_variables() {
-    _latent_variables.add_z("Constant", Normal(0, 3), Normal(0, 3));
+    Normal n1{Normal(0, 3)};
+    _latent_variables.add_z("Constant", reinterpret_cast<Family*>(&n1), reinterpret_cast<Family*>(&n1));
 
+    n1 = Normal(0, 0.5);
+    Normal n2{Normal(0.3)};
     for (size_t ar_terms{0}; ar_terms < _ar; ar_terms++)
-        _latent_variables.add_z("AR(" + std::to_string(ar_terms + 1) + ")", Normal(0, 0.5), Normal(0.3));
+        _latent_variables.add_z("AR(" + std::to_string(ar_terms + 1) + ")", reinterpret_cast<Family*>(&n1),
+                                reinterpret_cast<Family*>(&n2));
 
     for (size_t ma_terms{0}; ma_terms < _ma; ma_terms++)
-        _latent_variables.add_z("MA(" + std::to_string(ma_terms + 1) + ")", Normal(0, 0.5), Normal(0.3));
+        _latent_variables.add_z("MA(" + std::to_string(ma_terms + 1) + ")", reinterpret_cast<Family*>(&n1),
+                                reinterpret_cast<Family*>(&n2));
 }
 
-std::tuple<double, double, double> ARIMA::get_scale_and_shape(Eigen::VectorXd transformed_lvs) {
+std::tuple<double, double, double> ARIMA::get_scale_and_shape(Eigen::VectorXd transformed_lvs) const {
     double model_shape    = 0;
     double model_scale    = 0;
     double model_skewness = 0;
@@ -184,10 +188,19 @@ ARIMA::get_scale_and_shape_sim(Eigen::MatrixXd transformed_lvs) {
     return std::move(std::make_tuple(model_scale, model_shape, model_skewness));
 }
 
-std::tuple<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(Eigen::VectorXd beta) {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::model(const Eigen::VectorXd& beta) {
+    // If Normal family is selected, we use faster likelihood functions
+    if (instanceof <Normal>(_family.get()))
+        return normal_model(beta);
+    // TODO: else if (...) with missing models
+    else
+        return non_normal_model(beta);
+}
+
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(Eigen::VectorXd beta) {
     std::vector<double> data;
     std::copy(_data.begin() + _max_lag, _data.end(), std::back_inserter(data));
-    Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), data.size())};
+    Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
@@ -209,10 +222,10 @@ std::tuple<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(Eigen::VectorXd
     return {mu, Y};
 }
 
-std::tuple<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(Eigen::VectorXd beta) {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(Eigen::VectorXd beta) {
     std::vector<double> data;
     std::copy(_data.begin() + _max_lag, _data.end(), std::back_inserter(data));
-    Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), data.size())};
+    Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
@@ -228,7 +241,7 @@ std::tuple<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(Eigen::Vect
         mu = Eigen::VectorXd::Zero(Y.size()) * z[0];
 
     // MA terms
-    if (_ma != 0) { // TODO: Rivedere la definizione di _link (in questo caso usata per un vettore!)
+    if (_ma != 0) {
         Eigen::VectorXd link_mu(mu.size());
         std::transform(mu.begin(), mu.end(), link_mu.begin(), _link);
         mu = arima_recursion(z, mu, link_mu, Y, _max_lag, Y.size(), _ar, _ma);
@@ -237,14 +250,14 @@ std::tuple<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(Eigen::Vect
     return {mu, Y};
 }
 
-std::tuple<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(Eigen::VectorXd beta, size_t mini_batch) {
-    int rand_int = rand() % (_data.size() - mini_batch - _max_lag + 1);
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(Eigen::VectorXd beta, size_t mini_batch) {
+    size_t rand_int = rand() % (_data.size() - mini_batch - _max_lag + 1);
     std::vector<double> sample(mini_batch);
     std::iota(sample.begin(), sample.end(), rand_int);
 
     std::vector<double> data;
     std::copy(_data.begin() + _max_lag, _data.end(), std::back_inserter(data));
-    Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), data.size())};
+    Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
     Y = Y(Eigen::all, sample);
     Eigen::MatrixXd X(_x.rows(), sample.size());
     for (Eigen::Index i{0}; i < _x.rows(); i++)
@@ -270,14 +283,14 @@ std::tuple<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(Eigen::Vecto
     return {mu, Y};
 }
 
-std::tuple<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(Eigen::VectorXd beta, size_t mini_batch) {
-    int rand_int = rand() % (_data.size() - mini_batch - _max_lag + 1);
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(Eigen::VectorXd beta, size_t mini_batch) {
+    size_t rand_int = rand() % (_data.size() - mini_batch - _max_lag + 1);
     std::vector<double> sample(mini_batch);
     std::iota(sample.begin(), sample.end(), rand_int);
 
     std::vector<double> data;
     std::copy(_data.begin() + _max_lag, _data.end(), std::back_inserter(data));
-    Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), data.size())};
+    Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
     Y = Y(Eigen::all, sample);
     Eigen::MatrixXd X(_x.rows(), sample.size());
     for (Eigen::Index i{0}; i < _x.rows(); i++)
@@ -297,11 +310,193 @@ std::tuple<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(Eigen::V
         mu = Eigen::VectorXd::Zero(Y.size()) * z[0];
 
     // MA terms
-    if (_ma != 0) { // TODO: Rivedere la definizione di _link (in questo caso usata per un vettore!)
+    if (_ma != 0) {
         Eigen::VectorXd link_mu(mu.size());
         std::transform(mu.begin(), mu.end(), link_mu.begin(), _link);
         mu = arima_recursion(z, mu, link_mu, Y, _max_lag, Y.size(), _ar, _ma);
     }
 
     return {mu, Y};
+}
+
+Eigen::VectorXd ARIMA::mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, size_t h, Eigen::VectorXd t_z) {
+    // Create arrays to iterate over
+    Eigen::VectorXd Y_exp{std::move(Y)};
+    Eigen::VectorXd mu_exp{std::move(mu)};
+
+    // Loop over h time periods
+    for (size_t t{0}; t < h; t++) {
+        double new_value = t_z[0];
+
+        if (_ar != 0) {
+            for (Eigen::Index i{1}; i <= _ar; i++)
+                new_value += t_z[i] * Y_exp[-i];
+        }
+
+        if (_ma != 0) {
+            for (Eigen::Index i{1}; i <= _ma; i++) {
+                if (i - 1 >= t)
+                    new_value += t_z[i + static_cast<Eigen::Index>(_ar)] * (Y_exp[-i] - _link(mu_exp[-i]));
+            }
+        }
+
+        std::vector<double> Y_exp_v(&Y_exp[0], Y_exp.data());
+        if (_model_name2 == "Exponential")
+            Y_exp_v.push_back(1.0 / _link(new_value));
+        else
+            Y_exp_v.push_back(_link(new_value));
+        Y_exp = Eigen::VectorXd::Map(Y_exp_v.data(), static_cast<Eigen::Index>(Y_exp_v.size()));
+
+        // For indexing consistency
+        std::vector<double> mu_exp_v(&mu_exp[0], mu_exp.data());
+        mu_exp_v.push_back(0.0);
+        mu_exp = Eigen::VectorXd::Map(mu_exp_v.data(), static_cast<Eigen::Index>(mu_exp_v.size()));
+    }
+
+    // FIXME: del mu_exp si può tradurre con ->
+    mu_exp = Eigen::VectorXd::Zero(mu_exp.size());
+
+    return Y_exp;
+}
+
+Eigen::MatrixXd ARIMA::sim_prediction(const Eigen::VectorXd& mu, const Eigen::VectorXd& Y, size_t h,
+                                      Eigen::VectorXd t_params, size_t simulations) {
+    auto scale_shape{get_scale_and_shape(t_params)};
+
+    Eigen::MatrixXd sim_vector{
+            Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(simulations), static_cast<Eigen::Index>(h))};
+
+    for (Eigen::Index n{0}; n < simulations; n++) {
+        // Create arrays to iterate over
+        Eigen::VectorXd Y_exp{Y};
+        Eigen::VectorXd mu_exp{mu};
+
+        // Loop over h time periods
+        for (Eigen::Index t{0}; t < h; t++) {
+            double new_value = t_params[0];
+
+            if (_ar != 0) {
+                for (Eigen::Index i{1}; i <= _ar; i++)
+                    new_value += t_params[i] * Y_exp[-i];
+            }
+
+            if (_ma != 0) {
+                for (Eigen::Index i{1}; i <= _ma; i++) {
+                    if (i - 1 >= t)
+                        new_value += t_params[i + static_cast<Eigen::Index>(_ar)] * (Y_exp[-i] - mu_exp[-i]);
+                }
+            }
+
+            std::vector<double> Y_exp_v(&Y_exp[0], Y_exp.data());
+            if (_model_name2 == "Exponential")
+                Y_exp_v.push_back(_family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape),
+                                                         std::get<1>(scale_shape), std::get<2>(scale_shape), 1)[0]);
+            else
+                Y_exp_v.push_back(_family->draw_variable(_link(new_value), std::get<0>(scale_shape),
+                                                         std::get<1>(scale_shape), std::get<2>(scale_shape), 1)[0]);
+            Y_exp = Eigen::VectorXd::Map(Y_exp_v.data(), static_cast<Eigen::Index>(Y_exp_v.size()));
+
+            std::vector<double> mu_exp_v(&mu_exp[0], mu_exp.data());
+            mu_exp_v.push_back(0.0);
+            mu_exp = Eigen::VectorXd::Map(mu_exp_v.data(), static_cast<Eigen::Index>(mu_exp_v.size()));
+
+            // For indexing consistency
+            Eigen::VectorXd Y_exp_h(Y_exp.size());
+            std::copy(Y_exp.begin() - static_cast<Eigen::Index>(h), Y_exp.end(), std::back_inserter(Y_exp_h));
+            sim_vector.row(n) = Y_exp_h;
+        }
+
+        // FIXME: del Y_exp si può tradurre con ->
+        Y_exp = Eigen::VectorXd::Zero(Y_exp.size());
+        // FIXME: del mu_exp si può tradurre con ->
+        mu_exp = Eigen::VectorXd::Zero(mu_exp.size());
+    }
+
+    return sim_vector.transpose();
+}
+
+Eigen::MatrixXd ARIMA::sim_prediction_bayes(long h, size_t simulations) {
+    Eigen::MatrixXd sim_vector{
+            Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(simulations), static_cast<Eigen::Index>(h))};
+
+    for (Eigen::Index n{0}; n < simulations; n++) {
+        Eigen::VectorXd t_z{draw_latent_variables(1).transpose().row(0)};
+        auto mu_Y{model(t_z)};
+        for (Eigen::Index i{0}; i < t_z.size(); i++)
+            t_z[i] = _latent_variables.get_z_list()[i].get_prior()->get_transform()(t_z[i]);
+
+        auto scale_shape{get_scale_and_shape(t_z)};
+
+        // Create arrays to iterate over
+        Eigen::VectorXd Y_exp{mu_Y.second};
+        Eigen::VectorXd mu_exp{mu_Y.first};
+
+        // Loop over h time periods
+        for (Eigen::Index t{0}; t < h; t++) {
+            double new_value = t_z[0];
+
+            if (_ar != 0) {
+                for (Eigen::Index i{1}; i <= _ar; i++)
+                    new_value += t_z[i] * Y_exp[-i];
+            }
+
+            if (_ma != 0) {
+                for (Eigen::Index i{1}; i <= _ma; i++) {
+                    if (i - 1 >= t)
+                        new_value += t_z[i + static_cast<Eigen::Index>(_ar)] * (Y_exp[-i] - mu_exp[-i]);
+                }
+            }
+
+            std::vector<double> Y_exp_v(&Y_exp[0], Y_exp.data());
+            if (_model_name2 == "Exponential")
+                Y_exp_v.push_back(_family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape),
+                                                         std::get<1>(scale_shape), std::get<2>(scale_shape), 1)[0]);
+            else
+                Y_exp_v.push_back(_family->draw_variable(_link(new_value), std::get<0>(scale_shape),
+                                                         std::get<1>(scale_shape), std::get<2>(scale_shape), 1)[0]);
+            Y_exp = Eigen::VectorXd::Map(Y_exp_v.data(), static_cast<Eigen::Index>(Y_exp_v.size()));
+
+            std::vector<double> mu_exp_v(&mu_exp[0], mu_exp.data());
+            mu_exp_v.push_back(0.0);
+            mu_exp = Eigen::VectorXd::Map(mu_exp_v.data(), static_cast<Eigen::Index>(mu_exp_v.size()));
+
+            // For indexing consistency
+            Eigen::VectorXd Y_exp_h(Y_exp.size());
+            std::copy(Y_exp.begin() - h, Y_exp.end(), std::back_inserter(Y_exp_h));
+            sim_vector.row(n) = Y_exp_h;
+        }
+
+        // FIXME: del Y_exp si può tradurre con ->
+        Y_exp = Eigen::VectorXd::Zero(Y_exp.size());
+        // FIXME: del mu_exp si può tradurre con ->
+        mu_exp = Eigen::VectorXd::Zero(mu_exp.size());
+    }
+
+    return sim_vector.transpose();
+}
+
+std::tuple<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
+ARIMA::summarize_simulations(Eigen::VectorXd mean_values, Eigen::VectorXd sim_vector, Eigen::VectorXd date_index,
+                             long h, long past_values) {
+    std::vector<double> error_bars;
+    for (size_t pre{5}; pre < 100; pre += 5) {
+        error_bars.push_back(mean_values[-h - 1]);
+        for (Eigen::Index i{0}; i < sim_vector.rows(); i++)
+            error_bars.push_back(percentile(sim_vector.row(i), pre));
+    }
+
+    std::vector<double> forecasted_values;
+    if (_latent_variables.get_estimation_method() == "M-H") {
+        forecasted_values.push_back(mean_values[-h - 1]);
+        for (Eigen::Index i{0}; i < sim_vector.rows(); i++)
+            forecasted_values.push_back(mean(sim_vector.row(i)));
+    } else
+        std::copy(mean_values.begin() - h - 1, mean_values.end(), std::back_inserter(forecasted_values));
+
+    std::vector<double> plot_values;
+    std::copy(mean_values.begin() - h - past_values, mean_values.end(), std::back_inserter(plot_values));
+    std::vector<double> plot_index;
+    std::copy(date_index.begin() - h - past_values, date_index.end(), std::back_inserter(plot_index));
+
+    return {error_bars, forecasted_values, plot_values, plot_index};
 }

@@ -183,7 +183,7 @@ private:
     std::string _model_name;                                         ///< Model's name
     std::vector<LatentVariable> _z_list;                             ///< List of latent variables
     std::map<std::string, std::map<std::string, size_t>> _z_indices; ///<
-    bool _estimated = false;                                         ///<
+    bool _estimated                               = false;           ///<
     std::optional<std::string> _estimation_method = std::nullopt;    ///<
 
 public:
@@ -208,7 +208,7 @@ public:
      * @param q Which distribution to use for variational approximation
      * @param index Whether to index the variable in the z_indices dictionary
      */
-    void add_z(const std::string& name, const Family& prior, const Family& q, bool index = true);
+    void add_z(const std::string& name, Family* prior, Family* q, bool index = true);
 
     /**
      * @brief Creates multiple latent variables
@@ -217,7 +217,7 @@ public:
      * @param prior Which prior distribution? E.g. Normal(0,1)
      * @param q Which distribution to use for variational approximation
      */
-    void create(const std::string& name, const std::vector<size_t>& dim, const Family& prior, const Family& q);
+    void create(const std::string& name, const std::vector<size_t>& dim, const Family& q, const Family& prior);
 
     /**
      * @brief Adjusts priors for the latent variables
@@ -298,7 +298,7 @@ public:
      * @brief Sets estimation method
      * @param method Estimation method
      */
-    void set_estimation_method(std::string method);
+    void set_estimation_method(const std::string& method);
 
     /**
      * @brief Set values to latent variables

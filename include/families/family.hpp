@@ -1,25 +1,9 @@
 #pragma once
 
+#include "families/lv_to_build.hpp"
 #include "headers.hpp"
-#include "flat.hpp"
-#include "normal.hpp"
-#include "arima/arima.hpp"
 
 #include <optional>
-
-struct Lv_to_build final{
-    std::string name;
-    Flat flat;
-    std::unique_ptr<Normal> normal; /**< Using a unique pointer avoids double deletes;
- *   the pointer is needed because otherwise parameter n could not be initialized,
- *   since it is of type Normal and it is inside the Normal class.
- */
-    double value;
-};     /**<  Necessary for "build_latent_variables()" function.
- *   The python code appends to a list another list, this one:
- *   (['Normal Scale', Flat(transform='exp'), Normal(0, 3), 0.0])
- *   To translate the list above, we used this structure.
- */
 
 /**
  * @brief Struct for attributes returned by families
@@ -112,12 +96,6 @@ public:
      */
     [[nodiscard]] std::function<double(double)> get_itransform() const;
 
-    /**
-     * @brief Wrapper function for changing latent variables for variational inference
-     * @param size How many simulations to perform
-     * @return Array of Family random variable
-     */
-    [[nodiscard]] virtual Eigen::VectorXd draw_variable_local(size_t size) const;
 
     /**
      * @brief Returns the number of parameters
@@ -153,15 +131,29 @@ public:
     [[nodiscard]] virtual std::string get_z_name() const;
 
     /**
-     * @details Thanks to the copy costructor,
-     *          this method returns a copy of the family object which calls this function.
-     *          This is needed in other classes,
-     *          namely LatenVariable and TSM,
-     *          in order to return a deep copy of some family object.
-     *
-     * @return A copy of the family object which calls this function.
+     * @brief Builds additional latent variables for this family in a probabilistic model
+     * @return A list of structs (each struct contains latent variable information)
      */
-    [[nodiscard]] virtual Family* clone() const;
+    virtual std::vector<Lv_to_build> build_latent_variables() const;
+
+    /**
+     * @brief Draws random variables from this distribution with new latent variables
+     * @param loc Location parameter for the distribution
+     * @param scale Scale parameter for the distribution
+     * @param shape Not actually used
+     * @param skewness Not actually used
+     * @param nsims Number of draws to take from the distribution
+     * @return Random draws from the distribution, obtained thanks to the std::normal_distribution library.
+     */
+    [[nodiscard]] virtual Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness,
+                                                        int nsims);
+
+    /**
+     * @brief Wrapper function for changing latent variables for variational inference
+     * @param size How many simulations to perform
+     * @return Array of Family random variable
+     */
+    [[nodiscard]] virtual Eigen::VectorXd draw_variable_local(size_t size) const;
 
     /**
      * @brief Returns the attributes of this family if using in a probabilistic model
@@ -175,17 +167,15 @@ public:
     [[nodiscard]] virtual FamilyAttributes setup() const;
 
     /**
-     * @brief Builds additional latent variables for this family in a probabilistic model
-     * @return A list of structs (each struct contains latent variable information)
+     * @details Thanks to the copy costructor,
+     *          this method returns a copy of the family object which calls this function.
+     *          This is needed in other classes,
+     *          namely LatenVariable and TSM,
+     *          in order to return a deep copy of some family object.
+     *
+     * @return A copy of the family object which calls this function.
      */
-    [[nodiscard]] virtual std::vector<Lv_to_build> build_latent_variables() const;
-
-    // TODO: Override this function in each subclass of Family with the correct settings (see ARIMA constructor in Python)
-    /**
-     * @brief Set the likelihood functions for the ARIMA model according to the kind of family that calls this function (used in ARIMA contructors)
-     * @param arima The ARIMA model to set
-     */
-    virtual void set_functions(ARIMA& arima) const;
+    [[nodiscard]] virtual Family* clone() const;
 
 private:
     /**

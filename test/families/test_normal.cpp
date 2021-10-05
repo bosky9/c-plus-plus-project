@@ -17,8 +17,8 @@ TEST_CASE("Approximating model", "[approximating_model, approximating_model_reg]
 
 TEST_CASE("Build latent variables", "[build_latent_variables]") {
     std::list<Normal::lv_to_build> result = Normal::build_latent_variables();
-    REQUIRE(result.front().name == "Normal scale");
-    REQUIRE(result.front().flat.get_transform_name() == "exp");
+    REQUIRE(result.front()._name == "Normal scale");
+    REQUIRE(result.front()._flat.get_transform_name() == "exp");
     REQUIRE(*result.front().n.get() == Normal{0.0, 3.0});
     REQUIRE(result.front().zero == 0.0);
 }

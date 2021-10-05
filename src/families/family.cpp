@@ -128,10 +128,6 @@ std::string Family::get_z_name() const {
     return "";
 }
 
-Eigen::VectorXd Family::draw_variable_local(size_t size) const {
-    return {};
-}
-
 void Family::vi_change_param(size_t index, double value) {}
 
 double Family::vi_return_param(size_t index) const {
@@ -142,6 +138,17 @@ short unsigned int Family::get_param_no() const {
     return 0;
 }
 
+std::vector<Lv_to_build> Family::build_latent_variables() const {
+    return {};
+}
+
+Eigen::VectorXd Family::draw_variable(double loc, double scale, double shape, double skewness, int nsims) {
+    return {};
+}
+
+Eigen::VectorXd Family::draw_variable_local(size_t size) const {
+    return {};
+}
 
 Family* Family::clone() const {
     return new Family(*this);
@@ -149,17 +156,4 @@ Family* Family::clone() const {
 
 FamilyAttributes Family::setup() const {
     return {"Family", [](double x) { return x; }, false, false, false, [](double x) { return x; }, false};
-}
-
-std::vector<Lv_to_build> Family::build_latent_variables() const {
-    std::vector<Lv_to_build> lvs_to_build;
-    return std::move(lvs_to_build);
-}
-
-// TODO: Fix the errors
-void Family::set_functions(ARIMA& arima) const {
-    arima.set_model(arima.non_normal_model);
-    arima.set_mb_model(arima.mb_non_normal_model);
-    arima.set_neg_loglik(arima.non_normal_neg_loglik);
-    arima.set_mb_neg_loglik(arima.non_normal_mb_neg_loglik);
 }

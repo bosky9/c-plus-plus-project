@@ -195,15 +195,15 @@ inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs
     return stream;
 }
 
-void LatentVariables::add_z(const std::string& name, const Family& prior, const Family& q, bool index) {
-    LatentVariable lv{name, prior, q};
+void LatentVariables::add_z(const std::string& name, Family* prior, Family* q, bool index) {
+    LatentVariable lv{name, *prior, *q};
     _z_list.push_back(std::move(lv));
     if (index)
         _z_indices[name] = {{"start", _z_list.size() - 1}, {"end", _z_list.size() - 1}};
 }
 
-void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, const Family& prior,
-                             const Family& q) {
+void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, const Family& q,
+                             const Family& prior) {
     // Initialize indices vector
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "(");
@@ -313,7 +313,7 @@ std::optional<std::string> LatentVariables::get_estimation_method() const {
     return _estimation_method;
 }
 
-void LatentVariables::set_estimation_method(std::string method) {
+void LatentVariables::set_estimation_method(const std::string& method) {
     _estimation_method = method;
 }
 
@@ -323,11 +323,11 @@ void LatentVariables::set_z_values(const Eigen::VectorXd& values, const std::str
     assert(values.size() == _z_list.size());
     for (size_t i{0}; i < _z_list.size(); i++) {
         _z_list[i].set_method(method);
-        _z_list[i].set_value(values[i]);
+        _z_list[i].set_value(values[static_cast<Eigen::Index>(i)]);
         if (stds)
-            _z_list[i].set_std(stds.value()[i]);
+            _z_list[i].set_std(stds.value()[static_cast<Eigen::Index>(i)]);
         if (samples.has_value())
-            _z_list[i].set_sample(samples.value().row(i));
+            _z_list[i].set_sample(samples.value().row(static_cast<Eigen::Index>(i)));
     }
     _estimated = true;
 }
@@ -335,7 +335,7 @@ void LatentVariables::set_z_values(const Eigen::VectorXd& values, const std::str
 void LatentVariables::set_z_starting_values(const Eigen::VectorXd& values) {
     assert(values.size() == _z_list.size());
     for (size_t i{0}; i < _z_list.size(); i++) {
-        _z_list[i].set_start(values[i]);
+        _z_list[i].set_start(values[static_cast<Eigen::Index>(i)]);
     }
 }
 

@@ -82,12 +82,13 @@ Normal::approximating_model_reg(const Eigen::VectorXd& beta, const Eigen::Matrix
 // What about the transform of the Normal?
 std::vector<Lv_to_build> Normal::build_latent_variables() const {
     std::vector<Lv_to_build> lvs_to_build;
-    lvs_to_build.push_back(Lv_to_build{"Normal scale", new Flat("exp"), new Normal(0.0, 3.0), 0});
+    lvs_to_build.push_back(
+            Lv_to_build{static_cast<std::string>("Normal scale"), new Flat("exp"), new Normal(0.0, 3.0), 0.0});
     return std::move(lvs_to_build); // return lvs_to_build
 }
 
 Eigen::VectorXd Normal::draw_variable(double loc, double scale, double shape, double skewness, int nsims) {
-    std::normal_distribution<double> my_normal{loc, scale}; //Uses the normal library function
+    std::normal_distribution<double> my_normal{loc, scale}; // Uses the normal library function
     Eigen::VectorXd sims(nsims);
     std::random_device rd{};
     std::mt19937 gen{rd()};
@@ -188,12 +189,4 @@ std::string Normal::get_z_name() const {
 
 Family* Normal::clone() const {
     return new Normal(*this);
-}
-
-// TODO: Fix the errors
-void Normal::set_functions(ARIMA& arima) const {
-    arima.set_model(arima.normal_model);
-    arima.set_mb_model(arima.mb_normal_model);
-    arima.set_neg_loglik(arima.normal_neg_loglik);
-    arima.set_mb_neg_loglik(arima.normal_mb_neg_loglik);
 }

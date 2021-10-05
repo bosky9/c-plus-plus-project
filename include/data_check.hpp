@@ -33,18 +33,18 @@ struct CheckedDataMv final {
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-std::unique_ptr<CheckedData> data_check(const std::vector<T>& data, const std::vector<T>& index) {
+CheckedData* data_check(const std::vector<T>& data, const std::vector<T>& index) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
     assert(data.size() == index.size());
 
-    std::unique_ptr<CheckedData> checked_data(new CheckedData());
-    checked_data->transformed_data.reset(new std::vector<double>{data});
-    checked_data->data_index.reset(new std::vector<double>{index});
-    checked_data->data_name.reset(new std::vector<std::string>{"Series"});
+    std::shared_ptr<CheckedData> checked_data(new CheckedData());
+    checked_data->transformed_data = data;
+    checked_data->data_index       = index;
+    checked_data->data_name->push_back("Series");
 
-    return checked_data;
+    return checked_data.get();
 }
 
 /**
@@ -54,21 +54,22 @@ std::unique_ptr<CheckedData> data_check(const std::vector<T>& data, const std::v
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-std::unique_ptr<CheckedData> data_check(const std::map<std::string, std::vector<T>>& data, const std::vector<T>& index, const std::string& target) {
+CheckedData* data_check(const std::map<std::string, std::vector<T>>& data, const std::vector<T>& index,
+                        const std::string& target) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
     assert(data[target].size() == index.size());
 
-    std::unique_ptr<CheckedData> checked_data(new CheckedData());
-    checked_data->transformed_data.reset(new std::vector<double>{data[target]});
-    checked_data->data_index.reset(new std::vector<double>{index});
-    checked_data->data_name.reset(new std::vector<std::string>{target});
+    std::shared_ptr<CheckedData> checked_data(new CheckedData());
+    checked_data->transformed_data = data[target];
+    checked_data->data_index       = index;
+    checked_data->data_name->push_back(target);
 
-    return checked_data;
+    return checked_data.get();
 }
 
-// TODO: The following method (used only in VAR models) is usefull ??? Consider to remove it
+// TODO: The following method (used only in VAR models) is useful? Consider to remove it
 
 /**
  * @brief Checks data type
@@ -76,18 +77,17 @@ std::unique_ptr<CheckedData> data_check(const std::map<std::string, std::vector<
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-std::unique_ptr<CheckedDataMv> mv_data_check(std::vector<std::vector<T>>& data) {
+CheckedDataMv* mv_data_check(std::vector<std::vector<T>>& data) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
 
-    std::unique_ptr<CheckedDataMv> checked_data(new CheckedDataMv());
-    checked_data->transformed_data =
-            std::make_unique<std::vector<std::vector<double>>>(std::vector<std::vector<double>>{data});
-    checked_data->data_index = std::make_unique<std::vector<size_t>>(data[0].size());
+    std::shared_ptr<CheckedDataMv> checked_data(new CheckedDataMv());
+    checked_data->transformed_data = data;
+    checked_data->data_index->resize(data[0].size());
     std::iota(checked_data->data_index->begin(), checked_data->data_index->end(), 0);
-    checked_data->data_name = std::make_unique<std::vector<size_t>>(data[0].size());
+    checked_data->data_name->resize(data[0].size());
     std::iota(checked_data->data_name->begin(), checked_data->data_name->end(), 1);
 
-    return checked_data;
+    return checked_data.get();
 }
