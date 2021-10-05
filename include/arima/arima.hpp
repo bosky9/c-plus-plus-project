@@ -75,7 +75,7 @@ private:
      * @return Tuple of vectors (each being scale, shape and skewness draws)
      */
     std::tuple<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>
-    get_scale_and_shape_sim(Eigen::VectorXd transformed_lvs);
+    get_scale_and_shape_sim(Eigen::MatrixXd transformed_lvs);
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for a Normal family ARIMA model

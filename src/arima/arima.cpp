@@ -68,3 +68,56 @@ ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::
 
     // TODO: continue
 }
+
+std::tuple<double, double, double> ARIMA::get_scale_and_shape(Eigen::VectorXd transformed_lvs) {
+    double model_shape      = 0;
+    double model_scale      = 0;
+    double model_skewness   = 0;
+
+    if (_scale){
+        if(_shape){
+            model_shape = transformed_lvs(Eigen::last);
+            model_scale = transformed_lvs(Eigen::last-1);
+        }
+        else
+            model_scale = transformed_lvs(Eigen::last);
+    }
+
+    if (_skewness)
+        model_skewness = transformed_lvs(Eigen::last-2);
+
+    return std::make_tuple(model_scale, model_shape, model_skewness);
+}
+
+std::tuple<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd> ARIMA::get_scale_and_shape_sim(Eigen::MatrixXd transformed_lvs) {
+    Eigen::VectorXd model_shape(transformed_lvs.cols())     = Eigen::VectorXd::Zero(transformed_lvs.cols());
+    Eigen::VectorXd model_scale(transformed_lvs.cols())     = Eigen::VectorXd::Zero(transformed_lvs.cols());
+    Eigen::VectorXd model_skewness(transformed_lvs.cols())  = Eigen::VectorXd::Zero(transformed_lvs.cols());
+
+    if (_scale){
+        if (_shape){
+            // Apply trasform() to every element inside the matrix last row
+            model_shape(Eigen::first, Eigen::last)= transformed_lvs(Eigen::last, Eigen::all);
+            std::transform(model_shape.begin(), model_shape.end(), model_shape,
+                    _latent_variables.get_z_list().back().get_prior()->get_transform());
+
+            model_scale(Eigen::first, Eigen::last)= transformed_lvs(Eigen::last-1, Eigen::all);
+            std::transform(model_scale.begin(), model_scale.end(), model_scale,
+                           _latent_variables.get_z_list().back().get_prior()->get_transform());
+        }
+        else{
+            model_scale(Eigen::first, Eigen::last)= transformed_lvs(Eigen::last, Eigen::all);
+            std::transform(model_scale.begin(), model_scale.end(), model_scale,
+                           _latent_variables.get_z_list().back().get_prior()->get_transform());
+        }
+    }
+
+    if (_skewness){
+        model_skewness(Eigen::first, Eigen::last) = transformed_lvs(Eigen::last-2, Eigen::all);
+        std::transform(model_skewness.begin(), model_skewness.end(), model_skewness,
+                       _latent_variables.get_z_list().back().get_prior()->get_transform());
+    }
+
+    return std::move(std::make_tuple(model_scale, model_shape, model_skewness));
+
+}
