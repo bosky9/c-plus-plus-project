@@ -1,13 +1,14 @@
 #pragma once
 
+#include "arima/arima_recursion.hpp"
 #include "data_check.hpp"
 #include "families/family.hpp"
 #include "families/normal.hpp"
+#include "headers.hpp"
 #include "output/tableprinter.hpp"
 #include "tests/nhst.hpp"
 #include "tsm.hpp"
 
-#include <string>
 #include <map>
 #include <vector>
 
@@ -17,13 +18,13 @@
  * @return Mean of values inside the vector
  */
 inline double mean(Eigen::VectorXd v) {
-    return std::accumulate(v.begin(), v.end(), 0) / v.size();
+    return std::accumulate(v.begin(), v.end(), 0.0) / static_cast<double>(v.size());
 }
 
 inline std::vector<double> diff(const std::vector<double>& v) {
-    std::vector<double> new_v(v.size()-1);
+    std::vector<double> new_v(v.size() - 1);
     for (size_t i{0}; i < new_v.size(); i++)
-        new_v.at(i) = v.at(i+1) - v.at(i);
+        new_v.at(i) = v.at(i + 1) - v.at(i);
     return std::move(new_v);
 }
 
@@ -46,6 +47,8 @@ private:
     bool _skewness;
     std::function<double(double)> _mean_transform; ///< a function which transforms the location parameter
     bool _cythonized;
+    size_t _data_length;
+    size_t _family_z_no;
 
     /**
      * @brief Creates the Autoregressive Matrix for the model
@@ -94,8 +97,8 @@ private:
      * - mu: contains the predicted values (location) for the time series
      * - Y: contains the length-adjusted time series (accounting for lags)
      */
-    std::tuple<Eigen::VectorXd, Eigen::VectorXd>
-    poisson_model(Eigen::VectorXd beta); // TODO: Non abbiamo implementato in families Poisson!
+    // std::tuple<Eigen::VectorXd, Eigen::VectorXd> poisson_model(Eigen::VectorXd beta);
+    //  TODO: Non abbiamo implementato in families Poisson!
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for a non-normal model.
@@ -141,8 +144,9 @@ private:
      * - mu: contains the predicted values (location) for the time series
      * - Y: contains the length-adjusted time series (accounting for lags)
      */
-    std::tuple<Eigen::VectorXd, Eigen::VectorXd> mb_poisson_model(Eigen::VectorXd beta, size_t mini_batch);
-
+    // std::tuple<Eigen::VectorXd, Eigen::VectorXd> mb_poisson_model(Eigen::VectorXd beta, size_t mini_batch);
+    //  TODO: Non abbiamo implementato in families Poisson!
+    
     /**
      * @brief Creates a h-step ahead mean prediction
      * @details This function is used for predict(). We have to iterate over the number of timepoints (h) that the user
@@ -204,7 +208,8 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
+    ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ = 0,
+          const Family& family = Normal());
 
     /**
      * @brief Constructor for ARIMA object
@@ -216,7 +221,8 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index, const std::string& target, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
+    ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index,
+          const std::string& target, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
 
     /**
      * @brief Calculates the negative log-likelihood of the model for Normal family

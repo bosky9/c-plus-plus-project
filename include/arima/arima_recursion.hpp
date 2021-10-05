@@ -1,5 +1,7 @@
 #pragma once
 
+#include "headers.hpp"
+
 /**
  * @brief Max function between two doubles
  * @param a First value
@@ -32,12 +34,13 @@ inline double double_min(double a, double b) {
  * @param ma_terms
  * @return
  */
-double arima_recursion(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd link_mu, Eigen::VectorXd Y,
-                       size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
+Eigen::VectorXd arima_recursion(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd link_mu,
+                                Eigen::VectorXd Y, size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
 
 // TODO: Non abbiamo implementato in families Poisson!
-double arima_recursion_poisson(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd link_mu,
-                               Eigen::VectorXd Y, size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
+Eigen::VectorXd arima_recursion_poisson(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd link_mu,
+                                        Eigen::VectorXd Y, size_t max_lag, size_t Y_len, size_t ar_terms,
+                                        size_t ma_terms);
 
 /**
  * @brief Moving average recursion for ARIMA model class - Gaussian errors
@@ -51,9 +54,9 @@ double arima_recursion_poisson(Eigen::VectorXd parameters, Eigen::VectorXd mu, E
  * @param ma_terms
  * @return
  */
-double arima_recursion_normal(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd link_mu,
-                              Eigen::VectorXd Y, size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
+Eigen::VectorXd arima_recursion_normal(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd Y,
+                                       size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
 
 // TODO: Da implementare solo in caso si faccia la classe ARIMAX
-double arimax_recursion(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd link_mu, Eigen::VectorXd Y,
-                        size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
+Eigen::VectorXd arimax_recursion(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd Y, size_t max_lag,
+                                 size_t Y_len, size_t ar_terms, size_t ma_terms);
