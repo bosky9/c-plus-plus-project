@@ -277,3 +277,19 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) {
         return chain(Eigen::all, ind);
     }
 }
+
+void TSM::set_model(std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd)> model) {
+    _model = model;
+}
+
+void TSM::set_mb_model(std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd, size_t)> mb_model) {
+    _mb_model = mb_model;
+}
+
+void TSM::set_neg_loglik(std::function<double(Eigen::VectorXd)> neg_loglik) {
+    _neg_loglik = neg_loglik;
+}
+
+void TSM::set_mb_neg_loglik(std::function<double(Eigen::VectorXd, std::optional<size_t>)> mb_neg_loglik) {
+    _mb_neg_loglik = mb_neg_loglik;
+}

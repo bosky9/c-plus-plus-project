@@ -318,6 +318,13 @@ public:
     void set_z_starting_values(const Eigen::VectorXd& values);
 
     /**
+     * @brief Set starting value to a latent variable
+     * @param index The index of the latent variable in _z_list
+     * @param value Starting value to set
+     */
+    void set_z_starting_value(size_t index, double value);
+
+    /**
      * @brief Plots the latent variables
      * @param indices Vector of indices to plot
      * @param width Width of the figure

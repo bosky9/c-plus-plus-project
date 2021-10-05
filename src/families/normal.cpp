@@ -80,9 +80,9 @@ Normal::approximating_model_reg(const Eigen::VectorXd& beta, const Eigen::Matrix
 
 // Copy/move constructor may be needed
 // What about the transform of the Normal?
-std::list<Normal::lv_to_build> Normal::build_latent_variables() {
-    std::list<Normal::lv_to_build> lvs_to_build;
-    lvs_to_build.push_back(Normal::lv_to_build{});
+std::vector<Lv_to_build> Normal::build_latent_variables() const {
+    std::vector<Lv_to_build> lvs_to_build;
+    lvs_to_build.push_back(Lv_to_build{"Normal scale", new Flat("exp"), new Normal(0.0, 3.0), 0});
     return std::move(lvs_to_build); // return lvs_to_build
 }
 
@@ -111,7 +111,7 @@ Eigen::VectorXd Normal::markov_blanket(const Eigen::VectorXd& y, const Eigen::Ve
     return Mvn::logpdf(y, means, Eigen::Vector<double, 1>{scale});
 }
 
-FamilyAttributes Normal::setup() {
+FamilyAttributes Normal::setup() const {
     return {"Normal", [](double x) { return x; }, true, false, false, [](double x) { return x; }, true};
 }
 
@@ -188,4 +188,12 @@ std::string Normal::get_z_name() const {
 
 Family* Normal::clone() const {
     return new Normal(*this);
+}
+
+// TODO: Fix the errors
+void Normal::set_functions(ARIMA& arima) const {
+    arima.set_model(arima.normal_model);
+    arima.set_mb_model(arima.mb_normal_model);
+    arima.set_neg_loglik(arima.normal_neg_loglik);
+    arima.set_mb_neg_loglik(arima.normal_mb_neg_loglik);
 }

@@ -79,73 +79,6 @@ private:
      */
     std::tuple<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>
     get_scale_and_shape_sim(Eigen::MatrixXd transformed_lvs);
-
-    /**
-     * @brief Creates the structure of the model (model matrices etc) for a Normal family ARIMA model
-     * @param beta Contains untransformed starting values for the latent variables
-     * @return Tuple of vectors:
-     * - mu: contains the predicted values (location) for the time series
-     * - Y: contains the length-adjusted time series (accounting for lags)
-     */
-    std::tuple<Eigen::VectorXd, Eigen::VectorXd> normal_model(Eigen::VectorXd beta);
-
-    /**
-     * @brief Creates the structure of the model (model matrices etc) for a Poisson model.
-     * @details Here we apply a link function to the MA lags.
-     * @param beta Contains untransformed starting values for the latent variables
-     * @return Tuple of vectors:
-     * - mu: contains the predicted values (location) for the time series
-     * - Y: contains the length-adjusted time series (accounting for lags)
-     */
-    // std::tuple<Eigen::VectorXd, Eigen::VectorXd> poisson_model(Eigen::VectorXd beta);
-    //  TODO: Non abbiamo implementato in families Poisson!
-
-    /**
-     * @brief Creates the structure of the model (model matrices etc) for a non-normal model.
-     * Here we apply a link function to the MA lags.
-     * @param beta Contains untransformed starting values for the latent variables
-     * @return Tuple of vectors:
-     * - mu: contains the predicted values (location) for the time series
-     * - Y: contains the length-adjusted time series (accounting for lags)
-     */
-    std::tuple<Eigen::VectorXd, Eigen::VectorXd> non_normal_model(Eigen::VectorXd beta);
-
-    /**
-     * @brief Creates the structure of the model (model matrices etc) for mini batch model.
-     * @details Here the structure is the same as for normal_model() but we are going to sample a random choice of data
-     * points (of length mini_batch).
-     * @param beta Contains untransformed starting values for the latent variables
-     * @param mini_batch Mini batch size for the data sampling
-     * @return Tuple of vectors:
-     * - mu: contains the predicted values (location) for the time series
-     * - Y: contains the length-adjusted time series (accounting for lags)
-     */
-    std::tuple<Eigen::VectorXd, Eigen::VectorXd> mb_normal_model(Eigen::VectorXd beta, size_t mini_batch);
-
-    /**
-     * @brief Creates the structure of the model (model matrices etc) for mini batch model.
-     * @details Here the structure is the same as for non_normal_model() but we are going to sample a random choice of
-     * data points (of length mini_batch).
-     * @param beta Contains untransformed starting values for the latent variables
-     * @param mini_batch Mini batch size for the data sampling
-     * @return Tuple of vectors:
-     * - mu: contains the predicted values (location) for the time series
-     * - Y: contains the length-adjusted time series (accounting for lags)
-     */
-    std::tuple<Eigen::VectorXd, Eigen::VectorXd> mb_non_normal_model(Eigen::VectorXd beta, size_t mini_batch);
-
-    /**
-     * @brief Creates the structure of the model (model matrices etc) for mini batch model.
-     * @details Here the structure is the same as for poisson_model() but we are going to sample a random choice of
-     * data points (of length mini_batch).
-     * @param beta Contains untransformed starting values for the latent variables
-     * @param mini_batch Mini batch size for the data sampling
-     * @return Tuple of vectors:
-     * - mu: contains the predicted values (location) for the time series
-     * - Y: contains the length-adjusted time series (accounting for lags)
-     */
-    // std::tuple<Eigen::VectorXd, Eigen::VectorXd> mb_poisson_model(Eigen::VectorXd beta, size_t mini_batch);
-    //  TODO: Non abbiamo implementato in families Poisson!
     
     /**
      * @brief Creates a h-step ahead mean prediction
@@ -223,6 +156,73 @@ public:
      */
     ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index,
           const std::string& target, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
+
+    /**
+     * @brief Creates the structure of the model (model matrices etc) for a Normal family ARIMA model
+     * @param beta Contains untransformed starting values for the latent variables
+     * @return Tuple of vectors:
+     * - mu: contains the predicted values (location) for the time series
+     * - Y: contains the length-adjusted time series (accounting for lags)
+     */
+    std::tuple<Eigen::VectorXd, Eigen::VectorXd> normal_model(Eigen::VectorXd beta);
+
+    /**
+     * @brief Creates the structure of the model (model matrices etc) for a Poisson model.
+     * @details Here we apply a link function to the MA lags.
+     * @param beta Contains untransformed starting values for the latent variables
+     * @return Tuple of vectors:
+     * - mu: contains the predicted values (location) for the time series
+     * - Y: contains the length-adjusted time series (accounting for lags)
+     */
+    // std::tuple<Eigen::VectorXd, Eigen::VectorXd> poisson_model(Eigen::VectorXd beta);
+    //  TODO: Non abbiamo implementato in families Poisson!
+
+    /**
+     * @brief Creates the structure of the model (model matrices etc) for a non-normal model.
+     * Here we apply a link function to the MA lags.
+     * @param beta Contains untransformed starting values for the latent variables
+     * @return Tuple of vectors:
+     * - mu: contains the predicted values (location) for the time series
+     * - Y: contains the length-adjusted time series (accounting for lags)
+     */
+    std::tuple<Eigen::VectorXd, Eigen::VectorXd> non_normal_model(Eigen::VectorXd beta);
+
+    /**
+     * @brief Creates the structure of the model (model matrices etc) for mini batch model.
+     * @details Here the structure is the same as for normal_model() but we are going to sample a random choice of data
+     * points (of length mini_batch).
+     * @param beta Contains untransformed starting values for the latent variables
+     * @param mini_batch Mini batch size for the data sampling
+     * @return Tuple of vectors:
+     * - mu: contains the predicted values (location) for the time series
+     * - Y: contains the length-adjusted time series (accounting for lags)
+     */
+    std::tuple<Eigen::VectorXd, Eigen::VectorXd> mb_normal_model(Eigen::VectorXd beta, size_t mini_batch);
+
+    /**
+     * @brief Creates the structure of the model (model matrices etc) for mini batch model.
+     * @details Here the structure is the same as for non_normal_model() but we are going to sample a random choice of
+     * data points (of length mini_batch).
+     * @param beta Contains untransformed starting values for the latent variables
+     * @param mini_batch Mini batch size for the data sampling
+     * @return Tuple of vectors:
+     * - mu: contains the predicted values (location) for the time series
+     * - Y: contains the length-adjusted time series (accounting for lags)
+     */
+    std::tuple<Eigen::VectorXd, Eigen::VectorXd> mb_non_normal_model(Eigen::VectorXd beta, size_t mini_batch);
+
+    /**
+     * @brief Creates the structure of the model (model matrices etc) for mini batch model.
+     * @details Here the structure is the same as for poisson_model() but we are going to sample a random choice of
+     * data points (of length mini_batch).
+     * @param beta Contains untransformed starting values for the latent variables
+     * @param mini_batch Mini batch size for the data sampling
+     * @return Tuple of vectors:
+     * - mu: contains the predicted values (location) for the time series
+     * - Y: contains the length-adjusted time series (accounting for lags)
+     */
+    // std::tuple<Eigen::VectorXd, Eigen::VectorXd> mb_poisson_model(Eigen::VectorXd beta, size_t mini_batch);
+    //  TODO: Non abbiamo implementato in families Poisson!
 
     /**
      * @brief Calculates the negative log-likelihood of the model for Normal family

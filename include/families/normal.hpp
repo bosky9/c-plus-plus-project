@@ -24,21 +24,6 @@ private:
     // gradient_only won't be used (no GAS models)
 
 public:
-
-    struct lv_to_build {
-        std::string name = "Normal scale";
-        Flat flat{"exp"};
-        std::unique_ptr<Normal> n{new Normal(0.0, 3.0)}; /**< Using a unique pointer avoids double deletes;
- *   the pointer is needed because otherwise parameter n could not be initialized,
- *   since it is of type Normal and it is inside the Normal class.
- */
-        double zero = 0;
-    };     /**<  Necessary for "build_latent_variables()" function.
- *   The python code appends to a list another list, this one:
- *   (['Normal Scale', Flat(transform='exp'), Normal(0, 3), 0.0])
- *   To translate the list above, we used this structure.
- */
-
     /**
      * @brief Constructor for Normal distribution
      * @param mu Mean for the Normal distribution
@@ -122,7 +107,7 @@ public:
      * @brief Builds additional latent variables for this family in a probabilistic model
      * @return A list of structs (each struct contains latent variable information)
      */
-    static std::list<lv_to_build> build_latent_variables();
+    [[nodiscard]] std::vector<Lv_to_build> build_latent_variables() const override;
 
     /**
      * @brief Draws random variables from this distribution with new latent variables
@@ -183,7 +168,7 @@ public:
      *          we could not get what their purpose was;
      *          we translated them as y = x functions.
      */
-    static FamilyAttributes setup();
+    [[nodiscard]] FamilyAttributes setup() const override;
 
     /**
      * @brief Negative loglikelihood function for this distribution
@@ -299,4 +284,10 @@ public:
     [[nodiscard]] Family* clone() const override; /**< override the family one,
  * returns a new Normal object by deep copy of the current one.
  */
+
+    /**
+     * @brief Set the likelihood functions for the ARIMA model according to the Normal family (used in ARIMA contructors)
+     * @param arima The ARIMA model to set
+     */
+    void set_functions(ARIMA& arima) const override;
 };

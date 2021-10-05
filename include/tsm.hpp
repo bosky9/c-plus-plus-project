@@ -2,12 +2,14 @@
 
 #include "cppoptlib/solver/lbfgsb.h"
 #include "headers.hpp"
+#include "families/family.hpp"
 #include "hessian.hpp"
 #include "inference/bbvi.hpp"
 #include "inference/metropolis_hastings.hpp"
 #include "latent_variables.hpp"
 #include "posterior.hpp"
 #include "results.hpp"
+#include "inference/stoch_optim.hpp"
 
 #include <functional>
 #include <memory>
@@ -49,6 +51,8 @@ protected:
     bool _multivariate_model;
     std::function<double(Eigen::VectorXd)> _neg_logposterior;
     std::function<double(Eigen::VectorXd)> _neg_loglik;
+    std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd)> _model;
+    std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd, size_t)> _mb_model;
     // Not used in Python
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior;
     std::function<double(Eigen::VectorXd, std::optional<size_t>)> _mb_neg_logposterior;
@@ -141,7 +145,7 @@ protected:
                   const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
                   const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
                   const std::optional<StochOptim>& optimizer = std::nullopt,
-                  const std::optional<u_int8_t> batch_size = 12, const std::optional<size_t> mininbatch = std::nullopt,
+                  const std::optional<uint8_t> batch_size = 12, const std::optional<size_t> mininbatch = std::nullopt,
                   const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
                   const std::optional<bool> record_elbo    = std::nullopt,
                   const std::optional<bool> quiet_progress = false, const std::optional<bool> preopt_search = true,
@@ -167,7 +171,7 @@ public:
                  std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
                  const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
                  const std::optional<StochOptim>& optimizer = std::nullopt,
-                 const std::optional<u_int8_t> batch_size = 12, const std::optional<size_t> mininbatch = std::nullopt,
+                 const std::optional<uint8_t> batch_size = 12, const std::optional<size_t> mininbatch = std::nullopt,
                  const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
                  const std::optional<bool> record_elbo    = std::nullopt,
                  const std::optional<bool> quiet_progress = false);
@@ -213,4 +217,12 @@ public:
      * @return Matrix of draws
      */
     Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000);
+
+    void set_model(std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd)> model);
+
+    void set_mb_model(std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd, size_t)> mb_model);
+
+    void set_neg_loglik(std::function<double(Eigen::VectorXd)> neg_loglik);
+
+    void set_mb_neg_loglik(std::function<double(Eigen::VectorXd, std::optional<size_t>)> mb_neg_loglik);
 };

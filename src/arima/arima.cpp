@@ -29,7 +29,7 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
     create_latent_variables();
 
     _family             = family;
-    FamilyAttributes fa = family.setup(); // TODO: Creare il metodo virtual in family che ritorna delle info nulle
+    FamilyAttributes fa = family.setup();
     _model_name_short   = fa.name;
     _link               = fa.link;
     _scale              = fa.scale;
@@ -41,7 +41,19 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
                   std::to_string(_ma) + ")";
 
     // Build any remaining latent variables that are specific to the family chosen
-    // TODO: continue
+    std::vector<Lv_to_build> lvs = _family->build_latent_variables();
+    for (size_t no{0}; no < lvs.size(); no++) {
+        Lv_to_build lv = lvs.at(no);
+        _latent_variables.add_z(lv.name, lv.flat, lv.normal);
+        _latent_variables.set_z_starting_value(1+no+_ar+_ma, lv.value);
+    }
+    _latent_variables.set_z_starting_value(0,_mean_transform(static_cast<double>(std::reduce(_data.begin(), _data.end())) / _data.size()));
+
+    _family_z_no = lvs.size();
+    _z_no = _latent_variables.get_z_list().size();
+
+    // If Normal family is selected, we use faster likelihood functions
+    _family->set_functions(this);
 }
 
 ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index,
@@ -61,7 +73,40 @@ ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::
     _data_name         = c_data.data_name;
     _index             = c_data.data_index;
 
-    // TODO: continue
+    // Difference data
+    for (size_t order{0}; order < _integ; order++)
+        _data = diff(_data);
+    _data_name.at(0) = "Differenced " + _data_name.at(0);
+
+    _x = ar_matrix();
+    create_latent_variables();
+
+    _family             = family;
+    FamilyAttributes fa = family.setup();
+    _model_name_short   = fa.name;
+    _link               = fa.link;
+    _scale              = fa.scale;
+    _shape              = fa.shape;
+    _skewness           = fa.skewness;
+    _mean_transform     = fa.mean_transform;
+    _cythonized         = fa.cythonized;
+    _model_name         = _model_name_short + " ARIMA(" + std::to_string(_ar) + "," + std::to_string(_integ) + "," +
+            std::to_string(_ma) + ")";
+
+    // Build any remaining latent variables that are specific to the family chosen
+    std::vector<Lv_to_build> lvs = _family->build_latent_variables();
+    for (size_t no{0}; no < lvs.size(); no++) {
+        Lv_to_build lv = lvs.at(no);
+        _latent_variables.add_z(lv.name, lv.flat, lv.normal);
+        _latent_variables.set_z_starting_value(1+no+_ar+_ma, lv.value);
+    }
+    _latent_variables.set_z_starting_value(0,_mean_transform(static_cast<double>(std::reduce(_data.begin(), _data.end())) / _data.size()));
+
+    _family_z_no = lvs.size();
+    _z_no = _latent_variables.get_z_list().size();
+
+    // If Normal family is selected, we use faster likelihood functions
+    _family->set_functions(this);
 }
 
 Eigen::MatrixXd ARIMA::ar_matrix() {

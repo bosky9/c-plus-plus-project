@@ -1,6 +1,40 @@
 #pragma once
+
 #include "headers.hpp"
+#include "flat.hpp"
+#include "normal.hpp"
+#include "arima/arima.hpp"
+
 #include <optional>
+
+struct Lv_to_build final{
+    std::string name;
+    Flat flat;
+    std::unique_ptr<Normal> normal; /**< Using a unique pointer avoids double deletes;
+ *   the pointer is needed because otherwise parameter n could not be initialized,
+ *   since it is of type Normal and it is inside the Normal class.
+ */
+    double value;
+};     /**<  Necessary for "build_latent_variables()" function.
+ *   The python code appends to a list another list, this one:
+ *   (['Normal Scale', Flat(transform='exp'), Normal(0, 3), 0.0])
+ *   To translate the list above, we used this structure.
+ */
+
+/**
+ * @brief Struct for attributes returned by families
+ * @details Returned by normal.setup()
+ */
+struct FamilyAttributes final {
+    std::string name;
+    std::function<double(double)> link; ///< This one is not explained in the original code
+    bool scale;
+    bool shape;
+    bool skewness;
+    std::function<double(double)> mean_transform; /**< a function which transforms the location parameter
+                                                       ... in theory. In python is just np.array*/
+    bool cythonized;
+};
 
 class Family {
 protected:
@@ -129,6 +163,30 @@ public:
      */
     [[nodiscard]] virtual Family* clone() const;
 
+    /**
+     * @brief Returns the attributes of this family if using in a probabilistic model
+     * @return A struct with attributes of the family
+     *
+     * @details Since the attributes link, mean_transform
+     *          are np.array in the original code,
+     *          we could not get what their purpose was;
+     *          we translated them as y = x functions.
+     */
+    [[nodiscard]] virtual FamilyAttributes setup() const;
+
+    /**
+     * @brief Builds additional latent variables for this family in a probabilistic model
+     * @return A list of structs (each struct contains latent variable information)
+     */
+    [[nodiscard]] virtual std::vector<Lv_to_build> build_latent_variables() const;
+
+    // TODO: Override this function in each subclass of Family with the correct settings (see ARIMA constructor in Python)
+    /**
+     * @brief Set the likelihood functions for the ARIMA model according to the kind of family that calls this function (used in ARIMA contructors)
+     * @param arima The ARIMA model to set
+     */
+    virtual void set_functions(ARIMA& arima) const;
+
 private:
     /**
      * @brief Apply the logit transformation
@@ -182,19 +240,4 @@ private:
      * @param transform Whether to apply a transformation (e.g. "exp" or "logit")
      */
     static std::string itransform_name_define(const std::string& transform);
-};
-
-/**
- * @brief Struct for attributes returned by families
- * @details Returned by normal.setup()
- */
-struct FamilyAttributes final {
-    std::string name;
-    std::function<double(double)> link; ///< This one is not explained in the original code
-    bool scale;
-    bool shape;
-    bool skewness;
-    std::function<double(double)> mean_transform; /**< a function which transforms the location parameter
-                                                       ... in theory. In python is just np.array*/
-    bool cythonized;
 };

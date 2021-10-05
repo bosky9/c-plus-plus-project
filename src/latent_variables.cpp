@@ -339,6 +339,11 @@ void LatentVariables::set_z_starting_values(const Eigen::VectorXd& values) {
     }
 }
 
+void LatentVariables::set_z_starting_value(size_t index, double value) {
+    assert(index < _z_list.size());
+    _z_list.at(index).set_start(value);
+}
+
 void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width, size_t height,
                              std::string loc) {
     plt::figure_size(width, height);

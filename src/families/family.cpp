@@ -146,3 +146,20 @@ short unsigned int Family::get_param_no() const {
 Family* Family::clone() const {
     return new Family(*this);
 }
+
+FamilyAttributes Family::setup() const {
+    return {"Family", [](double x) { return x; }, false, false, false, [](double x) { return x; }, false};
+}
+
+std::vector<Lv_to_build> Family::build_latent_variables() const {
+    std::vector<Lv_to_build> lvs_to_build;
+    return std::move(lvs_to_build);
+}
+
+// TODO: Fix the errors
+void Family::set_functions(ARIMA& arima) const {
+    arima.set_model(arima.non_normal_model);
+    arima.set_mb_model(arima.mb_non_normal_model);
+    arima.set_neg_loglik(arima.non_normal_neg_loglik);
+    arima.set_mb_neg_loglik(arima.non_normal_mb_neg_loglik);
+}
