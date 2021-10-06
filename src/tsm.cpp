@@ -131,12 +131,12 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
                            output.theta, output.scores, output.states, output.states_var);
 }
 
-MLEResults* TSM::_ols_fit() {}
+MLEResults* TSM::_ols_fit() {return nullptr;}
 
 MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
                                const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
                                const std::optional<size_t> nsims, const std::optional<StochOptim>& optimizer,
-                               const std::optional<u_int8_t> batch_size, const std::optional<size_t> mininbatch,
+                               const std::optional<uint8_t> batch_size, const std::optional<size_t> mininbatch,
                                const std::optional<bool> map_start, const std::optional<double> learning_rate,
                                const std::optional<bool> record_elbo, const std::optional<bool> quiet_progress,
                                const std::optional<bool> preopt_search, const std::optional<Eigen::VectorXd>& start) {
@@ -181,7 +181,7 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
 
 Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixXd>& cov_matrix,
                   const std::optional<size_t> iterations, const std::optional<size_t> nsims,
-                  const std::optional<StochOptim>& optimizer, const std::optional<u_int8_t> batch_size,
+                  const std::optional<StochOptim>& optimizer, const std::optional<uint8_t> batch_size,
                   const std::optional<size_t> mininbatch, const std::optional<bool> map_start,
                   const std::optional<double> learning_rate, const std::optional<bool> record_elbo,
                   const std::optional<bool> quiet_progress) {

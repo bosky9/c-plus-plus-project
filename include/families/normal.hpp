@@ -285,4 +285,8 @@ public:
     [[nodiscard]] Family* clone() const override; /**< override the family one,
                                                    * returns a new Normal object by deep copy of the current one.
                                                    */
+
+    [[nodiscard]] double get_mu0() const;
+
+    [[nodiscard]] double get_sigma0() const;
 };

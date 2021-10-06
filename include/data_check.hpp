@@ -12,9 +12,9 @@
  * @see data_check
  */
 struct CheckedData final {
-    std::unique_ptr<std::vector<double>> transformed_data; ///< Raw data array for use in the model
-    std::unique_ptr<std::vector<std::string>> data_name;   ///< Name of the data
-    std::unique_ptr<std::vector<size_t>> data_index;       ///< The time indices for the data
+    std::vector<double> transformed_data; ///< Raw data array for use in the model
+    std::vector<std::string> data_name;   ///< Name of the data
+    std::vector<size_t> data_index;       ///< The time indices for the data
 };
 
 /**
@@ -22,9 +22,9 @@ struct CheckedData final {
  * @see data_check
  */
 struct CheckedDataMv final {
-    std::unique_ptr<std::vector<std::vector<double>>> transformed_data; ///< Raw data array for use in the model
-    std::unique_ptr<std::vector<size_t>> data_name;                     ///< Names of the data
-    std::unique_ptr<std::vector<size_t>> data_index;                    ///< The time indices for the data
+    std::vector<std::vector<double>> transformed_data; ///< Raw data array for use in the model
+    std::vector<size_t> data_name;                     ///< Names of the data
+    std::vector<size_t> data_index;                    ///< The time indices for the data
 };
 
 /**
@@ -33,18 +33,17 @@ struct CheckedDataMv final {
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedData* data_check(std::vector<T>& data, std::vector<size_t>& index) {
+CheckedData data_check(std::vector<T>& data, std::vector<size_t>& index) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
     assert(data.size() == index.size());
 
-    std::shared_ptr<CheckedData> checked_data(new CheckedData());
-    checked_data->transformed_data.reset(&data);
-    checked_data->data_index.reset(&index);
-    checked_data->data_name->push_back("Series");
-
-    return checked_data.get();
+    CheckedData cd;
+    cd.transformed_data = data;
+    cd.data_index = index;
+    cd.data_name = {"Series"};
+    return std::move(cd);
 }
 
 /**
@@ -54,19 +53,18 @@ CheckedData* data_check(std::vector<T>& data, std::vector<size_t>& index) {
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedData* data_check(std::map<std::string, std::vector<T>>& data, std::vector<size_t>& index,
+CheckedData data_check(std::map<std::string, std::vector<T>>& data, std::vector<size_t>& index,
                         const std::string& target) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
     assert(data[target].size() == index.size());
 
-    std::shared_ptr<CheckedData> checked_data(new CheckedData());
-    checked_data->transformed_data.reset(&data[target]);
-    checked_data->data_index.reset(&index);
-    checked_data->data_name->push_back(target);
-
-    return checked_data.get();
+    CheckedData cd;
+    cd.transformed_data = data[target];
+    cd.data_index = index;
+    cd.data_name = {target};
+    return std::move(cd);
 }
 
 // TODO: The following method (used only in VAR models) is useful? Consider to remove it
@@ -77,17 +75,17 @@ CheckedData* data_check(std::map<std::string, std::vector<T>>& data, std::vector
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedDataMv* mv_data_check(std::vector<std::vector<T>>& data) {
+CheckedDataMv mv_data_check(std::vector<std::vector<T>>& data) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
 
-    std::shared_ptr<CheckedDataMv> checked_data(new CheckedDataMv());
-    checked_data->transformed_data.reset(&data);
-    checked_data->data_index->resize(data[0].size());
-    std::iota(checked_data->data_index->begin(), checked_data->data_index->end(), 0);
-    checked_data->data_name->resize(data[0].size());
-    std::iota(checked_data->data_name->begin(), checked_data->data_name->end(), 1);
+    CheckedDataMv cd;
+    cd.transformed_data = data;
+    cd.data_index.resize(data.at(0).size());
+    std::iota(cd.data_index.begin(), cd.data_index.end(), 0);
+    cd.data_name.resize(data[0].size());
+    std::iota(cd.data_name.begin(), cd.data_name.end(), 1);
 
-    return checked_data.get();
+    return std::move(cd);
 }

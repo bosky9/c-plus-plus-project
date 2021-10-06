@@ -11,10 +11,10 @@ ARIMA::ARIMA(std::vector<double>& data, std::vector<size_t>& index, size_t ar, s
     _multivariate_model = false;
 
     // Format the data
-    CheckedData* c_data = data_check(data, index);
-    _data               = *c_data->transformed_data;
-    _data_name          = *c_data->data_name;
-    _index              = *c_data->data_index;
+    CheckedData c_data = data_check(data, index);
+    _data               = c_data.transformed_data;
+    _data_name          = c_data.data_name;
+    _index              = c_data.data_index;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
@@ -63,10 +63,10 @@ ARIMA::ARIMA(std::map<std::string, std::vector<double>>& data, std::vector<size_
     _multivariate_model = false;
 
     // Format the data
-    CheckedData* c_data = data_check(data, index, target);
-    _data               = *c_data->transformed_data;
-    _data_name          = *c_data->data_name;
-    _index              = *c_data->data_index;
+    CheckedData c_data = data_check(data, index, target);
+    _data               = c_data.transformed_data;
+    _data_name          = c_data.data_name;
+    _index              = c_data.data_index;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
