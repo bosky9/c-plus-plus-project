@@ -13,6 +13,13 @@
  * @param x Array of data
  * @param lag Index to split the array into two arrays with equal sizes
  * @return The sample autocovariance of the two arrays
+ *
+ * @details
+        A back-insert iterator is a special type of output iterator
+        designed to allow algorithms that usually overwrite elements (such as copy)
+        to instead insert new elements automatically at the end of the container.
+
+        Used to expand vector x1, x2.
  */
 template<typename T, int N>
 T cov(const Eigen::Vector<T, N>& x, size_t lag = 0) {
