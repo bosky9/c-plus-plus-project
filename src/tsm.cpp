@@ -214,10 +214,10 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
         return _ols_fit();
 }
 
-std::vector<size_t> TSM::shift_dates(size_t n) {
+std::vector<double> TSM::shift_dates(size_t n) {
     assert(_index.size() > 0);
     assert(_index.size() > _max_lag);
-    std::vector<size_t> date_index(_index.begin() + _max_lag, _index.end());
+    std::vector<double> date_index(_index.begin() + _max_lag, _index.end());
     if (date_index.size() > 1) {
         for (size_t i{0}; i < n; i++)
             date_index.push_back(date_index.back() + (date_index.back() - date_index.at(date_index.size() - 2)));

@@ -4,20 +4,20 @@
 
 TEST_CASE("Data check on multiple time series", "[data_check]") {
     std::map<std::string, std::vector<double>> v{{"1", {0.2, 0.3}}, {"2", {0.4, 0.6}}};
-    std::vector<size_t> index{0, 1};
+    std::vector<double> index{0, 1};
     CheckedData cd = data_check(v, index, "1");
     REQUIRE(cd.transformed_data == std::vector<double>{0.2, 0.3});
     REQUIRE(cd.data_name == std::vector<std::string>{"1"});
-    REQUIRE(cd.data_index == std::vector<size_t>{0, 1});
+    REQUIRE(cd.data_index == std::vector<double>{0, 1});
 }
 
 TEST_CASE("Data check a single time series", "[data_check]") {
     std::vector<double> v{0.1, 0.2, 0.3, 0.4, 0.5};
-    std::vector<size_t> index{0, 1, 2, 3, 4};
+    std::vector<double> index{0, 1, 2, 3, 4};
     CheckedData cd = data_check(v, index);
     REQUIRE(cd.transformed_data == std::vector<double>{0.1, 0.2, 0.3, 0.4, 0.5});
     REQUIRE(cd.data_name == std::vector<std::string>{"Series"});
-    REQUIRE(cd.data_index == std::vector<size_t>{0, 1, 2, 3, 4});
+    REQUIRE(cd.data_index == std::vector<double>{0, 1, 2, 3, 4});
 }
 
 TEST_CASE("Data check on multiple time series (mv version)", "[mv_data_check]") {
@@ -25,5 +25,5 @@ TEST_CASE("Data check on multiple time series (mv version)", "[mv_data_check]") 
     CheckedDataMv cd = mv_data_check(v);
     REQUIRE(cd.transformed_data == v);
     REQUIRE(cd.data_name == std::vector<size_t>{1, 2, 3});
-    REQUIRE(cd.data_index == std::vector<size_t>{0, 1, 2});
+    REQUIRE(cd.data_index == std::vector<double>{0, 1, 2});
 }

@@ -18,7 +18,7 @@ protected:
     LatentVariables _z;
     Eigen::VectorXd _z_values;
     Eigen::MatrixXd _data; ///< Predicted values for the time series and length-adjusted time series
-    std::vector<size_t> _index;
+    std::vector<double> _index;
     bool _multivariate_model;
     std::function<double(Eigen::VectorXd)> _objective_object; ///< Likelihood or posterior
     std::string _method;
@@ -57,7 +57,7 @@ protected:
      */
     Results(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
             const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
-            std::vector<size_t> index, bool multivariate_model, std::function<double(Eigen::VectorXd)> objective_object,
+            std::vector<double> index, bool multivariate_model, std::function<double(Eigen::VectorXd)> objective_object,
             std::string method, bool z_hide, int max_lag, Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
             Eigen::VectorXd scores = Eigen::VectorXd::Zero(0), Eigen::VectorXd states = Eigen::VectorXd::Zero(0),
             Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));
@@ -129,7 +129,7 @@ public:
      */
     MLEResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                const std::string& model_type, const LatentVariables& latent_variables, Eigen::VectorXd results,
-               Eigen::MatrixXd data, std::vector<size_t> index, bool multivariate_model,
+               Eigen::MatrixXd data, std::vector<double> index, bool multivariate_model,
                std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                Eigen::MatrixXd ihessian = Eigen::VectorXd::Zero(0), Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
                Eigen::VectorXd scores = Eigen::VectorXd::Zero(0), Eigen::VectorXd states = Eigen::VectorXd::Zero(0),
@@ -190,7 +190,7 @@ public:
      */
     BBVIResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                 const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
-                std::vector<size_t> index, bool multivariate_model,
+                std::vector<double> index, bool multivariate_model,
                 std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                 Eigen::VectorXd ses, Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
                 Eigen::VectorXd scores       = Eigen::VectorXd::Zero(0),
@@ -261,7 +261,7 @@ public:
      */
     BBVISSResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                   const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
-                  std::vector<size_t> index, bool multivariate_model, double objective_value, std::string method,
+                  std::vector<double> index, bool multivariate_model, double objective_value, std::string method,
                   bool z_hide, int max_lag, Eigen::VectorXd ses, Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
                   Eigen::VectorXd scores       = Eigen::VectorXd::Zero(0),
                   Eigen::VectorXd elbo_records = Eigen::VectorXd::Zero(0),
@@ -328,7 +328,7 @@ public:
      */
     LaplaceResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                    const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
-                   std::vector<size_t> index, bool multivariate_model,
+                   std::vector<double> index, bool multivariate_model,
                    std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
                    int max_lag, Eigen::MatrixXd ihessian, Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
                    Eigen::VectorXd scores = Eigen::VectorXd::Zero(0), Eigen::VectorXd states = Eigen::VectorXd::Zero(0),
@@ -384,7 +384,7 @@ public:
      */
     MCMCResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                 const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
-                std::vector<size_t> index, bool multivariate_model,
+                std::vector<double> index, bool multivariate_model,
                 std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                 Eigen::MatrixXd samples, Eigen::VectorXd mean_est, Eigen::VectorXd median_est,
                 Eigen::VectorXd upper_95_est, Eigen::VectorXd lower_95_est,

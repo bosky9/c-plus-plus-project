@@ -2,7 +2,7 @@
 
 Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                  const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
-                 std::vector<size_t> index, bool multivariate_model,
+                 std::vector<double> index, bool multivariate_model,
                  std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                  Eigen::VectorXd signal, Eigen::VectorXd scores, Eigen::VectorXd states, Eigen::VectorXd states_var)
     : _x_names{std::move(X_names)}, _model_name{std::move(model_name)}, _model_type{model_type}, _z{latent_variables},
@@ -37,7 +37,7 @@ LatentVariables Results::get_z() const {
 
 MLEResults::MLEResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                        const std::string& model_type, const LatentVariables& latent_variables, Eigen::VectorXd results,
-                       Eigen::MatrixXd data, std::vector<size_t> index, bool multivariate_model,
+                       Eigen::MatrixXd data, std::vector<double> index, bool multivariate_model,
                        std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
                        int max_lag, Eigen::MatrixXd ihessian, Eigen::VectorXd signal, Eigen::VectorXd scores,
                        Eigen::VectorXd states, Eigen::VectorXd states_var)
@@ -173,9 +173,9 @@ void MLEResults::summary_with_hessian(bool transformed) const {
     model_details.push_back(
             {{"model_details", "Dependent Variable: " + _data_name}, {"model_results", "Method: " + _method}});
     model_details.push_back(
-            {{"model_details", "Start Date: " + std::to_string(_index[_max_lag])}, {"model_results", obj_desc}});
+            {{"model_details", "Start Date: " + std::to_string(_index.at(_max_lag))}, {"model_results", obj_desc}});
     model_details.push_back(
-            {{"model_details", "End Date: " + std::to_string(_index[-1])},
+            {{"model_details", "End Date: " + std::to_string(_index.back())},
              {"model_results",
               "AIC: " + std::to_string(round_to(
                                 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values), 4))}});
@@ -221,8 +221,8 @@ void MLEResults::summary_without_hessian() const {
     model_details.push_back(
             {{"model_details", "Dependent Variable: " + _data_name}, {"model_results", "Method: " + _method}});
     model_details.push_back(
-            {{"model_details", "Start Date: " + std::to_string(_index[_max_lag])}, {"model_results", obj_desc}});
-    model_details.push_back({{"model_details", "End Date: " + std::to_string(_index[-1])},
+            {{"model_details", "Start Date: " + std::to_string(_index.at(_max_lag))}, {"model_results", obj_desc}});
+    model_details.push_back({{"model_details", "End Date: " + std::to_string(_index.back())},
                              {"model_results", "AIC: " + std::to_string(_aic)}});
     model_details.push_back({{"model_details", "Number of observations: " + std::to_string(_data_length)},
                              {"model_results", "BIC: " + std::to_string(_bic)}});
@@ -244,7 +244,7 @@ Eigen::MatrixXd MLEResults::get_ihessian() const {
 
 BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                          const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
-                         std::vector<size_t> index, bool multivariate_model,
+                         std::vector<double> index, bool multivariate_model,
                          std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
                          int max_lag, Eigen::VectorXd ses, Eigen::VectorXd signal, Eigen::VectorXd scores,
                          Eigen::VectorXd elbo_records, Eigen::VectorXd states, Eigen::VectorXd states_var)
@@ -360,8 +360,8 @@ void BBVIResults::summary(bool transformed) {
     model_details.push_back(
             {{"model_details", "Dependent Variable: " + _data_name}, {"model_results", "Method: " + _method}});
     model_details.push_back(
-            {{"model_details", "Start Date: " + std::to_string(_index[_max_lag])}, {"model_results", obj_desc}});
-    model_details.push_back({{"model_details", "End Date: " + std::to_string(_index[-1])},
+            {{"model_details", "Start Date: " + std::to_string(_index.at(_max_lag))}, {"model_results", obj_desc}});
+    model_details.push_back({{"model_details", "End Date: " + std::to_string(_index.back())},
                              {"model_results", "AIC: " + std::to_string(_aic)}});
     model_details.push_back({{"model_details", "Number of observations: " + std::to_string(_data_length)},
                              {"model_results", "BIC: " + std::to_string(_bic)}});
@@ -374,7 +374,7 @@ void BBVIResults::summary(bool transformed) {
 
 BBVISSResults::BBVISSResults(std::vector<std::string> data_name, std::vector<std::string> X_names,
                              std::string model_name, const std::string& model_type,
-                             const LatentVariables& latent_variables, Eigen::MatrixXd data, std::vector<size_t> index,
+                             const LatentVariables& latent_variables, Eigen::MatrixXd data, std::vector<double> index,
                              bool multivariate_model, double objective_value, std::string method, bool z_hide,
                              int max_lag, Eigen::VectorXd ses, Eigen::VectorXd signal, Eigen::VectorXd scores,
                              Eigen::VectorXd elbo_records, Eigen::VectorXd states, Eigen::VectorXd states_var)
@@ -489,8 +489,8 @@ void BBVISSResults::summary(bool transformed) {
     model_details.push_back(
             {{"model_details", "Dependent Variable: " + _data_name}, {"model_results", "Method: " + _method}});
     model_details.push_back(
-            {{"model_details", "Start Date: " + std::to_string(_index[_max_lag])}, {"model_results", obj_desc}});
-    model_details.push_back({{"model_details", "End Date: " + std::to_string(_index[-1])},
+            {{"model_details", "Start Date: " + std::to_string(_index.at(_max_lag))}, {"model_results", obj_desc}});
+    model_details.push_back({{"model_details", "End Date: " + std::to_string(_index.back())},
                              {"model_results", "AIC: " + std::to_string(_aic)}});
     model_details.push_back({{"model_details", "Number of observations: " + std::to_string(_data_length)},
                              {"model_results", "BIC: " + std::to_string(_bic)}});
@@ -503,7 +503,7 @@ void BBVISSResults::summary(bool transformed) {
 
 LaplaceResults::LaplaceResults(std::vector<std::string> data_name, std::vector<std::string> X_names,
                                std::string model_name, const std::string& model_type,
-                               const LatentVariables& latent_variables, Eigen::MatrixXd data, std::vector<size_t> index,
+                               const LatentVariables& latent_variables, Eigen::MatrixXd data, std::vector<double> index,
                                bool multivariate_model, std::function<double(Eigen::VectorXd)> objective_object,
                                std::string method, bool z_hide, int max_lag, Eigen::MatrixXd ihessian,
                                Eigen::VectorXd signal, Eigen::VectorXd scores, Eigen::VectorXd states,
@@ -629,7 +629,7 @@ void LaplaceResults::summary(bool transformed) {
     model_details.push_back(
             {{"model_details", "Dependent Variable: " + _data_name}, {"model_results", "Method: " + _method}});
     model_details.push_back(
-            {{"model_details", "Start Date: " + std::to_string(_index[_max_lag])}, {"model_results", obj_desc}});
+            {{"model_details", "Start Date: " + std::to_string(_index.at(_max_lag))}, {"model_results", obj_desc}});
     model_details.push_back({{"model_details", "End Date: " + std::to_string(_index.back())},
                              {"model_results", "AIC: " + std::to_string(_aic)}});
     model_details.push_back({{"model_details", "Number of observations: " + std::to_string(_data_length)},
@@ -643,7 +643,7 @@ void LaplaceResults::summary(bool transformed) {
 
 MCMCResults::MCMCResults(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                          const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
-                         std::vector<size_t> index, bool multivariate_model,
+                         std::vector<double> index, bool multivariate_model,
                          std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
                          int max_lag, Eigen::MatrixXd samples, Eigen::VectorXd mean_est, Eigen::VectorXd median_est,
                          Eigen::VectorXd upper_95_est, Eigen::VectorXd lower_95_est, Eigen::VectorXd signal,
@@ -731,7 +731,7 @@ void MCMCResults::summary(bool transformed) {
     model_details.push_back(
             {{"model_details", "Dependent Variable: " + _data_name}, {"model_results", "Method: " + _method}});
     model_details.push_back(
-            {{"model_details", "Start Date: " + std::to_string(_index[_max_lag])}, {"model_results", obj_desc}});
+            {{"model_details", "Start Date: " + std::to_string(_index.at(_max_lag))}, {"model_results", obj_desc}});
     model_details.push_back({{"model_details", "End Date: " + std::to_string(_index.back())},
                              {"model_results", "AIC: " + std::to_string(_aic)}});
     model_details.push_back({{"model_details", "Number of observations: " + std::to_string(_data_length)},

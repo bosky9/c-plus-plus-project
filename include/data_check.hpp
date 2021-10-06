@@ -14,7 +14,7 @@
 struct CheckedData final {
     std::vector<double> transformed_data; ///< Raw data array for use in the model
     std::vector<std::string> data_name;   ///< Name of the data
-    std::vector<size_t> data_index;       ///< The time indices for the data
+    std::vector<double> data_index;       ///< The time indices for the data
 };
 
 /**
@@ -24,7 +24,7 @@ struct CheckedData final {
 struct CheckedDataMv final {
     std::vector<std::vector<double>> transformed_data; ///< Raw data array for use in the model
     std::vector<size_t> data_name;                     ///< Names of the data
-    std::vector<size_t> data_index;                    ///< The time indices for the data
+    std::vector<double> data_index;                    ///< The time indices for the data
 };
 
 /**
@@ -33,7 +33,7 @@ struct CheckedDataMv final {
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedData data_check(std::vector<T>& data, std::vector<size_t>& index) {
+CheckedData data_check(const std::vector<T>& data, const std::vector<double>& index) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
@@ -53,15 +53,15 @@ CheckedData data_check(std::vector<T>& data, std::vector<size_t>& index) {
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedData data_check(std::map<std::string, std::vector<T>>& data, std::vector<size_t>& index,
+CheckedData data_check(const std::map<std::string, std::vector<T>>& data, const std::vector<double>& index,
                         const std::string& target) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
-    assert(data[target].size() == index.size());
+    assert(data.at(target).size() == index.size());
 
     CheckedData cd;
-    cd.transformed_data = data[target];
+    cd.transformed_data = data.at(target);
     cd.data_index = index;
     cd.data_name = {target};
     return std::move(cd);
@@ -75,7 +75,7 @@ CheckedData data_check(std::map<std::string, std::vector<T>>& data, std::vector<
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedDataMv mv_data_check(std::vector<std::vector<T>>& data) {
+CheckedDataMv mv_data_check(const std::vector<std::vector<T>>& data) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");

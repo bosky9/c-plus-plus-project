@@ -1,6 +1,6 @@
 #include "arima/arima.hpp"
 
-ARIMA::ARIMA(std::vector<double>& data, std::vector<size_t>& index, size_t ar, size_t ma, size_t integ, Family* family)
+ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ, Family* family)
     : TSM{"ARIMA"} {
     // Latent Variable information
     _z_no               = _ar + _ma + 2;
@@ -51,7 +51,7 @@ ARIMA::ARIMA(std::vector<double>& data, std::vector<size_t>& index, size_t ar, s
     _z_no        = _latent_variables.get_z_list().size();
 }
 
-ARIMA::ARIMA(std::map<std::string, std::vector<double>>& data, std::vector<size_t>& index, const std::string& target,
+ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index, const std::string& target,
              size_t ar, size_t ma, size_t integ, Family* family)
     : TSM{"ARIMA"}, _ar{ar}, _ma{ma}, _integ{integ} {
     // Latent Variable information

@@ -47,7 +47,7 @@ protected:
     std::string _model_name_short; ///< The self.model_name2 variable in python
     std::string _model_type;       ///< The type of model (e.g. 'ARIMA', 'GARCH')
     std::vector<double> _data;     ///< The univariate time series data that will be used
-    std::vector<size_t> _index;    ///< The times of the input data (years, days or seconds)
+    std::vector<double> _index;    ///< The times of the input data (years, days or seconds)
     bool _multivariate_model;
     std::function<double(Eigen::VectorXd)> _neg_logposterior;
     std::function<double(Eigen::VectorXd)> _neg_loglik;
@@ -181,7 +181,7 @@ public:
      * @param n How many steps to forecast
      * @return A transformed date_index object
      */
-    std::vector<size_t> shift_dates(size_t n);
+    std::vector<double> shift_dates(size_t n);
 
     /**
      * @brief Transforms latent variables to actual scale by applying link function
