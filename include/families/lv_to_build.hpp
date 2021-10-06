@@ -8,7 +8,7 @@ struct Lv_to_build final {
     std::unique_ptr<Flat> _flat;
     std::unique_ptr<Normal> _normal; /**< Using a unique pointer avoids double deletes;
                                       *   the pointer is needed because otherwise parameter n could not be initialized,
-                                      *   since it is of type Normal and it is inside the Normal class.
+                                      *   since it is of type Normal and it is used in the Normal class.
                                       */
     double _value;
 
