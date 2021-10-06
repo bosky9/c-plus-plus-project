@@ -1,7 +1,7 @@
 #pragma once
 
-#include "families/lv_to_build.hpp"
 #include "headers.hpp"
+
 
 #include <optional>
 
@@ -134,7 +134,8 @@ public:
      * @brief Builds additional latent variables for this family in a probabilistic model
      * @return A list of structs (each struct contains latent variable information)
      */
-    virtual std::vector<Lv_to_build> build_latent_variables() const;
+    using lv_to_build = std::tuple<std::string, Family*, Family*, double>;
+    virtual std::vector<lv_to_build> build_latent_variables() const;
 
     /**
      * @brief Draws random variables from this distribution with new latent variables
@@ -231,3 +232,10 @@ private:
      */
     static std::string itransform_name_define(const std::string& transform);
 };
+
+using lv_to_build = std::tuple<std::string, Family*, Family*, double>;
+/**<  Necessary for "build_latent_variables()" function.
+ *   The python code appends to a list another list, this one:
+ *   (['Normal Scale', Flat(transform='exp'), Normal(0, 3), 0.0])
+ *   To translate the list above, we used this structure.
+ */

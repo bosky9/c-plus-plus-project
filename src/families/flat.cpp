@@ -1,4 +1,4 @@
-#include "../../include/families/flat.hpp"
+#include "families/flat.hpp"
 
 Flat::Flat(const std::string& transform) : Family{transform}, _covariance_prior{false} {}
 

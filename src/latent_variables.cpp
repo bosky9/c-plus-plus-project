@@ -202,8 +202,7 @@ void LatentVariables::add_z(const std::string& name, Family* prior, Family* q, b
         _z_indices[name] = {{"start", _z_list.size() - 1}, {"end", _z_list.size() - 1}};
 }
 
-void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, const Family& q,
-                             const Family& prior) {
+void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, Family& q, Family& prior) {
     // Initialize indices vector
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "(");
@@ -217,7 +216,7 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
     size_t starting_index = _z_list.size();
     _z_indices[name] = {{"start", starting_index}, {"end", starting_index + indices.size() - 1}, {"dim", dim.size()}};
     for (const std::string& index : indices)
-        add_z(name + " " + index, prior, q, false);
+        add_z(name + " " + index, &prior, &q, false);
 }
 
 void LatentVariables::adjust_prior(const std::vector<size_t>& index, Family& prior) {

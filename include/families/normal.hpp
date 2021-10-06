@@ -1,10 +1,9 @@
 #pragma once
 
-#include "arima/arima.hpp"
 #include "families/family.hpp"
 #include "families/flat.hpp"
-#include "families/lv_to_build.hpp"
 #include "headers.hpp"
+#include "multivariate_normal.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -109,7 +108,7 @@ public:
      * @brief Builds additional latent variables for this family in a probabilistic model
      * @return A list of structs (each struct contains latent variable information)
      */
-    [[nodiscard]] std::vector<Lv_to_build> build_latent_variables() const override;
+    [[nodiscard]] std::vector<lv_to_build> build_latent_variables() const override;
 
     /**
      * @brief Draws random variables from this distribution with new latent variables

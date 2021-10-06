@@ -1,9 +1,5 @@
 #include "inference/bbvi.hpp"
 
-#include <utility>
-
-#include "multivariate_normal.hpp"
-
 BBVI::BBVI() = default;
 
 BBVI::BBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior, std::vector<Normal*>& q,

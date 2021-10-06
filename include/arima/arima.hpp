@@ -258,7 +258,7 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ = 0,
+    ARIMA(std::vector<double>& data, std::vector<size_t>& index, size_t ar, size_t ma, size_t integ = 0,
           Family* family = reinterpret_cast<Family*>(new Normal()));
 
     /**
@@ -271,9 +271,8 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index,
-          const std::string& target, size_t ar, size_t ma, size_t integ = 0,
-          Family* family = reinterpret_cast<Family*>(new Normal()));
+    ARIMA(std::map<std::string, std::vector<double>>& data, std::vector<size_t>& index, const std::string& target,
+          size_t ar, size_t ma, size_t integ = 0, Family* family = reinterpret_cast<Family*>(new Normal()));
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for a general family ARIMA model

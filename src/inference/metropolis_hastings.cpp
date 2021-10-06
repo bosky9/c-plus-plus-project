@@ -1,8 +1,5 @@
 #include "inference/metropolis_hastings.hpp"
 
-#include "inference/metropolis_sampler.hpp"
-#include "multivariate_normal.hpp"
-
 MetropolisHastings::MetropolisHastings(std::function<double(Eigen::VectorXd)>& posterior, double scale, size_t nsims,
                                        const Eigen::VectorXd& initials,
                                        const std::optional<Eigen::MatrixXd>& cov_matrix, int thinning,

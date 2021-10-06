@@ -1,9 +1,5 @@
 #include "results.hpp"
 
-#include "inference/norm_post_sim.hpp"
-
-#include <algorithm>
-
 Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                  const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
                  std::vector<size_t> index, bool multivariate_model,

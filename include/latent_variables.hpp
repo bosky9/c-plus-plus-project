@@ -217,7 +217,7 @@ public:
      * @param prior Which prior distribution? E.g. Normal(0,1)
      * @param q Which distribution to use for variational approximation
      */
-    void create(const std::string& name, const std::vector<size_t>& dim, const Family& q, const Family& prior);
+    void create(const std::string& name, const std::vector<size_t>& dim, Family& q, Family& prior);
 
     /**
      * @brief Adjusts priors for the latent variables

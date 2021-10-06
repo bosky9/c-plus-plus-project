@@ -1,8 +1,5 @@
 #include "multivariate_normal.hpp"
 
-#include <chrono>
-#include <random>
-
 Mvn::Mvn(Eigen::VectorXd mu, const Eigen::MatrixXd& s) : _mean{std::move(mu)}, _sigma{s} {}
 
 double Mvn::pdf(const Eigen::VectorXd& x) const {

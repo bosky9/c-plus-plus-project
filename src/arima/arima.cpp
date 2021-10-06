@@ -1,9 +1,6 @@
 #include "arima/arima.hpp"
 
-#include "data_check.hpp"
-
-ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ,
-             Family* family)
+ARIMA::ARIMA(std::vector<double>& data, std::vector<size_t>& index, size_t ar, size_t ma, size_t integ, Family* family)
     : TSM{"ARIMA"} {
     // Latent Variable information
     _z_no               = _ar + _ma + 2;
@@ -40,12 +37,11 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
                   std::to_string(_ma) + ")";
 
     // Build any remaining latent variables that are specific to the family chosen
-    std::vector<Lv_to_build> lvs = _family->build_latent_variables();
+    std::vector<lv_to_build> lvs = _family->build_latent_variables();
     for (size_t no{0}; no < lvs.size(); no++) {
-        Lv_to_build lv = lvs[no];
-        _latent_variables.add_z(lv._name, reinterpret_cast<Family*>(lv._flat.get()),
-                                reinterpret_cast<Family*>(lv._normal.get()));
-        _latent_variables.set_z_starting_value(1 + no + _ar + _ma, lv._value);
+        lv_to_build lv = lvs[no];
+        _latent_variables.add_z(std::get<0>(lv), std::get<1>(lv), std::get<2>(lv));
+        _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
     }
     _latent_variables.set_z_starting_value(
             0, _mean_transform(static_cast<double>(std::reduce(_data.begin(), _data.end())) /
@@ -55,8 +51,8 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
     _z_no        = _latent_variables.get_z_list().size();
 }
 
-ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index,
-             const std::string& target, size_t ar, size_t ma, size_t integ, Family* family)
+ARIMA::ARIMA(std::map<std::string, std::vector<double>>& data, std::vector<size_t>& index, const std::string& target,
+             size_t ar, size_t ma, size_t integ, Family* family)
     : TSM{"ARIMA"}, _ar{ar}, _ma{ma}, _integ{integ} {
     // Latent Variable information
     _z_no               = _ar + _ma + 2;
@@ -93,12 +89,11 @@ ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::
                   std::to_string(_ma) + ")";
 
     // Build any remaining latent variables that are specific to the family chosen
-    std::vector<Lv_to_build> lvs = _family->build_latent_variables();
+    std::vector<lv_to_build> lvs = _family->build_latent_variables();
     for (size_t no{0}; no < lvs.size(); no++) {
-        Lv_to_build lv = lvs[no];
-        _latent_variables.add_z(lv._name, reinterpret_cast<Family*>(lv._flat.get()),
-                                reinterpret_cast<Family*>(lv._normal.get()));
-        _latent_variables.set_z_starting_value(1 + no + _ar + _ma, lv._value);
+        lv_to_build lv = lvs[no];
+        _latent_variables.add_z(std::get<0>(lv), std::get<1>(lv), std::get<2>(lv));
+        _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
     }
     _latent_variables.set_z_starting_value(
             0, _mean_transform(static_cast<double>(std::reduce(_data.begin(), _data.end())) /
@@ -162,27 +157,31 @@ ARIMA::get_scale_and_shape_sim(Eigen::MatrixXd transformed_lvs) {
     Eigen::VectorXd model_scale    = Eigen::VectorXd::Zero(transformed_lvs.cols());
     Eigen::VectorXd model_skewness = Eigen::VectorXd::Zero(transformed_lvs.cols());
 
+    std::vector<double> x;
+    auto transform{_latent_variables.get_z_list().back().get_prior()->get_transform()};
     if (_scale) {
         if (_shape) {
             // Apply trasform() to every element inside the matrix last row
             model_shape = transformed_lvs(Eigen::last, Eigen::all);
-            std::transform(model_shape.begin(), model_shape.end(), model_shape,
-                           _latent_variables.get_z_list().back().get_prior()->get_transform());
+            x           = std::vector<double>(&model_shape[0], model_shape.data());
+            std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
+            model_shape = Eigen::VectorXd::Map(x.data(), x.size());
 
-            model_scale = transformed_lvs(Eigen::last - 1, Eigen::all);
-            std::transform(model_scale.begin(), model_scale.end(), model_scale,
-                           _latent_variables.get_z_list().back().get_prior()->get_transform());
+            x = std::vector<double>(&model_scale[0], model_scale.data());
+            std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
+            model_scale = Eigen::VectorXd::Map(x.data(), x.size());
         } else {
-            model_scale = transformed_lvs(Eigen::last, Eigen::all);
-            std::transform(model_scale.begin(), model_scale.end(), model_scale,
-                           _latent_variables.get_z_list().back().get_prior()->get_transform());
+            x = std::vector<double>(&model_scale[0], model_scale.data());
+            std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
+            model_scale = Eigen::VectorXd::Map(x.data(), x.size());
         }
     }
 
     if (_skewness) {
         model_skewness = transformed_lvs(Eigen::last - 2, Eigen::all);
-        std::transform(model_skewness.begin(), model_skewness.end(), model_skewness,
-                       _latent_variables.get_z_list().back().get_prior()->get_transform());
+        x              = std::vector<double>(&model_skewness[0], model_skewness.data());
+        std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
+        model_skewness = Eigen::VectorXd::Map(x.data(), x.size());
     }
 
     return std::move(std::make_tuple(model_scale, model_shape, model_skewness));
@@ -401,9 +400,9 @@ Eigen::MatrixXd ARIMA::sim_prediction(const Eigen::VectorXd& mu, const Eigen::Ve
             mu_exp = Eigen::VectorXd::Map(mu_exp_v.data(), static_cast<Eigen::Index>(mu_exp_v.size()));
 
             // For indexing consistency
-            Eigen::VectorXd Y_exp_h(Y_exp.size());
+            std::vector<double> Y_exp_h(Y_exp.size());
             std::copy(Y_exp.begin() - static_cast<Eigen::Index>(h), Y_exp.end(), std::back_inserter(Y_exp_h));
-            sim_vector.row(n) = Y_exp_h;
+            sim_vector.row(n) = Eigen::VectorXd::Map(Y_exp_h.data(), Y_exp_h.size());
         }
 
         // FIXME: del Y_exp si può tradurre con ->
@@ -461,9 +460,9 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(long h, size_t simulations) {
             mu_exp = Eigen::VectorXd::Map(mu_exp_v.data(), static_cast<Eigen::Index>(mu_exp_v.size()));
 
             // For indexing consistency
-            Eigen::VectorXd Y_exp_h(Y_exp.size());
-            std::copy(Y_exp.begin() - h, Y_exp.end(), std::back_inserter(Y_exp_h));
-            sim_vector.row(n) = Y_exp_h;
+            std::vector<double> Y_exp_h(Y_exp.size());
+            std::copy(Y_exp.begin() - static_cast<Eigen::Index>(h), Y_exp.end(), std::back_inserter(Y_exp_h));
+            sim_vector.row(n) = Eigen::VectorXd::Map(Y_exp_h.data(), Y_exp_h.size());
         }
 
         // FIXME: del Y_exp si può tradurre con ->

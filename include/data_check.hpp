@@ -14,7 +14,7 @@
 struct CheckedData final {
     std::unique_ptr<std::vector<double>> transformed_data; ///< Raw data array for use in the model
     std::unique_ptr<std::vector<std::string>> data_name;   ///< Name of the data
-    std::unique_ptr<std::vector<double>> data_index;       ///< The time indices for the data
+    std::unique_ptr<std::vector<size_t>> data_index;       ///< The time indices for the data
 };
 
 /**
@@ -24,7 +24,7 @@ struct CheckedData final {
 struct CheckedDataMv final {
     std::unique_ptr<std::vector<std::vector<double>>> transformed_data; ///< Raw data array for use in the model
     std::unique_ptr<std::vector<size_t>> data_name;                     ///< Names of the data
-    std::unique_ptr<std::vector<double>> data_index;                    ///< The time indices for the data
+    std::unique_ptr<std::vector<size_t>> data_index;                    ///< The time indices for the data
 };
 
 /**
@@ -33,15 +33,15 @@ struct CheckedDataMv final {
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedData* data_check(const std::vector<T>& data, const std::vector<T>& index) {
+CheckedData* data_check(std::vector<T>& data, std::vector<size_t>& index) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
     assert(data.size() == index.size());
 
     std::shared_ptr<CheckedData> checked_data(new CheckedData());
-    checked_data->transformed_data = data;
-    checked_data->data_index       = index;
+    checked_data->transformed_data.reset(&data);
+    checked_data->data_index.reset(&index);
     checked_data->data_name->push_back("Series");
 
     return checked_data.get();
@@ -54,7 +54,7 @@ CheckedData* data_check(const std::vector<T>& data, const std::vector<T>& index)
  * @return A struct containing the transformed data, relative name and indices
  */
 template<typename T>
-CheckedData* data_check(const std::map<std::string, std::vector<T>>& data, const std::vector<T>& index,
+CheckedData* data_check(std::map<std::string, std::vector<T>>& data, std::vector<size_t>& index,
                         const std::string& target) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
@@ -62,8 +62,8 @@ CheckedData* data_check(const std::map<std::string, std::vector<T>>& data, const
     assert(data[target].size() == index.size());
 
     std::shared_ptr<CheckedData> checked_data(new CheckedData());
-    checked_data->transformed_data = data[target];
-    checked_data->data_index       = index;
+    checked_data->transformed_data.reset(&data[target]);
+    checked_data->data_index.reset(&index);
     checked_data->data_name->push_back(target);
 
     return checked_data.get();
@@ -83,7 +83,7 @@ CheckedDataMv* mv_data_check(std::vector<std::vector<T>>& data) {
                   "floating points");
 
     std::shared_ptr<CheckedDataMv> checked_data(new CheckedDataMv());
-    checked_data->transformed_data = data;
+    checked_data->transformed_data.reset(&data);
     checked_data->data_index->resize(data[0].size());
     std::iota(checked_data->data_index->begin(), checked_data->data_index->end(), 0);
     checked_data->data_name->resize(data[0].size());

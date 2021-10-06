@@ -1,9 +1,11 @@
 #pragma once
 
-#include <optional>
-
 #include "headers.hpp"
+#include "inference/metropolis_sampler.hpp"
+#include "multivariate_normal.hpp"
 #include "sample.hpp"
+
+#include <optional>
 
 /**
  * @brief Random-walk Metropolis-Hastings MCMC

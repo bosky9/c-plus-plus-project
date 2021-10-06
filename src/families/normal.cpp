@@ -1,7 +1,5 @@
 #include "families/normal.hpp"
 
-#include "multivariate_normal.hpp"
-
 Normal::Normal(double mu, double sigma, const std::string& transform)
     : Family{transform}, _mu0{mu}, _sigma0{sigma}, _param_no{2}, _covariance_prior{false} {}
 
@@ -80,10 +78,10 @@ Normal::approximating_model_reg(const Eigen::VectorXd& beta, const Eigen::Matrix
 
 // Copy/move constructor may be needed
 // What about the transform of the Normal?
-std::vector<Lv_to_build> Normal::build_latent_variables() const {
-    std::vector<Lv_to_build> lvs_to_build;
+std::vector<lv_to_build> Normal::build_latent_variables() const {
+    std::vector<lv_to_build> lvs_to_build;
     lvs_to_build.push_back(
-            Lv_to_build{static_cast<std::string>("Normal scale"), new Flat("exp"), new Normal(0.0, 3.0), 0.0});
+            lv_to_build{static_cast<std::string>("Normal scale"), new Flat("exp"), new Normal(0.0, 3.0), 0.0});
     return std::move(lvs_to_build); // return lvs_to_build
 }
 

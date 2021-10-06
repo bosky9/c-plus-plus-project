@@ -1,15 +1,15 @@
 #pragma once
 
-#include <algorithm>
-#include <cmath>
-#include <memory>
-#include <utility>
-
 #include "families/normal.hpp"
 #include "headers.hpp"
 #include "inference/bbvi_routines.hpp"
 #include "inference/stoch_optim.hpp"
 #include "multivariate_normal.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
+#include <utility>
 
 struct BBVIReturnData {
     std::vector<Normal*> q;

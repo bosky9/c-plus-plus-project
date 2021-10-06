@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "families/family.hpp"
 #include "families/normal.hpp"
 
 TEST_CASE("Approximating model", "[approximating_model, approximating_model_reg]") {
@@ -16,17 +17,18 @@ TEST_CASE("Approximating model", "[approximating_model, approximating_model_reg]
 }
 
 TEST_CASE("Build latent variables", "[build_latent_variables]") {
-    std::list<Normal::lv_to_build> result = Normal::build_latent_variables();
-    REQUIRE(result.front()._name == "Normal scale");
-    REQUIRE(result.front()._flat.get_transform_name() == "exp");
-    REQUIRE(*result.front().n.get() == Normal{0.0, 3.0});
-    REQUIRE(result.front().zero == 0.0);
+    Normal normal{};
+    std::vector<lv_to_build> result = normal.build_latent_variables();
+    REQUIRE(std::get<0>(result.front()) == "Normal scale");
+    REQUIRE(std::get<1>(result.front())->get_transform_name() == "exp");
+    REQUIRE(*reinterpret_cast<Normal*>(std::get<2>(result.front())) == Normal{0.0, 3.0});
+    REQUIRE(std::get<3>(result.front()) == 0.0);
 }
 
 TEST_CASE("Draw variable", "[draw_variable, draw_variable_local]") {
-    Eigen::VectorXd variable = Normal::draw_variable(0.0, 1.0, 4.0, 2.5, 5);
     Normal normal{};
-    variable = normal.draw_variable_local(2);
+    Eigen::VectorXd variable = normal.draw_variable(0.0, 1.0, 4.0, 2.5, 5);
+    variable                 = normal.draw_variable_local(2);
 }
 
 TEST_CASE("Log of the PDF", "[logpdf]") {
@@ -41,7 +43,8 @@ TEST_CASE("Markov blanket", "[markov_blanket") {
 }
 
 TEST_CASE("Setup", "[setup]") {
-    FamilyAttributes attributes = Normal::setup();
+    Normal normal{};
+    FamilyAttributes attributes = normal.setup();
     REQUIRE(attributes.name == "Normal");
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "inference/norm_post_sim.hpp"
 #include "latent_variables.hpp"
 #include "matplotlibcpp.hpp"
 #include "output/tableprinter.hpp"

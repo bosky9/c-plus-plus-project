@@ -138,7 +138,7 @@ short unsigned int Family::get_param_no() const {
     return 0;
 }
 
-std::vector<Lv_to_build> Family::build_latent_variables() const {
+std::vector<lv_to_build> Family::build_latent_variables() const {
     return {};
 }
 
