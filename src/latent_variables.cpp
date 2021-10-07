@@ -101,7 +101,7 @@ void LatentVariable::plot_z(size_t width, size_t height) {
     }
     plt::xlabel("Value");
     plt::legend();
-    plt::save("../data/plot_z_single.png");
+    plt::save("../data/latent_variables/plot_z_single.png");
     // plt::show();
 }
 
@@ -311,6 +311,10 @@ std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
     return q_list;
 }
 
+bool LatentVariables::is_estimated() const {
+    return _estimated;
+}
+
 std::optional<std::string> LatentVariables::get_estimation_method() const {
     return _estimation_method;
 }
@@ -384,7 +388,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
     plt::ylabel("Frequency");
     plt::title("Latent Variable Plot");
     plt::legend(std::map<std::string, std::string>{{"loc", loc}});
-    plt::save("../data/plot_z.png");
+    plt::save("../data/latent_variables/plot_z.png");
     // plt::show();
 }
 
@@ -452,6 +456,6 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
             }
         }
     }
-    plt::save("../data/trace_plot.png");
+    plt::save("../data/latent_variables/trace_plot.png");
     // plt::show();
 }

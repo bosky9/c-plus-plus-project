@@ -5,6 +5,7 @@
 #include "families/family.hpp"
 #include "families/normal.hpp"
 #include "headers.hpp"
+#include "matplotlibcpp.hpp"
 #include "output/tableprinter.hpp"
 #include "tests/nhst.hpp"
 #include "tsm.hpp"
@@ -12,6 +13,8 @@
 #include <map>
 #include <type_traits>
 #include <vector>
+
+namespace plt = matplotlibcpp;
 
 /**
  * @brief Mean function applied to a vector
@@ -140,7 +143,8 @@ private:
      * - mu: contains the predicted values (location) for the time series
      * - Y: contains the length-adjusted time series (accounting for lags)
      */
-    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_normal_model(const Eigen::VectorXd& beta, size_t mini_batch) const;
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_normal_model(const Eigen::VectorXd& beta,
+                                                                              size_t mini_batch) const;
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for mini batch model.
@@ -152,7 +156,8 @@ private:
      * - mu: contains the predicted values (location) for the time series
      * - Y: contains the length-adjusted time series (accounting for lags)
      */
-    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_non_normal_model(const Eigen::VectorXd& beta, size_t mini_batch) const;
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_non_normal_model(const Eigen::VectorXd& beta,
+                                                                                  size_t mini_batch) const;
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for mini batch model.
@@ -245,8 +250,8 @@ private:
      * @return Tuple of vectors: error bars, forecasted values, values and indices to plot
      */
     std::tuple<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
-    summarize_simulations(Eigen::VectorXd mean_values, Eigen::VectorXd sim_vector, Eigen::VectorXd date_index, long h,
-                          long past_values);
+    summarize_simulations(Eigen::VectorXd mean_values, Eigen::MatrixXd sim_vector, std::vector<double> date_index,
+                          long h, long past_values);
 
 public:
     /**
@@ -271,11 +276,11 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index, const std::string& target,
-          size_t ar, size_t ma, size_t integ = 0, const Family& family = *(new Normal()));
+    ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index,
+          const std::string& target, size_t ar, size_t ma, size_t integ = 0, const Family& family = *(new Normal()));
 
     /**
-     * @brief Creates the structure of the model (model matrices etc) for a general family ARIMA model
+     * @brief Creates the structure of the model (model matrices etc) for a generic family ARIMA model
      * @param beta Contains untransformed starting values for the latent variables
      * @return Tuple of vectors:
      * - mu: contains the predicted values (location) for the time series
@@ -283,7 +288,31 @@ public:
      */
     [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> model(const Eigen::VectorXd& beta) const;
 
-    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_model(const Eigen::VectorXd& beta, size_t mini_batch) const;
+    /**
+     * @brief Creates the structure of the model (model matrices etc) for mini batch model.
+     * @param beta Contains untransformed starting values for the latent variables
+     * @param mini_batch Mini batch size for the data sampling
+     * @return Tuple of vectors:
+     * - mu: contains the predicted values (location) for the time series
+     * - Y: contains the length-adjusted time series (accounting for lags)
+     */
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_model(const Eigen::VectorXd& beta,
+                                                                       size_t mini_batch) const;
+
+    /**
+     * @brief Calculates the negative log-likelihood of the model for a generic family
+     * @param beta Contains untransformed starting values for latent variables
+     * @return The negative logliklihood of the model
+     */
+    [[nodiscard]] double neg_loglik(const Eigen::VectorXd& beta) const;
+
+    /**
+     * @brief Calculates the negative log-likelihood of the model for generic family for a minibatch
+     * @param beta Contains untransformed starting values for latent variables
+     * @param mini_batch Size of each mini batch of data
+     * @return The negative logliklihood of the model
+     */
+    [[nodiscard]] double mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const;
 
     /**
      * @brief Plots the fit of the model against the data

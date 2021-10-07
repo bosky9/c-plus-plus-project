@@ -330,6 +330,12 @@ public:
     [[nodiscard]] std::vector<std::string> get_z_approx_dist_names() const;
 
     /**
+     * @brief Checks if latent variables are estimated
+     * @return If latent variables are estimated
+     */
+    [[nodiscard]] bool is_estimated() const;
+
+    /**
      * @brief Get the estimation method if setted
      * @return The estimation method if setted, std::nullopt_t otherwise
      */
