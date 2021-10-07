@@ -204,11 +204,14 @@ void LatentVariables::add_z(const std::string& name, Family* prior, Family* q, b
 
 void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, Family& q, Family& prior) {
     // Initialize indices vector
+    // tot size of elements (it's a tree in python)
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
-    std::vector<std::string> indices(indices_dim, "(");
+    std::vector<std::string> indices(indices_dim, "("); // Creates a vector of indices_dim (
     for (Eigen::Index d{0}; d < dim.size(); d++) {
+        // span is the remaining length
         Eigen::Index span     = std::accumulate(dim.begin() + d + 1, dim.end(), 1, std::multiplies<>());
         std::string separator = (d == dim.size() - 1) ? "," : ")";
+        // append these fractions to each string of indices
         for (size_t index{0}; index < indices_dim; index++)
             indices[index] += std::to_string(index / span) + separator;
     }

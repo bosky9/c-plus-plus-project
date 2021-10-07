@@ -286,7 +286,7 @@ public:
                                                    * returns a new Normal object by deep copy of the current one.
                                                    */
 
-    [[nodiscard]] double get_mu0() const;
+    [[nodiscard]] double get_mu0() const; ///< Get mean of the distribution
 
-    [[nodiscard]] double get_sigma0() const;
+    [[nodiscard]] double get_sigma0() const; ///< Get variance of the distribution
 };

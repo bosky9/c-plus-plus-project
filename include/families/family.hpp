@@ -132,7 +132,7 @@ public:
 
     /**
      * @brief Builds additional latent variables for this family in a probabilistic model
-     * @return A list of structs (each struct contains latent variable information)
+     * @return A list of tuples (each tuple contains latent variable information)
      */
     using lv_to_build = std::tuple<std::string, Family*, Family*, double>;
     virtual std::vector<lv_to_build> build_latent_variables() const;
@@ -169,7 +169,8 @@ public:
 
     /**
      * @details Thanks to the copy costructor,
-     *          this method returns a copy of the family object which calls this function.
+     *          this method returns a (pointer to a) copy
+     *          of the family object which calls this function.
      *          This is needed in other classes,
      *          namely LatenVariable and TSM,
      *          in order to return a deep copy of some family object.
@@ -237,5 +238,5 @@ using lv_to_build = std::tuple<std::string, Family*, Family*, double>;
 /**<  Necessary for "build_latent_variables()" function.
  *   The python code appends to a list another list, this one:
  *   (['Normal Scale', Flat(transform='exp'), Normal(0, 3), 0.0])
- *   To translate the list above, we used this structure.
+ *   To translate the list above, we used this tuple.
  */

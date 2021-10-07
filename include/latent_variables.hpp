@@ -19,6 +19,10 @@ namespace plt = matplotlibcpp;
 
 /**
  * @brief Class that represents a latent variable
+ *
+ * @details Using a unique_pointer for _prior and _q
+ *          allows, inside the constructor,
+ *          the passage of every subclass of Family.
  */
 class LatentVariable final {
 private:
@@ -28,7 +32,7 @@ private:
     std::function<double(double)> _transform; ///< The transform function of the prior
     double _start;                            ///< Starting value
     std::unique_ptr<Family> _q; ///< The variational distribution for the latent variable, e.g. Normal(0,1)
-    // TODO: I seguenti attributi non sono dichiarati nella classe Python ma usate in LatentVariables
+    // TODO: I seguenti attributi non sono dichiarati nella classe Python ma usati in LatentVariables
     std::string _method;
     std::optional<double> _value           = std::nullopt;
     std::optional<double> _std             = std::nullopt;
@@ -79,6 +83,9 @@ public:
      * @brief Function that plots information about the latent variable
      * @param width The width of the figure to plot
      * @param height The height of the figure to plot
+     *
+     * @detail  This one uses the "matplotlibcpp.hpp" library,
+     *          which calls python to print a matplot.
      */
     void plot_z(size_t width = 15, size_t height = 5);
 
@@ -131,7 +138,7 @@ public:
     [[nodiscard]] Family* get_q() const;
 
     /**
-     * @brief Set prior for the latent vairable
+     * @brief Set prior for the latent variable
      * @param prior Prior
      */
     void set_prior(const Family& prior);
@@ -182,7 +189,7 @@ class LatentVariables final {
 private:
     std::string _model_name;                                         ///< Model's name
     std::vector<LatentVariable> _z_list;                             ///< List of latent variables
-    std::map<std::string, std::map<std::string, size_t>> _z_indices; ///<
+    [[maybe_unused]] std::map<std::string, std::map<std::string, size_t>> _z_indices; ///< Info about latent variables
     bool _estimated                               = false;           ///<
     std::optional<std::string> _estimation_method = std::nullopt;    ///<
 
@@ -216,11 +223,45 @@ public:
      * @param dim Dimension of the latent variable arrays
      * @param prior Which prior distribution? E.g. Normal(0,1)
      * @param q Which distribution to use for variational approximation
+     *
+     * @detail  In python, there is a recursive function which,
+     *          given a list [x,y,...,z] e.g. [3,2],
+     *          it returns  "(1,1)" "(1,2)" , "(2,1)" , "(2,2)",
+     *                      "(3,1)", "(3,2)"
+     *
+     *          The number of elements is:
+     *              x*y*...*z
+     *          6 lists in the e.g.
+     *
+     *          For the first position, there are three 0, three 1.
+     *          Basically, it is, upper approximated,
+     *          (1/2 = 1, ...)
+     *          (2/2 = 1, ...)
+     *          (3/2 = 2, ...)
+     *          (4/2 = 2, ...)
+     *          (5/2 = 3, ...)
+     *          (6/2 = 3, ...)
+     *
+     *          For the second position, each first position has either another 0 or 1;
+     *          this mean
+     *          (1, 1/1 = 1)
+     *          (1, 2/1 = 2)
+     *          (2, 1/1 = 1)
+     *          (2, 2/1 = 2)
+     *          (3, 1/1 = 1)
+     *          (3, 2/1 = 2)
+     *
+     *          Please notice that at each position x(i) the number by which we divide is
+     *          1 * x(i+1) * x(i+2) * ... * x(end)
+     *
+     *          While the index ranges from 1 to (previous num of indexes / previous x(i)).
+     *          At 0 -> 6 (total) / 1 = 6, init
+     *          At 1 -> 6 (previous value)/ 3  (previous num of dims) = 2
      */
     void create(const std::string& name, const std::vector<size_t>& dim, Family& q, Family& prior);
 
     /**
-     * @brief Adjusts priors for the latent variables
+     * @brief Adjusts priors for the latent variables in _z_list
      * @param index Which latent variable index/indices to be altered
      * @param prior Which prior distribution? E.g. Normal(0,1)
      */
