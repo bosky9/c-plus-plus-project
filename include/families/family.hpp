@@ -169,7 +169,8 @@ public:
 
     /**
      * @details Thanks to the copy costructor,
-     *          this method returns a copy of the family object which calls this function.
+     *          this method returns a (pointer to a) copy
+     *          of the family object which calls this function.
      *          This is needed in other classes,
      *          namely LatenVariable and TSM,
      *          in order to return a deep copy of some family object.

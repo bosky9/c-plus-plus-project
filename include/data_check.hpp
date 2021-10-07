@@ -31,6 +31,10 @@ struct CheckedDataMv final {
  * @brief Checks data type
  * @param data Field to specify the time series data that will be used
  * @return A struct containing the transformed data, relative name and indices
+ *
+ * @details Having a template function which takes an std::vector as an input
+ *          is necessary to cover the python case where a np.array is passed
+ *          to the function.
  */
 template<typename T>
 CheckedData data_check(const std::vector<T>& data, const std::vector<double>& index) {
@@ -51,6 +55,9 @@ CheckedData data_check(const std::vector<T>& data, const std::vector<double>& in
  * @param data Field to specify the time series data that will be used
  * @param target Target column
  * @return A struct containing the transformed data, relative name and indices
+ *
+ * @details Using a map to approximate the python case where
+ *          a pd.DataFrame is passed to the function.
  */
 template<typename T>
 CheckedData data_check(const std::map<std::string, std::vector<T>>& data, const std::vector<double>& index,
