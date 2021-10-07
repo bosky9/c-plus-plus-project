@@ -259,7 +259,7 @@ public:
      * @param family E.g. Normal() (default)
      */
     ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ = 0,
-          Family* family = reinterpret_cast<Family*>(new Normal()));
+          const Family& family = *(new Normal()));
 
     /**
      * @brief Constructor for ARIMA object
@@ -272,7 +272,7 @@ public:
      * @param family E.g. Normal() (default)
      */
     ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index, const std::string& target,
-          size_t ar, size_t ma, size_t integ = 0, Family* family = reinterpret_cast<Family*>(new Normal()));
+          size_t ar, size_t ma, size_t integ = 0, const Family& family = *(new Normal()));
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for a general family ARIMA model

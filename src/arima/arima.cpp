@@ -1,6 +1,6 @@
 #include "arima/arima.hpp"
 
-ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ, Family* family)
+ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ, const Family& family)
     : TSM{"ARIMA"} {
     // Latent Variable information
     _z_no               = _ar + _ma + 2;
@@ -24,8 +24,8 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
     _x = ar_matrix();
     create_latent_variables();
 
-    _family.reset(family);
-    FamilyAttributes fa = family->setup();
+    _family.reset(family.clone());
+    FamilyAttributes fa = family.setup();
     _model_name_short   = fa.name;
     _link               = fa.link;
     _scale              = fa.scale;
@@ -52,7 +52,7 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
 }
 
 ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index, const std::string& target,
-             size_t ar, size_t ma, size_t integ, Family* family)
+             size_t ar, size_t ma, size_t integ, const Family& family)
     : TSM{"ARIMA"}, _ar{ar}, _ma{ma}, _integ{integ} {
     // Latent Variable information
     _z_no               = _ar + _ma + 2;
@@ -76,8 +76,8 @@ ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::
     _x = ar_matrix();
     create_latent_variables();
 
-    _family.reset(family);
-    FamilyAttributes fa = family->setup();
+    _family.reset(family.clone());
+    FamilyAttributes fa = family.setup();
     _model_name_short   = fa.name;
     _link               = fa.link;
     _scale              = fa.scale;
