@@ -90,15 +90,15 @@ private:
      * @param transformed_lvs Transformed latent variable vector
      * @return Tuple of model scale, model shape, model skewness
      */
-    std::tuple<double, double, double> get_scale_and_shape(Eigen::VectorXd transformed_lvs) const;
+    [[nodiscard]] std::tuple<double, double, double> get_scale_and_shape(const Eigen::VectorXd& transformed_lvs) const;
 
     /**
      * @brief Obtains model scale, shape, skewness latent variables for a 2d array of simulations
      * @param transformed_lvs Transformed latent variable vector (2d - with draws of each variable)
      * @return Tuple of vectors (each being scale, shape and skewness draws)
      */
-    std::tuple<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>
-    get_scale_and_shape_sim(Eigen::MatrixXd transformed_lvs);
+    [[nodiscard]] std::tuple<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>
+    get_scale_and_shape_sim(const Eigen::MatrixXd& transformed_lvs) const;
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for a Normal family ARIMA model
@@ -107,7 +107,7 @@ private:
      * - mu: contains the predicted values (location) for the time series
      * - Y: contains the length-adjusted time series (accounting for lags)
      */
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> normal_model(Eigen::VectorXd beta);
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> normal_model(const Eigen::VectorXd& beta) const;
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for a Poisson model.
@@ -128,7 +128,7 @@ private:
      * - mu: contains the predicted values (location) for the time series
      * - Y: contains the length-adjusted time series (accounting for lags)
      */
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> non_normal_model(Eigen::VectorXd beta);
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> non_normal_model(const Eigen::VectorXd& beta) const;
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for mini batch model.
@@ -140,7 +140,7 @@ private:
      * - mu: contains the predicted values (location) for the time series
      * - Y: contains the length-adjusted time series (accounting for lags)
      */
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_normal_model(Eigen::VectorXd beta, size_t mini_batch);
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_normal_model(const Eigen::VectorXd& beta, size_t mini_batch) const;
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for mini batch model.
@@ -152,7 +152,7 @@ private:
      * - mu: contains the predicted values (location) for the time series
      * - Y: contains the length-adjusted time series (accounting for lags)
      */
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_non_normal_model(Eigen::VectorXd beta, size_t mini_batch);
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_non_normal_model(const Eigen::VectorXd& beta, size_t mini_batch) const;
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for mini batch model.
@@ -172,7 +172,7 @@ private:
      * @param beta Contains untransformed starting values for latent variables
      * @return The negative logliklihood of the model
      */
-    double normal_neg_loglik(Eigen::VectorXd beta);
+    [[nodiscard]] double normal_neg_loglik(const Eigen::VectorXd& beta) const;
 
     /**
      * @brief Calculates the negative log-likelihood of the model for Normal family for a minibatch
@@ -180,14 +180,14 @@ private:
      * @param mini_batch Size of each mini batch of data
      * @return The negative logliklihood of the model
      */
-    double normal_mb_neg_loglik(Eigen::VectorXd beta, size_t mini_batch);
+    [[nodiscard]] double normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const;
 
     /**
      * @brief Calculates the negative log-likelihood of the model for non-Normal family
      * @param beta Contains untransformed starting values for latent variables
      * @return The negative logliklihood of the model
      */
-    double non_normal_neg_loglik(Eigen::VectorXd beta);
+    [[nodiscard]] double non_normal_neg_loglik(const Eigen::VectorXd& beta) const;
 
     /**
      * @brief Calculates the negative log-likelihood of the model for non-Normal family for a minibatch
@@ -195,7 +195,7 @@ private:
      * @param mini_batch Size of each mini batch of data
      * @return The negative logliklihood of the model
      */
-    double non_normal_mb_neg_loglik(Eigen::VectorXd beta, size_t mini_batch);
+    [[nodiscard]] double non_normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const;
 
     /**
      * @brief Creates a h-step ahead mean prediction
@@ -281,7 +281,9 @@ public:
      * - mu: contains the predicted values (location) for the time series
      * - Y: contains the length-adjusted time series (accounting for lags)
      */
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> model(const Eigen::VectorXd& beta);
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> model(const Eigen::VectorXd& beta) const;
+
+    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_model(const Eigen::VectorXd& beta, size_t mini_batch) const;
 
     /**
      * @brief Plots the fit of the model against the data

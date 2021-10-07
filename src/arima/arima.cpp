@@ -1,5 +1,7 @@
 #include "arima/arima.hpp"
 
+#include "multivariate_normal.hpp"
+
 ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ, const Family& family)
     : TSM{"ARIMA"} {
     // Latent Variable information
@@ -132,7 +134,7 @@ void ARIMA::create_latent_variables() {
                                 reinterpret_cast<Family*>(&n2));
 }
 
-std::tuple<double, double, double> ARIMA::get_scale_and_shape(Eigen::VectorXd transformed_lvs) const {
+std::tuple<double, double, double> ARIMA::get_scale_and_shape(const Eigen::VectorXd& transformed_lvs) const {
     double model_shape    = 0;
     double model_scale    = 0;
     double model_skewness = 0;
@@ -152,7 +154,7 @@ std::tuple<double, double, double> ARIMA::get_scale_and_shape(Eigen::VectorXd tr
 }
 
 std::tuple<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>
-ARIMA::get_scale_and_shape_sim(Eigen::MatrixXd transformed_lvs) {
+ARIMA::get_scale_and_shape_sim(const Eigen::MatrixXd& transformed_lvs) const {
     Eigen::VectorXd model_shape    = Eigen::VectorXd::Zero(transformed_lvs.cols());
     Eigen::VectorXd model_scale    = Eigen::VectorXd::Zero(transformed_lvs.cols());
     Eigen::VectorXd model_skewness = Eigen::VectorXd::Zero(transformed_lvs.cols());
@@ -187,7 +189,7 @@ ARIMA::get_scale_and_shape_sim(Eigen::MatrixXd transformed_lvs) {
     return std::move(std::make_tuple(model_scale, model_shape, model_skewness));
 }
 
-std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::model(const Eigen::VectorXd& beta) {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::model(const Eigen::VectorXd& beta) const {
     // If Normal family is selected, we use faster likelihood functions
     if (instanceof <Normal>(_family.get()))
         return normal_model(beta);
@@ -196,7 +198,16 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::model(const Eigen::VectorXd& 
         return non_normal_model(beta);
 }
 
-std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(Eigen::VectorXd beta) {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_model(const Eigen::VectorXd& beta, size_t mini_batch) const {
+    // If Normal family is selected, we use faster likelihood functions
+    if (instanceof <Normal>(_family.get()))
+        return mb_normal_model(beta, mini_batch);
+    // TODO: else if (...) with missing models
+    else
+        return mb_non_normal_model(beta, mini_batch);
+}
+
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::VectorXd& beta) const {
     std::vector<double> data;
     std::copy(_data.begin() + _max_lag, _data.end(), std::back_inserter(data));
     Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
@@ -221,7 +232,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(Eigen::VectorXd 
     return {mu, Y};
 }
 
-std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(Eigen::VectorXd beta) {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(const Eigen::VectorXd& beta) const {
     std::vector<double> data;
     std::copy(_data.begin() + _max_lag, _data.end(), std::back_inserter(data));
     Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
@@ -249,7 +260,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(Eigen::Vecto
     return {mu, Y};
 }
 
-std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(Eigen::VectorXd beta, size_t mini_batch) {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(const Eigen::VectorXd& beta, size_t mini_batch) const {
     size_t rand_int = rand() % (_data.size() - mini_batch - _max_lag + 1);
     std::vector<double> sample(mini_batch);
     std::iota(sample.begin(), sample.end(), rand_int);
@@ -282,7 +293,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(Eigen::Vector
     return {mu, Y};
 }
 
-std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(Eigen::VectorXd beta, size_t mini_batch) {
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eigen::VectorXd& beta, size_t mini_batch) const {
     size_t rand_int = rand() % (_data.size() - mini_batch - _max_lag + 1);
     std::vector<double> sample(mini_batch);
     std::iota(sample.begin(), sample.end(), rand_int);
@@ -316,6 +327,42 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(Eigen::Ve
     }
 
     return {mu, Y};
+}
+
+double ARIMA::normal_neg_loglik(const Eigen::VectorXd& beta) const {
+    std::pair<Eigen::VectorXd,Eigen::VectorXd> mu_y = model(beta);
+    Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
+    return -Mvn::logpdf(mu_y.second, mu_y.first, scale).sum();
+}
+
+double ARIMA::normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const {
+    std::pair<Eigen::VectorXd,Eigen::VectorXd> mu_y = mb_model(beta, mini_batch);
+    Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
+    return -Mvn::logpdf(mu_y.second, mu_y.first, scale).sum();
+}
+
+double ARIMA::non_normal_neg_loglik(const Eigen::VectorXd& beta) const {
+    std::pair<Eigen::VectorXd,Eigen::VectorXd> mu_y = model(beta);
+    Eigen::VectorXd transformed_parameters(beta.size());
+    std::vector<Family*> priors = _latent_variables.get_z_priors();
+    for (size_t k{0}; k < beta.size(); k++)
+        transformed_parameters(k) = priors.at(k)->get_transform()(beta(k));
+    std::tuple<double,double,double> sc_sh_sk = get_scale_and_shape(transformed_parameters);
+    Eigen::VectorXd link_mu(mu_y.first.size());
+    std::transform(mu_y.first.begin(), mu_y.first.end(), link_mu.begin(), _link);
+    return _family->neg_loglikelihood(mu_y.second, link_mu, std::get<0>(sc_sh_sk), std::get<1>(sc_sh_sk), std::get<2>(sc_sh_sk));
+}
+
+double ARIMA::non_normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const {
+    std::pair<Eigen::VectorXd,Eigen::VectorXd> mu_y = mb_model(beta, mini_batch);
+    Eigen::VectorXd transformed_parameters(beta.size());
+    std::vector<Family*> priors = _latent_variables.get_z_priors();
+    for (size_t k{0}; k < beta.size(); k++)
+        transformed_parameters(k) = priors.at(k)->get_transform()(beta(k));
+    std::tuple<double,double,double> sc_sh_sk = get_scale_and_shape(transformed_parameters);
+    Eigen::VectorXd link_mu(mu_y.first.size());
+    std::transform(mu_y.first.begin(), mu_y.first.end(), link_mu.begin(), _link);
+    return _family->neg_loglikelihood(mu_y.second, link_mu, std::get<0>(sc_sh_sk), std::get<1>(sc_sh_sk), std::get<2>(sc_sh_sk));
 }
 
 Eigen::VectorXd ARIMA::mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, size_t h, Eigen::VectorXd t_z) {

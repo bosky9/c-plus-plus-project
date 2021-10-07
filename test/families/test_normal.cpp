@@ -50,7 +50,8 @@ TEST_CASE("Setup", "[setup]") {
 
 TEST_CASE("Negative Log Likelihood", "[neg_loglikelihood]") {
     Eigen::VectorXd v = Eigen::VectorXd::Ones(3);
-    REQUIRE(Normal::neg_loglikelihood(v, v, 1.0, 3.0, 2.0) == -2.756815599614018);
+    Normal n{};
+    REQUIRE(n.neg_loglikelihood(v, v, 1.0, 3.0, 2.0) == -2.756815599614018);
 }
 
 TEST_CASE("PDF", "[pdf]") {

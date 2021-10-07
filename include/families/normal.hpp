@@ -180,8 +180,8 @@ public:
      * @param skewness Skewness parameter for the Normal distribution
      * @return Negative loglikelihood of the Normal family
      */
-    static double neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale, double shape,
-                                    double skewness);
+    [[nodiscard]] double neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale,
+                                           double shape, double skewness) const override;
 
     /**
      * @brief PDF for Normal prior

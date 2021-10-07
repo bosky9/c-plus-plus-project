@@ -179,6 +179,18 @@ public:
      */
     [[nodiscard]] virtual Family* clone() const;
 
+    /**
+     * @brief Negative loglikelihood function
+     * @param y Univariate time series
+     * @param mean Array of location parameters for the distribution
+     * @param scale Scale parameter for the distribution
+     * @param shape Tail thickness parameter for the distribution
+     * @param skewness Skewness parameter for the distribution
+     * @return Negative loglikelihood of the family
+     */
+    [[nodiscard]] virtual double neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale,
+                                                   double shape, double skewness) const;
+
 private:
     /**
      * @brief Apply the logit transformation

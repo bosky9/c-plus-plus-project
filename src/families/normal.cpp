@@ -115,7 +115,7 @@ FamilyAttributes Normal::setup() const {
 }
 
 double Normal::neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale, double shape,
-                                 double skewness) {
+                                 double skewness) const {
     assert(y.size() > 0);
     return Normal::markov_blanket(y, mean, scale, shape, skewness).sum();
 }

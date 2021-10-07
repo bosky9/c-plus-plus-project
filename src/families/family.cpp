@@ -154,6 +154,10 @@ Family* Family::clone() const {
     return new Family(*this);
 }
 
+double Family::neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale, double shape, double skewness) const {
+    return 0;
+}
+
 FamilyAttributes Family::setup() const {
     return {"Family", [](double x) { return x; }, false, false, false, [](double x) { return x; }, false};
 }
