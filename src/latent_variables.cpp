@@ -207,13 +207,23 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
     // tot size of elements (it's a tree in python)
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "("); // Creates a vector of indices_dim (
+
+    size_t previous_span = indices_dim;
+    size_t previous_value = 1;
+
     for (Eigen::Index d{0}; d < dim.size(); d++) {
         // span is the remaining length
-        Eigen::Index span     = std::accumulate(dim.begin() + d + 1, dim.end(), 1, std::multiplies<>());
+        // Eigen::Index span     = std::accumulate(dim.begin() + d + 1, dim.end(), 1, std::multiplies<>());
+        Eigen::Index span = previous_span / previous_value;
+        size_t current_dim = dim.at(d);
+        size_t divide_by = span / current_dim;
         std::string separator = (d == dim.size() - 1) ? "," : ")";
         // append these fractions to each string of indices
-        for (size_t index{0}; index < indices_dim; index++)
-            indices[index] += std::to_string(index / span) + separator;
+        for (size_t indx{1}; indx < indices_dim; indx++) {
+            indices[indx] += std::to_string(ceil(indx / divide_by)) + separator;
+            if (indx >= span)
+                indx = 1;
+        }
     }
 
     size_t starting_index = _z_list.size();
