@@ -710,6 +710,7 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
     }
 }
 
+
 std::pair<std::map<std::string, std::vector<double>>, std::vector<double>>
 ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool intervals) {
     std::map<std::string, std::vector<double>> predictions;
@@ -755,3 +756,26 @@ ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool i
 }
 
 std::vector<double> ARIMA::predict(size_t h, bool intervals) {}
+
+Eigen::MatrixXd ARIMA::sample(size_t nsims) {
+    assert(_latent_variables.get_estimation_method() == "BBVI" ||
+    _latent_variables.get_estimation_method() == "M-H");
+    Eigen::MatrixXd lv_draws = draw_latent_variables(nsims);
+    std::vector<Eigen::VectorXd> mus;
+    for (size_t i = 0; i < nsims; i++)
+        mus.push_back(std::get<0>(model(lv_draws.col(i))));
+
+    auto model_scale_shape_skew = get_scale_and_shape_sim(lv_draws);
+    Eigen::VectorXd temp_mus(mus[0].size());
+    Eigen::MatrixXd data_draws;
+    for (size_t i = 0; i < nsims; i++) {
+        std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
+        data_draws.row(i) = _family->draw_variable( temp_mus,
+                                                    std::get<0>(model_scale_shape_skew)[i],
+                                                    std::get<1>(model_scale_shape_skew)[i],
+                                                    std::get<2>(model_scale_shape_skew)[i],
+                                                    mus.at(i).size());
+    }
+
+    return std::move(data_draws);
+}
