@@ -222,7 +222,7 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
         add_z(name + " " + index, &prior, &q, false);
 }
 
-void LatentVariables::adjust_prior(const std::vector<size_t>& index, Family& prior) {
+void LatentVariables::adjust_prior(const std::vector<size_t>& index, const Family& prior) {
     for (size_t item : index) {
         assert(item > _z_list.size() - 1);
         _z_list[item].set_prior(prior);
@@ -351,7 +351,7 @@ void LatentVariables::set_z_starting_value(size_t index, double value) {
 }
 
 void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width, size_t height,
-                             std::string loc) {
+                             std::string loc) const {
     plt::figure_size(width, height);
     for (size_t z = 0; z < _z_list.size(); z++) {
         assert(!_z_list[z].get_sample().has_value() ||

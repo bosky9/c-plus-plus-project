@@ -26,9 +26,9 @@ protected:
     int _max_lag;
     Eigen::VectorXd _signal;
     // FIXME: _scores, _states e _states_var non sono mai usate con i modelli ARMA
-    Eigen::VectorXd _scores;
-    Eigen::VectorXd _states;
-    Eigen::VectorXd _states_var;
+    std::optional<Eigen::VectorXd> _scores;
+    std::optional<Eigen::VectorXd> _states;
+    std::optional<Eigen::VectorXd> _states_var;
     size_t _data_length;
     std::string _data_name;
     uint8_t _rounding_points;
@@ -59,8 +59,8 @@ protected:
             const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
             std::vector<double> index, bool multivariate_model, std::function<double(Eigen::VectorXd)> objective_object,
             std::string method, bool z_hide, int max_lag, Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
-            Eigen::VectorXd scores = Eigen::VectorXd::Zero(0), Eigen::VectorXd states = Eigen::VectorXd::Zero(0),
-            Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));
+            std::optional<Eigen::VectorXd> scores = std::nullopt, std::optional<Eigen::VectorXd> states = std::nullopt,
+            std::optional<Eigen::VectorXd> states_var = std::nullopt);
 
     /**
      * @brief Rounds given specific rounding points
@@ -132,8 +132,9 @@ public:
                Eigen::MatrixXd data, std::vector<double> index, bool multivariate_model,
                std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                Eigen::MatrixXd ihessian = Eigen::VectorXd::Zero(0), Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
-               Eigen::VectorXd scores = Eigen::VectorXd::Zero(0), Eigen::VectorXd states = Eigen::VectorXd::Zero(0),
-               Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));
+               std::optional<Eigen::VectorXd> scores     = std::nullopt,
+               std::optional<Eigen::VectorXd> states     = std::nullopt,
+               std::optional<Eigen::VectorXd> states_var = std::nullopt);
 
     /**
      * @brief Stream operator for MLEResults
@@ -193,10 +194,10 @@ public:
                 std::vector<double> index, bool multivariate_model,
                 std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                 Eigen::VectorXd ses, Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
-                Eigen::VectorXd scores       = Eigen::VectorXd::Zero(0),
-                Eigen::VectorXd elbo_records = Eigen::VectorXd::Zero(0),
-                Eigen::VectorXd states       = Eigen::VectorXd::Zero(0),
-                Eigen::VectorXd states_var   = Eigen::VectorXd::Zero(0));
+                std::optional<Eigen::VectorXd> scores     = std::nullopt,
+                Eigen::VectorXd elbo_records              = Eigen::VectorXd::Zero(0),
+                std::optional<Eigen::VectorXd> states     = std::nullopt,
+                std::optional<Eigen::VectorXd> states_var = std::nullopt);
 
     /**
      * @brief Stream operator for BBVIResults
@@ -263,10 +264,10 @@ public:
                   const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
                   std::vector<double> index, bool multivariate_model, double objective_value, std::string method,
                   bool z_hide, int max_lag, Eigen::VectorXd ses, Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
-                  Eigen::VectorXd scores       = Eigen::VectorXd::Zero(0),
-                  Eigen::VectorXd elbo_records = Eigen::VectorXd::Zero(0),
-                  Eigen::VectorXd states       = Eigen::VectorXd::Zero(0),
-                  Eigen::VectorXd states_var   = Eigen::VectorXd::Zero(0));
+                  std::optional<Eigen::VectorXd> scores     = std::nullopt,
+                  Eigen::VectorXd elbo_records              = Eigen::VectorXd::Zero(0),
+                  std::optional<Eigen::VectorXd> states     = std::nullopt,
+                  std::optional<Eigen::VectorXd> states_var = std::nullopt);
 
     /**
      * @brief Stream operator for BBVISSResults
@@ -331,8 +332,9 @@ public:
                    std::vector<double> index, bool multivariate_model,
                    std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
                    int max_lag, Eigen::MatrixXd ihessian, Eigen::VectorXd signal = Eigen::VectorXd::Zero(0),
-                   Eigen::VectorXd scores = Eigen::VectorXd::Zero(0), Eigen::VectorXd states = Eigen::VectorXd::Zero(0),
-                   Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));
+                   std::optional<Eigen::VectorXd> scores     = std::nullopt,
+                   std::optional<Eigen::VectorXd> states     = std::nullopt,
+                   std::optional<Eigen::VectorXd> states_var = std::nullopt);
 
     /**
      * @brief Stream operator for LaplaceResults
@@ -388,9 +390,9 @@ public:
                 std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
                 Eigen::MatrixXd samples, Eigen::VectorXd mean_est, Eigen::VectorXd median_est,
                 Eigen::VectorXd upper_95_est, Eigen::VectorXd lower_95_est,
-                Eigen::VectorXd signal = Eigen::VectorXd::Zero(0), Eigen::VectorXd scores = Eigen::VectorXd::Zero(0),
-                Eigen::VectorXd states     = Eigen::VectorXd::Zero(0),
-                Eigen::VectorXd states_var = Eigen::VectorXd::Zero(0));
+                Eigen::VectorXd signal = Eigen::VectorXd::Zero(0), std::optional<Eigen::VectorXd> scores = std::nullopt,
+                std::optional<Eigen::VectorXd> states     = std::nullopt,
+                std::optional<Eigen::VectorXd> states_var = std::nullopt);
 
     /**
      * @brief Stream operator for MCMCResults

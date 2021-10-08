@@ -273,7 +273,7 @@ public:
      * @param index Which latent variable index/indices to be altered
      * @param prior Which prior distribution? E.g. Normal(0,1)
      */
-    void adjust_prior(const std::vector<size_t>& index, Family& prior);
+    void adjust_prior(const std::vector<size_t>& index, const Family& prior);
 
     /**
      * @brief Returns list of LatentVariable objects
@@ -387,7 +387,7 @@ public:
      * @param loc Location of the legend
      */
     void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5,
-                std::string loc = "upper right");
+                std::string loc = "upper right") const;
 
     /**
      * @brief Plot samples

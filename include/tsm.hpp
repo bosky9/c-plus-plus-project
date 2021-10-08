@@ -22,19 +22,19 @@
 struct ModelOutput final {
     Eigen::VectorXd theta;
     Eigen::MatrixXd Y;
-    Eigen::VectorXd scores;
-    Eigen::VectorXd states;
-    Eigen::VectorXd states_var;
-    std::vector<std::string> X_names;
+    std::optional<Eigen::VectorXd> scores;
+    std::optional<Eigen::VectorXd> states;
+    std::optional<Eigen::VectorXd> states_var;
+    std::optional<std::vector<std::string>> X_names;
 };
 
 class Posterior : public cppoptlib::function::Function<double> {
     std::function<double(Eigen::VectorXd)> _posterior;
 
 public:
-    Posterior(const std::function<double(Eigen::VectorXd)>& posterior);
+    explicit Posterior(const std::function<double(Eigen::VectorXd)>& posterior);
 
-    scalar_t operator()(const vector_t& x) const;
+    scalar_t operator()(const vector_t& x) const override;
 };
 
 /**
@@ -44,19 +44,16 @@ class TSM {
 protected:
     std::vector<std::string> _data_name;
     std::string _model_name;
-    std::string _model_name_short; ///< The self.model_name2 variable in python
-    std::string _model_type;       ///< The type of model (e.g. 'ARIMA', 'GARCH')
-    std::vector<double> _data;     ///< The univariate time series data that will be used
-    std::vector<double> _index;    ///< The times of the input data (years, days or seconds)
+    std::string _model_name2;   ///< The self.model_name2 variable in python
+    std::string _model_type;    ///< The type of model (e.g. 'ARIMA', 'GARCH')
+    std::vector<double> _data;  ///< The univariate time series data that will be used
+    std::vector<double> _index; ///< The times of the input data (years, days or seconds)
     bool _multivariate_model;
     std::function<double(Eigen::VectorXd)> _neg_logposterior;
     std::function<double(Eigen::VectorXd)> _neg_loglik;
-    std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd)> _model;
-    std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd, size_t)> _mb_model;
     // Not used in Python
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior;
     std::function<double(Eigen::VectorXd, std::optional<size_t>)> _mb_neg_logposterior;
-    std::function<double(Eigen::VectorXd, std::optional<size_t>)> _mb_neg_loglik;
     bool _z_hide;
     int _max_lag;
     LatentVariables _latent_variables; ///< Holding variables for model output
@@ -69,7 +66,7 @@ protected:
     size_t _ylen;
     bool _is_pandas;
 
-    TSM(const std::string& model_type);
+    explicit TSM(const std::string& model_type);
 
     // TODO: I seguenti metodi sono presenti solo nella sottoclasse VAR
     //  Limitare i metodi che li usano solo alla classe VAR ?
@@ -85,7 +82,7 @@ protected:
      * @param z Untransformed starting values for the latent variables
      * @return A ModelOutput object
      */
-    [[nodiscard]] virtual ModelOutput _categorize_model_output(const Eigen::VectorXd& z) const = 0;
+    [[nodiscard]] virtual ModelOutput categorize_model_output(const Eigen::VectorXd& z) const = 0;
 
     /**
      * @brief Performs Black Box Variational Inference
@@ -181,7 +178,7 @@ public:
      * @param n How many steps to forecast
      * @return A transformed date_index object
      */
-    std::vector<double> shift_dates(size_t n);
+    [[nodiscard]] std::vector<double> shift_dates(size_t n) const;
 
     /**
      * @brief Transforms latent variables to actual scale by applying link function
@@ -198,7 +195,7 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5);
+    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5) const;
 
     // Not used in Python
     // void plot_parameters(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t
@@ -209,20 +206,12 @@ public:
      * @param index Which latent variable index/indices to be altered
      * @param prior Which prior distribution? E.g. Normal(0,1)
      */
-    void adjust_prior(const std::vector<size_t>& index, Family& prior);
+    void adjust_prior(const std::vector<size_t>& index, const Family& prior);
 
     /**
      * @brief Draws latent variables from the model (for Bayesian inference)
      * @param nsims How many draws to take
      * @return Matrix of draws
      */
-    virtual Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000);
-
-    void set_model(std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd)> model);
-
-    void set_mb_model(std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd, size_t)> mb_model);
-
-    void set_neg_loglik(std::function<double(Eigen::VectorXd)> neg_loglik);
-
-    void set_mb_neg_loglik(std::function<double(Eigen::VectorXd, std::optional<size_t>)> mb_neg_loglik);
+    [[nodiscard]] virtual Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000) const;
 };

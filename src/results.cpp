@@ -4,7 +4,8 @@ Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_
                  const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
                  std::vector<double> index, bool multivariate_model,
                  std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide, int max_lag,
-                 Eigen::VectorXd signal, Eigen::VectorXd scores, Eigen::VectorXd states, Eigen::VectorXd states_var)
+                 Eigen::VectorXd signal, std::optional<Eigen::VectorXd> scores, std::optional<Eigen::VectorXd> states,
+                 std::optional<Eigen::VectorXd> states_var)
     : _x_names{std::move(X_names)}, _model_name{std::move(model_name)}, _model_type{model_type}, _z{latent_variables},
       _z_values{latent_variables.get_z_values()}, _data{std::move(data)}, _index{std::move(index)},
       _multivariate_model{multivariate_model}, _objective_object{std::move(objective_object)},
@@ -39,8 +40,9 @@ MLEResults::MLEResults(std::vector<std::string> data_name, std::vector<std::stri
                        const std::string& model_type, const LatentVariables& latent_variables, Eigen::VectorXd results,
                        Eigen::MatrixXd data, std::vector<double> index, bool multivariate_model,
                        std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
-                       int max_lag, Eigen::MatrixXd ihessian, Eigen::VectorXd signal, Eigen::VectorXd scores,
-                       Eigen::VectorXd states, Eigen::VectorXd states_var)
+                       int max_lag, Eigen::MatrixXd ihessian, Eigen::VectorXd signal,
+                       std::optional<Eigen::VectorXd> scores, std::optional<Eigen::VectorXd> states,
+                       std::optional<Eigen::VectorXd> states_var)
     : Results{std::move(data_name),
               std::move(X_names),
               std::move(model_name),
@@ -94,13 +96,13 @@ inline std::ostream& operator<<(std::ostream& stream, const MLEResults& mle_resu
               "\n.index: Model Index";
     if (mle_results._method == "MLE" || mle_results._method == "OLS")
         stream << "\n.loglik: Loglikelihood";
-    if (mle_results._scores.size() > 0)
+    if (mle_results._scores.has_value())
         stream << "\n.scores: Model Scores";
     if (mle_results._signal.size() > 0)
         stream << "\n.signal: Model Signal";
-    if (mle_results._states.size() > 0)
+    if (mle_results._states.has_value())
         stream << "\n.states: Model States";
-    if (mle_results._states_var.size() > 0)
+    if (mle_results._states_var.has_value())
         stream << "\n.states_var: Model State Variances";
     stream << "\n.results : optimizer results"
               "\n\nMethods: "
@@ -246,8 +248,9 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
                          const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
                          std::vector<double> index, bool multivariate_model,
                          std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
-                         int max_lag, Eigen::VectorXd ses, Eigen::VectorXd signal, Eigen::VectorXd scores,
-                         Eigen::VectorXd elbo_records, Eigen::VectorXd states, Eigen::VectorXd states_var)
+                         int max_lag, Eigen::VectorXd ses, Eigen::VectorXd signal,
+                         std::optional<Eigen::VectorXd> scores, Eigen::VectorXd elbo_records,
+                         std::optional<Eigen::VectorXd> states, std::optional<Eigen::VectorXd> states_var)
     : Results{std::move(data_name),
               std::move(X_names),
               std::move(model_name),
@@ -302,13 +305,13 @@ inline std::ostream& operator<<(std::ostream& stream, const BBVIResults& results
               "\n.bic: Bayesian Information Criterion"
               "\n.data: Model Data"
               "\n.index: Model Index";
-    if (results._scores.size() > 0)
+    if (results._scores.has_value())
         stream << "\n.scores: Model Scores";
     if (results._signal.size() > 0)
         stream << "\n.signal: Model Signal";
-    if (results._states.size() > 0)
+    if (results._states.has_value())
         stream << "\n.states: Model States";
-    if (results._states_var.size() > 0)
+    if (results._states_var.has_value())
         stream << "\n.states_var: Model State Variances";
     stream << "\n\nMethods: "
               "\n.summary() : printed results";
@@ -376,8 +379,9 @@ BBVISSResults::BBVISSResults(std::vector<std::string> data_name, std::vector<std
                              std::string model_name, const std::string& model_type,
                              const LatentVariables& latent_variables, Eigen::MatrixXd data, std::vector<double> index,
                              bool multivariate_model, double objective_value, std::string method, bool z_hide,
-                             int max_lag, Eigen::VectorXd ses, Eigen::VectorXd signal, Eigen::VectorXd scores,
-                             Eigen::VectorXd elbo_records, Eigen::VectorXd states, Eigen::VectorXd states_var)
+                             int max_lag, Eigen::VectorXd ses, Eigen::VectorXd signal,
+                             std::optional<Eigen::VectorXd> scores, Eigen::VectorXd elbo_records,
+                             std::optional<Eigen::VectorXd> states, std::optional<Eigen::VectorXd> states_var)
     : Results{std::move(data_name),
               std::move(X_names),
               std::move(model_name),
@@ -432,13 +436,13 @@ inline std::ostream& operator<<(std::ostream& stream, const BBVISSResults& resul
               "\n.data: Model Data"
               "\n.index: Model Index"
               "\n.objective: Unnormalized Log Posterior";
-    if (results._scores.size() > 0)
+    if (results._scores.has_value())
         stream << "\n.scores: Model Scores";
     if (results._signal.size() > 0)
         stream << "\n.signal: Model Signal";
-    if (results._states.size() > 0)
+    if (results._states.has_value())
         stream << "\n.states: Model States";
-    if (results._states_var.size() > 0)
+    if (results._states_var.has_value())
         stream << "\n.states_var: Model State Variances";
     stream << "\n\nMethods: "
               "\n.summary() : printed results";
@@ -506,8 +510,8 @@ LaplaceResults::LaplaceResults(std::vector<std::string> data_name, std::vector<s
                                const LatentVariables& latent_variables, Eigen::MatrixXd data, std::vector<double> index,
                                bool multivariate_model, std::function<double(Eigen::VectorXd)> objective_object,
                                std::string method, bool z_hide, int max_lag, Eigen::MatrixXd ihessian,
-                               Eigen::VectorXd signal, Eigen::VectorXd scores, Eigen::VectorXd states,
-                               Eigen::VectorXd states_var)
+                               Eigen::VectorXd signal, std::optional<Eigen::VectorXd> scores,
+                               std::optional<Eigen::VectorXd> states, std::optional<Eigen::VectorXd> states_var)
     : Results{std::move(data_name),
               std::move(X_names),
               std::move(model_name),
@@ -575,13 +579,13 @@ std::ostream& operator<<(std::ostream& stream, const LaplaceResults& results) {
               "\n.bic: Bayesian Information Criterion"
               "\n.data: Model Data"
               "\n.index: Model Index";
-    if (results._scores.size() > 0)
+    if (results._scores.has_value())
         stream << "\n.scores: Model Scores";
     if (results._signal.size() > 0)
         stream << "\n.signal: Model Signal";
-    if (results._states.size() > 0)
+    if (results._states.has_value())
         stream << "\n.states: Model States";
-    if (results._states_var.size() > 0)
+    if (results._states_var.has_value())
         stream << "\n.states_var: Model State Variances";
     stream << "\n\nMethods: "
               "\n.summary() : printed results";
@@ -647,7 +651,8 @@ MCMCResults::MCMCResults(std::vector<std::string> data_name, std::vector<std::st
                          std::function<double(Eigen::VectorXd)> objective_object, std::string method, bool z_hide,
                          int max_lag, Eigen::MatrixXd samples, Eigen::VectorXd mean_est, Eigen::VectorXd median_est,
                          Eigen::VectorXd upper_95_est, Eigen::VectorXd lower_95_est, Eigen::VectorXd signal,
-                         Eigen::VectorXd scores, Eigen::VectorXd states, Eigen::VectorXd states_var)
+                         std::optional<Eigen::VectorXd> scores, std::optional<Eigen::VectorXd> states,
+                         std::optional<Eigen::VectorXd> states_var)
     : Results{std::move(data_name),
               std::move(X_names),
               std::move(model_name),
@@ -688,13 +693,13 @@ std::ostream& operator<<(std::ostream& stream, const MCMCResults& results) {
               "\n.bic: Bayesian Information Criterion"
               "\n.data: Model Data"
               "\n.index: Model Index";
-    if (results._scores.size() > 0)
+    if (results._scores.has_value())
         stream << "\n.scores: Model Scores";
     if (results._signal.size() > 0)
         stream << "\n.signal: Model Signal";
-    if (results._states.size() > 0)
+    if (results._states.has_value())
         stream << "\n.states: Model States";
-    if (results._states_var.size() > 0)
+    if (results._states_var.has_value())
         stream << "\n.states_var: Model State Variances";
     stream << "\n\nMethods: "
               "\n.summary() : printed results";
