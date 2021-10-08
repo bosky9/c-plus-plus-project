@@ -2,6 +2,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+using namespace derivatives;
+
 TEST_CASE("Compute Hessian matrix", "[hessian]") {
     Eigen::VectorXd x(7);
     x << 21, 32, 45, 52, 31, 20, 17;

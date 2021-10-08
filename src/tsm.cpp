@@ -60,14 +60,28 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
     _latent_variables.set_estimation_method("BBVI");
 
-    ModelOutput output{_categorize_model_output(data.final_means)};
+    ModelOutput output{categorize_model_output(data.final_means)};
 
     // LatentVariables latent_variables_store = _latent_variables; // No sense
 
-    return new BBVIResults{_data_name,        output.X_names, _model_name,         _model_type,       _latent_variables,
-                           output.Y,          _index,         _multivariate_model, _neg_logposterior, "BBVI",
-                           _z_hide,           _max_lag,       data.final_ses,      output.theta,      output.scores,
-                           data.elbo_records, output.states,  output.states_var};
+    return new BBVIResults{_data_name,
+                           output.X_names.value(),
+                           _model_name,
+                           _model_type,
+                           _latent_variables,
+                           output.Y,
+                           _index,
+                           _multivariate_model,
+                           _neg_logposterior,
+                           "BBVI",
+                           _z_hide,
+                           _max_lag,
+                           data.final_ses,
+                           output.theta,
+                           output.scores,
+                           data.elbo_records,
+                           output.states,
+                           output.states_var};
 }
 
 LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& obj_type) {
@@ -76,10 +90,10 @@ LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& 
 
     assert(y->get_ihessian().size() > 0 && "No Hessian information - Laplace approximation cannot be performed");
     _latent_variables.set_estimation_method("Laplace");
-    ModelOutput output{_categorize_model_output(_latent_variables.get_z_values())};
+    ModelOutput output{categorize_model_output(_latent_variables.get_z_values())};
 
-    return new LaplaceResults(_data_name, output.X_names, _model_name, _model_type, _latent_variables, output.Y, _index,
-                              _multivariate_model, obj_type, "Laplace", _z_hide, _max_lag, y->get_ihessian(),
+    return new LaplaceResults(_data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, output.Y,
+                              _index, _multivariate_model, obj_type, "Laplace", _z_hide, _max_lag, y->get_ihessian(),
                               output.theta, output.scores, output.states, output.states_var);
 }
 
@@ -123,15 +137,17 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
 
     _latent_variables.set_estimation_method("M-H");
 
-    ModelOutput output{_categorize_model_output(sample.mean_est)};
+    ModelOutput output{categorize_model_output(sample.mean_est)};
 
-    return new MCMCResults(_data_name, output.X_names, _model_name, _model_type, _latent_variables, output.Y, _index,
-                           _multivariate_model, _neg_logposterior, "Metropolis Hastings", _z_hide, _max_lag,
+    return new MCMCResults(_data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, output.Y,
+                           _index, _multivariate_model, _neg_logposterior, "Metropolis Hastings", _z_hide, _max_lag,
                            sample.chain, sample.mean_est, sample.median_est, sample.upper_95_est, sample.lower_95_est,
                            output.theta, output.scores, output.states, output.states_var);
 }
 
-MLEResults* TSM::_ols_fit() {return nullptr;}
+MLEResults* TSM::_ols_fit() {
+    return nullptr;
+}
 
 MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
                                const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
@@ -164,19 +180,19 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
             p = p2;
     }
 
-    ModelOutput output{_categorize_model_output(p.x)};
+    ModelOutput output{categorize_model_output(p.x)};
 
     // Check that matrix is non-singular, act accordingly
-    Eigen::MatrixXd ihessian{hessian(obj_type, p.x).inverse()};
+    Eigen::MatrixXd ihessian{derivatives::hessian(obj_type, p.x).inverse()};
     Eigen::MatrixXd ses{ihessian.diagonal().cwiseAbs().array().pow(0.5)};
     _latent_variables.set_z_values(p.x, method, ses);
     // _latent_variables.set_z_values(p.x, method);
 
     _latent_variables.set_estimation_method(method);
 
-    return new MLEResults(_data_name, output.X_names, _model_name, _model_type, _latent_variables, p.x, output.Y,
-                          _index, _multivariate_model, obj_type, method, _z_hide, _max_lag, ihessian, output.theta,
-                          output.scores, output.states, output.states_var);
+    return new MLEResults(_data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, p.x,
+                          output.Y, _index, _multivariate_model, obj_type, method, _z_hide, _max_lag, ihessian,
+                          output.theta, output.scores, output.states, output.states_var);
 }
 
 Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixXd>& cov_matrix,
@@ -215,7 +231,7 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
 }
 
 std::vector<double> TSM::shift_dates(size_t n) const {
-    assert(_index.size() > 0);
+    assert(!_index.empty());
     assert(_index.size() > _max_lag);
     std::vector<double> date_index(_index.begin() + _max_lag, _index.end());
     if (date_index.size() > 1) {
@@ -247,7 +263,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
     if (_latent_variables.get_estimation_method().value() == "BBVI") {
         std::vector<Family*> q_vec = _latent_variables.get_z_approx_dist();
         Eigen::MatrixXd output(q_vec.size(), nsims);
-        size_t r = 0;
+        Eigen::Index r = 0;
         for (Family* f : q_vec) {
             output.row(r) = f->draw_variable_local(nsims);
             r++;
@@ -274,20 +290,4 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
             ind.push_back(distribution(generator));
         return chain(Eigen::all, ind);
     }
-}
-
-void TSM::set_model(std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd)> model) {
-    _model = model;
-}
-
-void TSM::set_mb_model(std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd, size_t)> mb_model) {
-    _mb_model = mb_model;
-}
-
-void TSM::set_neg_loglik(std::function<double(Eigen::VectorXd)> neg_loglik) {
-    _neg_loglik = neg_loglik;
-}
-
-void TSM::set_mb_neg_loglik(std::function<double(Eigen::VectorXd, std::optional<size_t>)> mb_neg_loglik) {
-    _mb_neg_loglik = mb_neg_loglik;
 }

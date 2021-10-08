@@ -56,20 +56,19 @@ inline bool instanceof (const T*) {
  */
 class ARIMA : public TSM {
 private:
-    size_t _ar;     ///< How many AR lags the model will have
-    size_t _ma;     ///< How many MA lags the model will have
-    size_t _integ;  ///< How many times to difference the time series (default 0)
-    size_t _target; ///< Which array index to use. By default, first array index will be selected as the dependent
-                    ///< variable.
-    std::unique_ptr<Family> _family; ///< E.g. Normal()
+    size_t _ar;    ///< How many AR lags the model will have
+    size_t _ma;    ///< How many MA lags the model will have
+    size_t _integ; ///< How many times to difference the time series (default 0)
+    std::vector<double> _data_original;
+    size_t _data_length;
     Eigen::MatrixXd _x;
+    std::unique_ptr<Family> _family; ///< E.g. Normal()
     std::function<double(double)> _link;
     bool _scale;
     bool _shape;
     bool _skewness;
     std::function<double(double)> _mean_transform; ///< A function which transforms the location parameter
     bool _cythonized;
-    size_t _data_length;
     std::string _model_name2;
     size_t _family_z_no;
 
@@ -78,6 +77,13 @@ private:
      * @return Autoregressive Matrix
      */
     Eigen::MatrixXd ar_matrix();
+
+    /**
+     * @brief Return output data of the model
+     * @param z Untransformed starting values for the latent variables
+     * @return A ModelOutput object
+     */
+    [[nodiscard]] ModelOutput categorize_model_output(const Eigen::VectorXd& z) const override;
 
     /**
      * @brief Creates the model's latent variables
@@ -212,7 +218,8 @@ private:
      * @param t_z A vector of (transformed) latent variables
      * @return h-length vector of mean predictions
      */
-    [[nodiscard]] Eigen::VectorXd mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, size_t h, Eigen::VectorXd t_z) const;
+    [[nodiscard]] Eigen::VectorXd mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, size_t h,
+                                                  Eigen::VectorXd t_z) const;
 
     /**
      * @brief Simulates a h-step ahead mean prediction
@@ -226,7 +233,7 @@ private:
      * @return Matrix of simulations
      */
     [[nodiscard]] Eigen::MatrixXd sim_prediction(const Eigen::VectorXd& mu, const Eigen::VectorXd& Y, size_t h,
-                                   const Eigen::VectorXd& t_params, size_t simulations) const;
+                                                 const Eigen::VectorXd& t_params, size_t simulations) const;
 
     /**
      * @brief Simulates a h-step ahead mean prediction
@@ -236,7 +243,7 @@ private:
      * @param simulations How many simulations to perform
      * @return Matrix of simulations
      */
-    [[nodiscard]] Eigen::MatrixXd sim_prediction_bayes(long h, size_t simulations) const;
+    [[nodiscard]] Eigen::MatrixXd sim_prediction_bayes(size_t h, size_t simulations) const;
 
     /**
      * @brief Produces simulation forecasted values and prediction intervals
@@ -250,8 +257,8 @@ private:
      * @return Tuple of vectors: error bars, forecasted values, values and indices to plot
      */
     [[nodiscard]] std::tuple<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
-    summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::MatrixXd& sim_vector, const std::vector<double>& date_index,
-                          long h, long past_values) const;
+    summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::MatrixXd& sim_vector,
+                          const std::vector<double>& date_index, size_t h, size_t past_values) const;
 
 public:
     /**
@@ -264,7 +271,7 @@ public:
      * @param family E.g. Normal() (default)
      */
     ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ = 0,
-          const Family& family = *(new Normal()));
+          Family* family = new Normal());
 
     /**
      * @brief Constructor for ARIMA object
@@ -277,7 +284,7 @@ public:
      * @param family E.g. Normal() (default)
      */
     ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index,
-          const std::string& target, size_t ar, size_t ma, size_t integ = 0, const Family& family = *(new Normal()));
+          const std::string& target, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for a generic family ARIMA model
@@ -340,8 +347,8 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    Eigen::VectorXd predict_is(size_t h = 5, bool fit_once = true, std::string fit_method = "MLE",
-                               bool intervals = false);
+    std::pair<std::map<std::string, std::vector<double>>, std::vector<double>>
+    predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE", bool intervals = false);
 
     /**
      * @brief Plots forecasts with the estimated model against data
@@ -360,7 +367,7 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    Eigen::VectorXd predict(size_t h = 5, bool intervals = false);
+    std::vector<double> predict(size_t h = 5, bool intervals = false);
 
     /**
      * @brief Samples from the posterior predictive distribution
