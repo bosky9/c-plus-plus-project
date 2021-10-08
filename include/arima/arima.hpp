@@ -212,7 +212,7 @@ private:
      * @param t_z A vector of (transformed) latent variables
      * @return h-length vector of mean predictions
      */
-    Eigen::VectorXd mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, size_t h, Eigen::VectorXd t_z);
+    [[nodiscard]] Eigen::VectorXd mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, size_t h, Eigen::VectorXd t_z) const;
 
     /**
      * @brief Simulates a h-step ahead mean prediction
@@ -225,8 +225,8 @@ private:
      * @param simulations How many simulations to perform
      * @return Matrix of simulations
      */
-    Eigen::MatrixXd sim_prediction(const Eigen::VectorXd& mu, const Eigen::VectorXd& Y, size_t h,
-                                   Eigen::VectorXd t_params, size_t simulations);
+    [[nodiscard]] Eigen::MatrixXd sim_prediction(const Eigen::VectorXd& mu, const Eigen::VectorXd& Y, size_t h,
+                                   const Eigen::VectorXd& t_params, size_t simulations) const;
 
     /**
      * @brief Simulates a h-step ahead mean prediction
@@ -236,7 +236,7 @@ private:
      * @param simulations How many simulations to perform
      * @return Matrix of simulations
      */
-    Eigen::MatrixXd sim_prediction_bayes(long h, size_t simulations);
+    [[nodiscard]] Eigen::MatrixXd sim_prediction_bayes(long h, size_t simulations) const;
 
     /**
      * @brief Produces simulation forecasted values and prediction intervals
@@ -249,9 +249,9 @@ private:
      * @param past_values How many past observations to include in the forecast plot
      * @return Tuple of vectors: error bars, forecasted values, values and indices to plot
      */
-    std::tuple<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
-    summarize_simulations(Eigen::VectorXd mean_values, Eigen::MatrixXd sim_vector, std::vector<double> date_index,
-                          long h, long past_values);
+    [[nodiscard]] std::tuple<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
+    summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::MatrixXd& sim_vector, const std::vector<double>& date_index,
+                          long h, long past_values) const;
 
 public:
     /**
@@ -319,7 +319,7 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_fit(std::optional<size_t> width = 10, std::optional<size_t> height = 7);
+    void plot_fit(std::optional<size_t> width = 10, std::optional<size_t> height = 7) const;
 
     /**
      * @brief Plots forecasts with the estimated model
@@ -330,7 +330,7 @@ public:
      * @param height Height of the figure
      */
     void plot_predict(size_t h = 5, size_t past_values = 20, bool intervals = true, std::optional<size_t> width = 10,
-                      std::optional<size_t> height = 7);
+                      std::optional<size_t> height = 7) const;
 
     /**
      * @brief Makes dynamic out-of-sample predictions with the estimated model on in-sample data

@@ -181,7 +181,7 @@ public:
      * @param n How many steps to forecast
      * @return A transformed date_index object
      */
-    std::vector<double> shift_dates(size_t n);
+    [[nodiscard]] std::vector<double> shift_dates(size_t n) const;
 
     /**
      * @brief Transforms latent variables to actual scale by applying link function
@@ -198,7 +198,7 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5);
+    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5) const;
 
     // Not used in Python
     // void plot_parameters(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t
@@ -209,14 +209,14 @@ public:
      * @param index Which latent variable index/indices to be altered
      * @param prior Which prior distribution? E.g. Normal(0,1)
      */
-    void adjust_prior(const std::vector<size_t>& index, Family& prior);
+    void adjust_prior(const std::vector<size_t>& index, const Family& prior);
 
     /**
      * @brief Draws latent variables from the model (for Bayesian inference)
      * @param nsims How many draws to take
      * @return Matrix of draws
      */
-    virtual Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000);
+    [[nodiscard]] virtual Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000) const;
 
     void set_model(std::function<std::tuple<Eigen::VectorXd, Eigen::VectorXd>(Eigen::VectorXd)> model);
 

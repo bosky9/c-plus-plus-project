@@ -388,7 +388,7 @@ double ARIMA::non_normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_
                                       std::get<2>(sc_sh_sk));
 }
 
-Eigen::VectorXd ARIMA::mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, size_t h, Eigen::VectorXd t_z) {
+Eigen::VectorXd ARIMA::mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, size_t h, Eigen::VectorXd t_z) const {
     // Create arrays to iterate over
     Eigen::VectorXd Y_exp{std::move(Y)};
     Eigen::VectorXd mu_exp{std::move(mu)};
@@ -429,7 +429,7 @@ Eigen::VectorXd ARIMA::mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, si
 }
 
 Eigen::MatrixXd ARIMA::sim_prediction(const Eigen::VectorXd& mu, const Eigen::VectorXd& Y, size_t h,
-                                      Eigen::VectorXd t_params, size_t simulations) {
+                                      const Eigen::VectorXd& t_params, size_t simulations) const {
     auto scale_shape_skew{get_scale_and_shape(t_params)};
 
     Eigen::MatrixXd sim_vector{
@@ -485,7 +485,7 @@ Eigen::MatrixXd ARIMA::sim_prediction(const Eigen::VectorXd& mu, const Eigen::Ve
     return sim_vector.transpose();
 }
 
-Eigen::MatrixXd ARIMA::sim_prediction_bayes(long h, size_t simulations) {
+Eigen::MatrixXd ARIMA::sim_prediction_bayes(long h, size_t simulations) const {
     Eigen::MatrixXd sim_vector{
             Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(simulations), static_cast<Eigen::Index>(h))};
 
@@ -547,8 +547,8 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(long h, size_t simulations) {
 }
 
 std::tuple<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
-ARIMA::summarize_simulations(Eigen::VectorXd mean_values, Eigen::MatrixXd sim_vector, std::vector<double> date_index,
-                             long h, long past_values) {
+ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::MatrixXd& sim_vector, const std::vector<double>& date_index,
+                             long h, long past_values) const {
     std::vector<double> error_bars;
     for (size_t pre{5}; pre < 100; pre += 5) {
         error_bars.push_back(mean_values[-h - 1]);
@@ -570,10 +570,10 @@ ARIMA::summarize_simulations(Eigen::VectorXd mean_values, Eigen::MatrixXd sim_ve
     std::vector<double> plot_index;
     std::copy(date_index.end() - h - past_values, date_index.end(), std::back_inserter(plot_index));
 
-    return {error_bars, forecasted_values, plot_values, plot_index};
+    return {std::move(error_bars), std::move(forecasted_values), std::move(plot_values), std::move(plot_index)};
 }
 
-void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) {
+void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) const {
     plt::figure_size(width.value(), height.value());
     std::vector<double> date_index;
     std::copy(_index.begin() + static_cast<long>(std::max(_ar, _ma)), _index.begin() + static_cast<long>(_data_length),
@@ -609,7 +609,7 @@ void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) 
 }
 
 void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::optional<size_t> width,
-                         std::optional<size_t> height) {
+                         std::optional<size_t> height) const {
     assert(_latent_variables.is_estimated() && "No latent variables estimated!");
 
     auto mu_Y{model(_latent_variables.get_z_values())};

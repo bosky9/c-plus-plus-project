@@ -214,7 +214,7 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
         return _ols_fit();
 }
 
-std::vector<double> TSM::shift_dates(size_t n) {
+std::vector<double> TSM::shift_dates(size_t n) const {
     assert(_index.size() > 0);
     assert(_index.size() > _max_lag);
     std::vector<double> date_index(_index.begin() + _max_lag, _index.end());
@@ -232,15 +232,15 @@ Eigen::VectorXd TSM::transform_z() const {
     return _latent_variables.get_z_values(true);
 }
 
-void TSM::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width, size_t height) {
+void TSM::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width, size_t height) const {
     _latent_variables.plot_z(indices, width, height);
 }
 
-void TSM::adjust_prior(const std::vector<size_t>& index, Family& prior) {
+void TSM::adjust_prior(const std::vector<size_t>& index, const Family& prior) {
     _latent_variables.adjust_prior(index, prior);
 }
 
-Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) {
+Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
     assert(_latent_variables.get_estimation_method());
     assert(_latent_variables.get_estimation_method().value() == "BBVI" ||
            _latent_variables.get_estimation_method().value() == "M-H");
