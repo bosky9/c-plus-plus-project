@@ -116,14 +116,11 @@ ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::
 }
 
 Eigen::MatrixXd ARIMA::ar_matrix() {
-    Eigen::MatrixXd X{Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_data_length - _max_lag))};
-    std::vector<double> data{};
+    Eigen::MatrixXd X{Eigen::MatrixXd::Zero(_ar, static_cast<Eigen::Index>(_data_length - _max_lag))};
 
     if (_ar != 0) {
-        for (Eigen::Index i{0}; i < _ar; i++) {
-            std::copy(_data.begin() + _max_lag - i - 1, _data.end() - i - 1, std::back_inserter(data));
-            X.row(i + 1) = Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()));
-        }
+        for (Eigen::Index i{0}; i < _ar; i++)
+            std::copy(_data.begin() + _max_lag - i - 1, _data.end() - i - 1, X.row(i + 1).begin());
     }
 
     return X;
@@ -150,9 +147,7 @@ void ARIMA::create_latent_variables() {
 }
 
 std::tuple<double, double, double> ARIMA::get_scale_and_shape(const Eigen::VectorXd& transformed_lvs) const {
-    double model_shape    = 0;
-    double model_scale    = 0;
-    double model_skewness = 0;
+    double model_shape, model_scale, model_skewness{0};
 
     if (_scale) {
         if (_shape) {
@@ -170,35 +165,28 @@ std::tuple<double, double, double> ARIMA::get_scale_and_shape(const Eigen::Vecto
 
 std::tuple<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>
 ARIMA::get_scale_and_shape_sim(const Eigen::MatrixXd& transformed_lvs) const {
-    Eigen::VectorXd model_shape    = Eigen::VectorXd::Zero(transformed_lvs.cols());
-    Eigen::VectorXd model_scale    = Eigen::VectorXd::Zero(transformed_lvs.cols());
-    Eigen::VectorXd model_skewness = Eigen::VectorXd::Zero(transformed_lvs.cols());
+    Eigen::VectorXd model_shape, model_scale, model_skewness{Eigen::VectorXd::Zero(transformed_lvs.cols())};
 
-    std::vector<double> s;
     if (_scale) {
         if (_shape) {
             // Apply trasform() to every element inside the matrix last row
             model_shape = transformed_lvs(Eigen::last, Eigen::all);
-            s           = std::vector<double>(&model_shape[0], model_shape.data());
-            std::transform(s.begin(), s.end(), s.begin(), [this](double n) {
-                return _latent_variables.get_z_list()[-1].get_prior()->get_transform()(n);
+            std::transform(model_shape.begin(), model_shape.end(), model_shape.begin(), [this](double n) {
+                return _latent_variables.get_z_list().back().get_prior()->get_transform()(n);
             });
-            model_shape = Eigen::VectorXd::Map(s.data(), static_cast<Eigen::Index>(s.size()));
         }
 
         model_scale = transformed_lvs(Eigen::last - 1, Eigen::all);
-        s           = std::vector<double>(&model_scale[0], model_scale.data());
-        std::transform(s.begin(), s.end(), s.begin(),
-                       [this](double n) { return _latent_variables.get_z_list()[-2].get_prior()->get_transform()(n); });
-        model_scale = Eigen::VectorXd::Map(s.data(), static_cast<Eigen::Index>(s.size()));
+        std::transform(model_scale.begin(), model_scale.end(), model_scale.begin(), [this](double n) {
+            return _latent_variables.get_z_list().at(-2).get_prior()->get_transform()(n);
+        });
     }
 
     if (_skewness) {
-        model_skewness = transformed_lvs(Eigen::last - 2, Eigen::all);
-        s              = std::vector<double>(&model_skewness[0], model_skewness.data());
-        std::transform(s.begin(), s.end(), s.begin(),
-                       [this](double n) { return _latent_variables.get_z_list()[-3].get_prior()->get_transform()(n); });
-        model_skewness = Eigen::VectorXd::Map(s.data(), static_cast<Eigen::Index>(s.size()));
+        model_skewness = transformed_lvs(-2, Eigen::all);
+        std::transform(model_skewness.begin(), model_skewness.end(), model_skewness.begin(), [this](double n) {
+            return _latent_variables.get_z_list().at(-3).get_prior()->get_transform()(n);
+        });
     }
 
     return std::move(std::make_tuple(model_scale, model_shape, model_skewness));
@@ -223,14 +211,13 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_model(const Eigen::VectorX
 }
 
 std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::VectorXd& beta) const {
-    std::vector<double> data;
-    std::copy(_data.begin() + _max_lag, _data.end(), std::back_inserter(data));
-    Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
+    Eigen::VectorXd Y(_data.size() - _max_lag);
+    std::copy(_data.begin() + _max_lag, _data.end(), Y.begin());
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
     for (Eigen::Index i{0}; i < beta.size(); i++) {
-        z[i] = _latent_variables.get_z_list()[i].get_prior()->get_transform()(beta[i]);
+        z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
     }
 
     // Constant and AR terms
@@ -255,7 +242,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(const Eigen:
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
     for (Eigen::Index i{0}; i < beta.size(); i++) {
-        z[i] = _latent_variables.get_z_list()[i].get_prior()->get_transform()(beta[i]);
+        z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
     }
 
     // Constant and AR terms
@@ -295,7 +282,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(const Eigen::
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
     for (Eigen::Index i{0}; i < beta.size(); i++) {
-        z[i] = _latent_variables.get_z_list()[i].get_prior()->get_transform()(beta[i]);
+        z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
     }
 
     // Constant and AR terms
@@ -332,7 +319,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eig
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
     for (Eigen::Index i{0}; i < beta.size(); i++) {
-        z[i] = _latent_variables.get_z_list()[i].get_prior()->get_transform()(beta[i]);
+        z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
     }
 
     // Constant and AR terms
@@ -377,35 +364,33 @@ double ARIMA::normal_neg_loglik(const Eigen::VectorXd& beta) const {
 }
 
 double ARIMA::normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const {
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = mb_model(beta, mini_batch);
+    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = mb_model(beta, mini_batch);
     Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
-    return -Mvn::logpdf(mu_y.second, mu_y.first, scale).sum();
+    return -Mvn::logpdf(mu_Y.second, mu_Y.first, scale).sum();
 }
 
 double ARIMA::non_normal_neg_loglik(const Eigen::VectorXd& beta) const {
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = model(beta);
+    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = model(beta);
     Eigen::VectorXd transformed_parameters(beta.size());
-    std::vector<Family*> priors = _latent_variables.get_z_priors();
     for (Eigen::Index k{0}; k < beta.size(); k++)
-        transformed_parameters(k) = priors.at(k)->get_transform()(beta(k));
-    std::tuple<double, double, double> sc_sh_sk = get_scale_and_shape(transformed_parameters);
-    Eigen::VectorXd link_mu(mu_y.first.size());
-    std::transform(mu_y.first.begin(), mu_y.first.end(), link_mu.begin(), _link);
-    return _family->neg_loglikelihood(mu_y.second, link_mu, std::get<0>(sc_sh_sk), std::get<1>(sc_sh_sk),
-                                      std::get<2>(sc_sh_sk));
+        transformed_parameters(k) = _latent_variables.get_z_priors().at(k)->get_transform()(beta(k));
+    auto scale_shape_skew = get_scale_and_shape(transformed_parameters);
+    Eigen::VectorXd link_mu(mu_Y.first.size());
+    std::transform(mu_Y.first.begin(), mu_Y.first.end(), link_mu.begin(), _link);
+    return _family->neg_loglikelihood(mu_Y.second, link_mu, std::get<0>(scale_shape_skew),
+                                      std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew));
 }
 
 double ARIMA::non_normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const {
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = mb_model(beta, mini_batch);
+    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = mb_model(beta, mini_batch);
     Eigen::VectorXd transformed_parameters(beta.size());
-    std::vector<Family*> priors = _latent_variables.get_z_priors();
     for (Eigen::Index k{0}; k < beta.size(); k++)
-        transformed_parameters(k) = priors.at(k)->get_transform()(beta(k));
-    std::tuple<double, double, double> sc_sh_sk = get_scale_and_shape(transformed_parameters);
-    Eigen::VectorXd link_mu(mu_y.first.size());
-    std::transform(mu_y.first.begin(), mu_y.first.end(), link_mu.begin(), _link);
-    return _family->neg_loglikelihood(mu_y.second, link_mu, std::get<0>(sc_sh_sk), std::get<1>(sc_sh_sk),
-                                      std::get<2>(sc_sh_sk));
+        transformed_parameters(k) = _latent_variables.get_z_priors().at(k)->get_transform()(beta(k));
+    auto scale_shape_skew = get_scale_and_shape(transformed_parameters);
+    Eigen::VectorXd link_mu(mu_Y.first.size());
+    std::transform(mu_Y.first.begin(), mu_Y.first.end(), link_mu.begin(), _link);
+    return _family->neg_loglikelihood(mu_Y.second, link_mu, std::get<0>(scale_shape_skew),
+                                      std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew));
 }
 
 Eigen::VectorXd ARIMA::mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, size_t h, Eigen::VectorXd t_z) const {
@@ -661,7 +646,7 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
         Eigen::VectorXd t_z{transform_z()};
         Eigen::VectorXd mean_values{mean_prediction(mu_Y.first, mu_Y.second, h, t_z)};
         Eigen::VectorXd fv = mean_values(Eigen::seq(Eigen::last - static_cast<Eigen::Index>(h), Eigen::last));
-        forecasted_values  = std::vector<double>(&fv[0], fv.data());
+        std::copy(mean_values.end() - static_cast<long>(h), mean_values.end(), std::back_inserter(forecasted_values));
 
         if (_model_name2 == "Skewt") {
             auto scale_shape_skew{get_scale_and_shape(t_z)};
@@ -711,24 +696,19 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
 }
 
 
-std::pair<std::map<std::string, std::vector<double>>, std::vector<double>>
+std::pair<std::map<std::string, Eigen::MatrixXd>, std::vector<double>>
 ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool intervals) {
-    std::map<std::string, std::vector<double>> predictions;
+    std::map<std::string, Eigen::MatrixXd> predictions;
     LatentVariables saved_lvs{""};
 
-    std::vector<std::string> columns(5);
-    if (intervals) {
-        std::string names[]{std::accumulate(_data_name.begin(), _data_name.end(), std::string{}),
-                            "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
-                            "99% Prediction Interval"};
-        std::copy(&names[0], &names[4], columns.begin());
-    }
+    std::string names[]{std::accumulate(_data_name.begin(), _data_name.end(), std::string{}), "1% Prediction Interval",
+                        "5% Prediction Interval", "95% Prediction Interval", "99% Prediction Interval"};
 
+    std::vector<double> data_original_t, index;
+    std::pair<std::map<std::string, Eigen::VectorXd>, std::vector<double>> new_prediction;
     for (Eigen::Index t{0}; t < h; t++) {
-        std::vector<double> data_original_t;
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
-        std::vector<double> index;
         std::iota(index.begin(), index.end(), 0);
         ARIMA x{data_original_t, index, _ar, _ma, _integ, _family.get()};
         if (!fit_once)
@@ -738,43 +718,120 @@ ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool i
                 x.fit(fit_method, false);
                 saved_lvs = x._latent_variables;
             }
-            predictions.insert({columns[t], x.predict(1, intervals)});
         } else {
             if (fit_once)
                 x._latent_variables = saved_lvs;
-            if (intervals)
-                predictions.insert({columns[t], x.predict(1, intervals)});
-            else
-                predictions.insert({std::to_string(t), x.predict(1, intervals)});
         }
+        new_prediction = x.predict(1, intervals);
+        for (auto it{new_prediction.first.begin()}; it != new_prediction.first.end(); it++)
+            predictions[it->first].row(t) = it->second;
     }
 
-    std::vector<double> index;
     std::copy(_index.end() - static_cast<long>(h), _index.end(), std::back_inserter(index));
 
     return {predictions, index};
 }
 
-std::vector<double> ARIMA::predict(size_t h, bool intervals) {}
+void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_method, std::optional<size_t> width,
+                            std::optional<size_t> height) {
+    plt::figure_size(width.value(), height.value());
+    auto predictions{predict_is(h, fit_once, fit_method)};
+    std::vector<double> data;
+    std::copy(_data.end() - static_cast<long>(h), _data.end(), std::back_inserter(data));
+    plt::named_plot("Data", predictions.second, data);
+    for (auto it{predictions.first.begin()}; it != predictions.first.end(); it++) {
+        for (Eigen::Index i{0}; i < it->second.rows(); i++)
+            plt::named_plot("Predictions", predictions.second,
+                            std::vector<double>(&it->second.row(i)[0], it->second.row(i).data()), "k");
+    }
+    plt::title(std::accumulate(_data_name.begin(), _data_name.end(), std::string{}));
+    plt::legend({{"loc", "2"}});
+    plt::save("../data/arima/plot_predict_is.png");
+    // plt::show();
+}
+
+std::pair<std::map<std::string, Eigen::VectorXd>, std::vector<double>> ARIMA::predict(size_t h, bool intervals) {
+    assert(_latent_variables.is_estimated() && "No latent variables estimated!");
+
+    auto mu_Y{model(_latent_variables.get_z_values())};
+    std::vector<double> date_index{shift_dates(h)};
+
+    Eigen::MatrixXd sim_values;
+    std::pair<std::map<std::string, Eigen::VectorXd>, std::vector<double>> result;
+    Eigen::VectorXd forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
+    if (_latent_variables.get_estimation_method() == "M-H") {
+        sim_values = sim_prediction_bayes(5, 15000);
+        for (Eigen::Index i{0}; i < sim_values.rows(); i++) {
+            forecasted_values[i] = (mean(sim_values.row(i)));
+            prediction_01[i]     = (percentile(sim_values.row(i), 1));
+            prediction_05[i]     = (percentile(sim_values.row(i), 5));
+            prediction_95[i]     = (percentile(sim_values.row(i), 95));
+            prediction_99[i]     = (percentile(sim_values.row(i), 99));
+        }
+    } else {
+        Eigen::VectorXd t_z{transform_z()};
+        Eigen::VectorXd mean_values{mean_prediction(mu_Y.first, mu_Y.second, h, t_z)};
+        if (intervals)
+            sim_values = sim_prediction(mu_Y.first, mu_Y.second, h, t_z, 15000);
+        else
+            sim_values = sim_prediction(mu_Y.first, mu_Y.second, h, t_z, 2);
+
+        forecasted_values = Eigen::VectorXd(h);
+        if (_model_name2 == "Skewt") {
+            auto scale_shape_skew{get_scale_and_shape(t_z)};
+            double m1{(std::sqrt(std::get<1>(scale_shape_skew)) *
+                       std::tgamma((std::get<1>(scale_shape_skew) - 1.0) / 2.0)) /
+                      (std::sqrt(M_PI) * std::tgamma(std::get<1>(scale_shape_skew) / 2.0))};
+            double additional_loc{(std::get<2>(scale_shape_skew) - (1.0 / std::get<2>(scale_shape_skew))) *
+                                  std::get<0>(scale_shape_skew) * m1};
+            std::transform(mean_values.end() - static_cast<long>(h), mean_values.end(), forecasted_values.begin(),
+                           [additional_loc](double x) { return x + additional_loc; });
+        } else
+            std::copy(mean_values.end() - static_cast<long>(h), mean_values.end(), forecasted_values.begin());
+
+        if (!intervals)
+            result.first = {{std::accumulate(_data_name.begin(), _data_name.end(), std::string{}), forecasted_values}};
+        else {
+            if (_latent_variables.get_estimation_method() != "M-H") {
+                sim_values = sim_prediction_bayes(5, 15000);
+                for (Eigen::Index i{0}; i < sim_values.rows(); i++) {
+                    prediction_01[i] = (percentile(sim_values.row(i), 1));
+                    prediction_05[i] = (percentile(sim_values.row(i), 5));
+                    prediction_95[i] = (percentile(sim_values.row(i), 95));
+                    prediction_99[i] = (percentile(sim_values.row(i), 99));
+                }
+            }
+            Eigen::MatrixXd r(5, sim_values.rows());
+            r << forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
+            r = r.transpose();
+            std::string names[]{std::accumulate(_data_name.begin(), _data_name.end(), std::string{}),
+                                "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
+                                "99% Prediction Interval"};
+            for (Eigen::Index i{0}; i < r.rows(); i++) {
+                result.first.insert({names[i], r.row(i)});
+            }
+        }
+    }
+    std::copy(date_index.end() - static_cast<long>(h), date_index.end(), std::back_inserter(result.second));
+
+    return result;
+}
 
 Eigen::MatrixXd ARIMA::sample(size_t nsims) {
-    assert(_latent_variables.get_estimation_method() == "BBVI" ||
-    _latent_variables.get_estimation_method() == "M-H");
+    assert(_latent_variables.get_estimation_method() == "BBVI" || _latent_variables.get_estimation_method() == "M-H");
     Eigen::MatrixXd lv_draws = draw_latent_variables(nsims);
     std::vector<Eigen::VectorXd> mus;
-    for (size_t i = 0; i < nsims; i++)
+    for (Eigen::Index i = 0; i < nsims; i++)
         mus.push_back(std::get<0>(model(lv_draws.col(i))));
 
     auto model_scale_shape_skew = get_scale_and_shape_sim(lv_draws);
     Eigen::VectorXd temp_mus(mus[0].size());
     Eigen::MatrixXd data_draws;
-    for (size_t i = 0; i < nsims; i++) {
+    for (Eigen::Index i = 0; i < nsims; i++) {
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
-        data_draws.row(i) = _family->draw_variable( temp_mus,
-                                                    std::get<0>(model_scale_shape_skew)[i],
-                                                    std::get<1>(model_scale_shape_skew)[i],
-                                                    std::get<2>(model_scale_shape_skew)[i],
-                                                    mus.at(i).size());
+        data_draws.row(i) = _family->draw_variable(
+                temp_mus, std::get<0>(model_scale_shape_skew)[i], std::get<1>(model_scale_shape_skew)[i],
+                std::get<2>(model_scale_shape_skew)[i], static_cast<int>(mus.at(i).size()));
     }
 
     return std::move(data_draws);

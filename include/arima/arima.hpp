@@ -347,7 +347,7 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    std::pair<std::map<std::string, std::vector<double>>, std::vector<double>>
+    std::pair<std::map<std::string, Eigen::MatrixXd>, std::vector<double>>
     predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE", bool intervals = false);
 
     /**
@@ -358,7 +358,7 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_predict_is(size_t h = 5, bool fit_once = true, std::string fit_method = "MLE",
+    void plot_predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
                          std::optional<size_t> width = 10, std::optional<size_t> height = 7);
 
     /**
@@ -367,7 +367,8 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    std::vector<double> predict(size_t h = 5, bool intervals = false);
+    std::pair<std::map<std::string, Eigen::VectorXd>, std::vector<double>> predict(size_t h       = 5,
+                                                                                   bool intervals = false);
 
     /**
      * @brief Samples from the posterior predictive distribution
