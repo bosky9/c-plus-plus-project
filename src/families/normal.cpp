@@ -95,6 +95,20 @@ Eigen::VectorXd Normal::draw_variable(double loc, double scale, double shape, do
     return sims;
 }
 
+
+Eigen::VectorXd Normal::draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness, int nsims) {
+    assert(loc.size() == nsims);
+ // Uses the normal library function
+    Eigen::VectorXd sims(nsims);
+    std::random_device rd{};
+    std::mt19937 gen{rd()};
+    for (Eigen::Index n = 0; n < nsims; n++) {
+        std::normal_distribution<double> my_normal{loc[n], scale}; //sto male
+        sims[n] = my_normal(gen);
+    }
+    return sims;
+}
+
 Eigen::VectorXd Normal::draw_variable_local(size_t size) const {
     return Mvn::random(_mu0, _sigma0, size);
 }

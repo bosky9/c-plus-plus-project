@@ -121,6 +121,9 @@ public:
      */
     Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness, int nsims) override;
 
+    Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness, int nsims) override;
+
+
     /**
      * @brief Wrapper function for changing latent variables for variational inference
      * @param size How many simulations to perform
@@ -166,7 +169,6 @@ public:
      *
      * @details Since the attributes link, mean_transform
      *          are np.array in the original code,
-     *          we could not get what their purpose was;
      *          we translated them as y = x functions.
      */
     [[nodiscard]] FamilyAttributes setup() const override;

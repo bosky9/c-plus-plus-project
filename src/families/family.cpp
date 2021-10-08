@@ -146,6 +146,10 @@ Eigen::VectorXd Family::draw_variable(double loc, double scale, double shape, do
     return {};
 }
 
+Eigen::VectorXd Family::draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness, int nsims) {
+    return {};
+}
+
 Eigen::VectorXd Family::draw_variable_local(size_t size) const {
     return {};
 }

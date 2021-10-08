@@ -149,6 +149,9 @@ public:
     [[nodiscard]] virtual Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness,
                                                         int nsims);
 
+    [[nodiscard]] virtual Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness,
+                                                        int nsims);
+
     /**
      * @brief Wrapper function for changing latent variables for variational inference
      * @param size How many simulations to perform
