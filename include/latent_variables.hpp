@@ -233,8 +233,10 @@ public:
      *              x*y*...*z
      *          6 lists in the e.g.
      *
-     *          For the first position, there are three 0, three 1.
+     *          For the first position, there are two 1 two 2 two 3.
      *          Basically, it is, upper approximated,
+     *          given that (6/3 = 2), -> (index / (6/3))
+     *          since we want to split the whole set in three parts,
      *          (1/2 = 1, ...)
      *          (2/2 = 1, ...)
      *          (3/2 = 2, ...)
@@ -243,7 +245,10 @@ public:
      *          (6/2 = 3, ...)
      *
      *          For the second position, each first position has either another 0 or 1;
-     *          this mean
+     *          We are now dealing with 3 sets of two components,
+     *          and our current number is [-,2];
+     *          -> (index / (2 / 2))
+     *          so this mean
      *          (1, 1/1 = 1)
      *          (1, 2/1 = 2)
      *          (2, 1/1 = 1)
@@ -252,11 +257,14 @@ public:
      *          (3, 2/1 = 2)
      *
      *          Please notice that at each position x(i) the number by which we divide is
-     *          1 * x(i+1) * x(i+2) * ... * x(end)
+     *          the number necessary to split the set in x(i) parts.
+     *          This can both be obtained by division with (number_of_current_elements / x(i)),
+     *          or by multiplication of x(i+1) * x(i+2) * ... * 1)
      *
-     *          While the index ranges from 1 to (previous num of indexes / previous x(i)).
-     *          At 0 -> 6 (total) / 1 = 6, init
-     *          At 1 -> 6 (previous value)/ 3  (previous num of dims) = 2
+     *          While the index ranges from 1 to number_of_current_elements,
+     *          which is (previous num of indexes / previous x(i)).
+     *          At position 0 -> [6 (total) / 1] = 6, init
+     *          At position 1 -> [6 (previous value)/ 3  (previous num of dims)] = 2
      */
     void create(const std::string& name, const std::vector<size_t>& dim, Family& q, Family& prior);
 
