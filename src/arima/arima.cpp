@@ -696,16 +696,16 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
 }
 
 
-std::pair<std::map<std::string, Eigen::MatrixXd>, std::vector<double>>
+std::tuple<std::vector<Eigen::MatrixXd>, std::vector<double>, std::vector<std::string>>
 ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool intervals) {
-    std::map<std::string, Eigen::MatrixXd> predictions;
+    std::tuple<std::vector<Eigen::MatrixXd>, std::vector<double>, std::vector<std::string>> predictions;
     LatentVariables saved_lvs{""};
 
     std::string names[]{std::accumulate(_data_name.begin(), _data_name.end(), std::string{}), "1% Prediction Interval",
                         "5% Prediction Interval", "95% Prediction Interval", "99% Prediction Interval"};
 
     std::vector<double> data_original_t, index;
-    std::pair<std::map<std::string, Eigen::VectorXd>, std::vector<double>> new_prediction;
+    std::tuple<std::vector<Eigen::VectorXd>, std::vector<double>, std::vector<std::string>> new_prediction;
     for (Eigen::Index t{0}; t < h; t++) {
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
@@ -723,13 +723,16 @@ ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool i
                 x._latent_variables = saved_lvs;
         }
         new_prediction = x.predict(1, intervals);
-        for (auto it{new_prediction.first.begin()}; it != new_prediction.first.end(); it++)
-            predictions[it->first].row(t) = it->second;
+        for (size_t i{0}; i < std::get<1>(new_prediction).size(); i++) {
+            if (t == 0)
+                std::get<0>(predictions)[i] = Eigen::MatrixXd(t, std::get<0>(new_prediction)[i].size());
+            std::get<0>(predictions)[i].row(t) = std::get<0>(new_prediction)[i];
+        }
     }
 
-    std::copy(_index.end() - static_cast<long>(h), _index.end(), std::back_inserter(index));
+    std::copy(_index.end() - static_cast<long>(h), _index.end(), std::back_inserter(std::get<1>(predictions)));
 
-    return {predictions, index};
+    return predictions;
 }
 
 void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_method, std::optional<size_t> width,
@@ -738,11 +741,13 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     auto predictions{predict_is(h, fit_once, fit_method)};
     std::vector<double> data;
     std::copy(_data.end() - static_cast<long>(h), _data.end(), std::back_inserter(data));
-    plt::named_plot("Data", predictions.second, data);
-    for (auto it{predictions.first.begin()}; it != predictions.first.end(); it++) {
-        for (Eigen::Index i{0}; i < it->second.rows(); i++)
-            plt::named_plot("Predictions", predictions.second,
-                            std::vector<double>(&it->second.row(i)[0], it->second.row(i).data()), "k");
+    plt::named_plot("Data", std::get<1>(predictions), data);
+    for (size_t i{0}; i < std::get<2>(predictions).size(); i++) {
+        for (Eigen::Index j{0}; j < std::get<0>(predictions)[i].rows(); j++)
+            plt::named_plot("Predictions", std::get<1>(predictions),
+                            std::vector<double>(&std::get<0>(predictions)[i].row(j)[0],
+                                                std::get<0>(predictions)[i].row(j).data()),
+                            "k");
     }
     plt::title(std::accumulate(_data_name.begin(), _data_name.end(), std::string{}));
     plt::legend({{"loc", "2"}});
@@ -750,14 +755,15 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     // plt::show();
 }
 
-std::pair<std::map<std::string, Eigen::VectorXd>, std::vector<double>> ARIMA::predict(size_t h, bool intervals) {
+std::tuple<std::vector<Eigen::VectorXd>, std::vector<double>, std::vector<std::string>> ARIMA::predict(size_t h,
+                                                                                                       bool intervals) {
     assert(_latent_variables.is_estimated() && "No latent variables estimated!");
 
     auto mu_Y{model(_latent_variables.get_z_values())};
     std::vector<double> date_index{shift_dates(h)};
 
     Eigen::MatrixXd sim_values;
-    std::pair<std::map<std::string, Eigen::VectorXd>, std::vector<double>> result;
+    std::tuple<std::vector<Eigen::VectorXd>, std::vector<double>, std::vector<std::string>> result;
     Eigen::VectorXd forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
     if (_latent_variables.get_estimation_method() == "M-H") {
         sim_values = sim_prediction_bayes(5, 15000);
@@ -789,9 +795,10 @@ std::pair<std::map<std::string, Eigen::VectorXd>, std::vector<double>> ARIMA::pr
         } else
             std::copy(mean_values.end() - static_cast<long>(h), mean_values.end(), forecasted_values.begin());
 
-        if (!intervals)
-            result.first = {{std::accumulate(_data_name.begin(), _data_name.end(), std::string{}), forecasted_values}};
-        else {
+        if (!intervals) {
+            std::get<0>(result).push_back(forecasted_values);
+            std::get<2>(result).push_back(std::accumulate(_data_name.begin(), _data_name.end(), std::string{}));
+        } else {
             if (_latent_variables.get_estimation_method() != "M-H") {
                 sim_values = sim_prediction_bayes(5, 15000);
                 for (Eigen::Index i{0}; i < sim_values.rows(); i++) {
@@ -808,11 +815,12 @@ std::pair<std::map<std::string, Eigen::VectorXd>, std::vector<double>> ARIMA::pr
                                 "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
                                 "99% Prediction Interval"};
             for (Eigen::Index i{0}; i < r.rows(); i++) {
-                result.first.insert({names[i], r.row(i)});
+                std::get<0>(result).push_back(r.row(i));
+                std::get<2>(result).push_back(names[i]);
             }
         }
     }
-    std::copy(date_index.end() - static_cast<long>(h), date_index.end(), std::back_inserter(result.second));
+    std::copy(date_index.end() - static_cast<long>(h), date_index.end(), std::back_inserter(std::get<1>(result)));
 
     return result;
 }

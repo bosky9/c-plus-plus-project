@@ -347,7 +347,7 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    std::pair<std::map<std::string, Eigen::MatrixXd>, std::vector<double>>
+    std::tuple<std::vector<Eigen::MatrixXd>, std::vector<double>, std::vector<std::string>>
     predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE", bool intervals = false);
 
     /**
@@ -367,8 +367,8 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    std::pair<std::map<std::string, Eigen::VectorXd>, std::vector<double>> predict(size_t h       = 5,
-                                                                                   bool intervals = false);
+    std::tuple<std::vector<Eigen::VectorXd>, std::vector<double>, std::vector<std::string>>
+    predict(size_t h = 5, bool intervals = false);
 
     /**
      * @brief Samples from the posterior predictive distribution
