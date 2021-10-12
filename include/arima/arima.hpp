@@ -25,6 +25,21 @@ inline double mean(Eigen::VectorXd v) {
     return std::accumulate(v.begin(), v.end(), 0.0) / static_cast<double>(v.size());
 }
 
+inline double median(Eigen::VectorXd v) {
+    Eigen::Index n{v.size() / 2};
+    std::nth_element(v.begin(), v.begin() + n, v.end());
+    return v[n];
+}
+
+inline double max(Eigen::VectorXd v) {
+    return *std::max_element(v.begin(), v.end());
+}
+
+
+inline double min(Eigen::VectorXd v) {
+    return *std::min_element(v.begin(), v.end());
+}
+
 inline std::vector<double> diff(const std::vector<double>& v) {
     std::vector<double> new_v(v.size() - 1);
     for (size_t i{0}; i < new_v.size(); i++)
@@ -393,7 +408,7 @@ public:
      * @param T A discrepancy measure - e.g. mean, std or max
      * @return Posterior predictive p-value
      */
-    double ppc(size_t nsims = 1000, std::function<double(Eigen::VectorXd)> T = mean);
+    double ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = mean);
 
     /**
      * @brief Plots histogram of the discrepancy from draws of the posterior
@@ -402,6 +417,6 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_ppc(size_t nsims = 1000, std::function<double(Eigen::VectorXd)> T = mean,
-                  std::optional<size_t> width = 10, std::optional<size_t> height = 7);
+    void plot_ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = mean,
+                  std::string T_name = "mean", std::optional<size_t> width = 10, std::optional<size_t> height = 7);
 };

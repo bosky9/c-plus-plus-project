@@ -116,7 +116,8 @@ ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::
 }
 
 Eigen::MatrixXd ARIMA::ar_matrix() {
-    Eigen::MatrixXd X{Eigen::MatrixXd::Zero(_ar, static_cast<Eigen::Index>(_data_length - _max_lag))};
+    Eigen::MatrixXd X{
+            Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(_ar), static_cast<Eigen::Index>(_data_length - _max_lag))};
 
     if (_ar != 0) {
         for (Eigen::Index i{0}; i < _ar; i++)
@@ -826,21 +827,129 @@ std::tuple<std::vector<Eigen::VectorXd>, std::vector<double>, std::vector<std::s
 }
 
 Eigen::MatrixXd ARIMA::sample(size_t nsims) {
-    assert(_latent_variables.get_estimation_method() == "BBVI" || _latent_variables.get_estimation_method() == "M-H");
-    Eigen::MatrixXd lv_draws = draw_latent_variables(nsims);
+    assert((_latent_variables.get_estimation_method() == "BBVI" ||
+            _latent_variables.get_estimation_method() == "M-H") &&
+           "No latent variables estimated!");
+    Eigen::MatrixXd lv_draws{draw_latent_variables(nsims)};
     std::vector<Eigen::VectorXd> mus;
-    for (Eigen::Index i = 0; i < nsims; i++)
-        mus.push_back(std::get<0>(model(lv_draws.col(i))));
+    for (Eigen::Index i{0}; i < nsims; i++)
+        mus.push_back(model(lv_draws.col(i)).first);
 
-    auto model_scale_shape_skew = get_scale_and_shape_sim(lv_draws);
     Eigen::VectorXd temp_mus(mus[0].size());
-    Eigen::MatrixXd data_draws;
-    for (Eigen::Index i = 0; i < nsims; i++) {
+    Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
+    for (Eigen::Index i{0}; i < nsims; i++) {
+        auto scale_shape_skew{get_scale_and_shape(lv_draws.row(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
-        data_draws.row(i) = _family->draw_variable(
-                temp_mus, std::get<0>(model_scale_shape_skew)[i], std::get<1>(model_scale_shape_skew)[i],
-                std::get<2>(model_scale_shape_skew)[i], static_cast<int>(mus.at(i).size()));
+        data_draws.row(i) =
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew),
+                                       std::get<2>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
     }
 
     return std::move(data_draws);
+}
+
+void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> width, std::optional<size_t> height) {
+    assert((_latent_variables.get_estimation_method() == "BBVI" ||
+            _latent_variables.get_estimation_method() == "M-H") &&
+           "No latent variables estimated!");
+
+    plt::figure_size(width.value(), height.value());
+    std::vector<double> date_index;
+    std::copy(_index.begin() + static_cast<long>(std::max(_ar, _ma)), _index.begin() + static_cast<long>(_data_length),
+              std::back_inserter(date_index));
+    auto mu_Y = model(_latent_variables.get_z_values());
+    Eigen::MatrixXd draws{sample(nsims).transpose()};
+    for (Eigen::Index i{0}; i < draws.rows(); i++)
+        plt::named_plot("Posterior Draws", date_index,
+                        std::vector<double>(&draws.row(i)[0],
+                                            draws.row(i).data())); // FIXME: alpha = 1.0 parameter only in hist method
+    if (plot_data)
+        plt::named_plot("Data", date_index, std::vector<double>(&mu_Y.second[0], mu_Y.second.data()),
+                        "sk"); // FIXME: alpha = 0.5 parameter only in hist method
+    plt::title(std::accumulate(_data_name.begin(), _data_name.end(), std::string{}));
+    plt::save("../data/arima/plot_sample.png");
+    // plt::show();
+}
+
+double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T) {
+    assert((_latent_variables.get_estimation_method() == "BBVI" ||
+            _latent_variables.get_estimation_method() == "M-H") &&
+           "No latent variables estimated!");
+
+    Eigen::MatrixXd lv_draws{draw_latent_variables(nsims)};
+    std::vector<Eigen::VectorXd> mus;
+    for (Eigen::Index i{0}; i < nsims; i++)
+        mus.push_back(model(lv_draws.col(i)).first);
+
+    Eigen::VectorXd temp_mus(mus.at(0).size());
+    Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
+    for (Eigen::Index i{0}; i < nsims; i++) {
+        auto scale_shape_skew{get_scale_and_shape(lv_draws.row(i))};
+        std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
+        data_draws.row(i) =
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew),
+                                       std::get<2>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
+    }
+
+    Eigen::Matrix sample_data{sample(nsims)};
+    std::vector<double> T_sims;
+    for (Eigen::Index i{0}; i < sample_data.cols(); i++)
+        T_sims.push_back(T(sample_data.col(i)));
+    double T_actual{T(Eigen::VectorXd(_data.size(), _data.size()))};
+
+    std::vector<double> T_sims_greater;
+    for (size_t i{0}; i < T_sims.size(); i++) {
+        if (T_sims.at(i) > T_actual)
+            T_sims_greater.push_back(T_sims.at(i));
+    }
+
+    return static_cast<double>(T_sims_greater.size()) / nsims;
+}
+
+void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T, std::string T_name,
+                     std::optional<size_t> width, std::optional<size_t> height) {
+    assert((_latent_variables.get_estimation_method() == "BBVI" ||
+            _latent_variables.get_estimation_method() == "M-H") &&
+           "No latent variables estimated!");
+
+    Eigen::MatrixXd lv_draws{draw_latent_variables(nsims)};
+    std::vector<Eigen::VectorXd> mus;
+    for (Eigen::Index i{0}; i < nsims; i++)
+        mus.push_back(model(lv_draws.col(i)).first);
+
+    Eigen::VectorXd temp_mus(mus.at(0).size());
+    Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
+    for (Eigen::Index i{0}; i < nsims; i++) {
+        auto scale_shape_skew{get_scale_and_shape(lv_draws.row(i))};
+        std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
+        data_draws.row(i) =
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew),
+                                       std::get<2>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
+    }
+
+    Eigen::Matrix sample_data{sample(nsims)};
+    std::vector<double> T_sims;
+    for (Eigen::Index i{0}; i < sample_data.cols(); i++)
+        T_sims.push_back(T(sample_data.col(i)));
+    double T_actual{T(Eigen::VectorXd(_data.size(), _data.size()))};
+
+    std::string description;
+    if (T_name == "mean")
+        description = " of the mean";
+    else if (T_name == "max")
+        description = " of the maximum";
+    else if (T_name == "min")
+        description = " of the minimum";
+    else if (T_name == "median")
+        description = " of the median";
+
+    plt::figure_size(width.value(), height.value());
+    plt::subplot(1, 1, 1);
+    plt::axvline(T_actual);
+    plt::plot(T_sims);
+    plt::title("Posterior predictive" + description);
+    plt::xlabel("T(x)");
+    plt::ylabel("Frequency");
+    plt::save("../data/arima/plot_ppc.png");
+    // plt::show();
 }
