@@ -1,7 +1,5 @@
 #include "arima/arima.hpp"
 
-#include "multivariate_normal.hpp"
-
 ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ,
              Family* family)
     : TSM{"ARIMA"} {
@@ -18,16 +16,17 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
 
     // Format the data
     SingleDataFrame checked_data = data_check(data, index);
-    _data_frame.data       = checked_data.data;
-    _data_frame.data_name  = checked_data.data_name;
-    _data_frame.index      = checked_data.index;
-    _data_original         = _data_frame.data;
+    _data_frame.data             = checked_data.data;
+    _data_frame.data_name        = checked_data.data_name;
+    _data_frame.index            = checked_data.index;
+    _data_original               = _data_frame.data;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
         _data_frame.data = diff(_data_frame.data);
-    _data_frame.data_name.at(0) = "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
-    _data_length     = _data_frame.data.size();
+    _data_frame.data_name.at(0) =
+            "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
+    _data_length = _data_frame.data.size();
 
     _x = ar_matrix();
     create_latent_variables();
@@ -53,15 +52,13 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
     }
     _latent_variables.set_z_starting_value(
             0, _mean_transform(static_cast<double>(std::reduce(_data_frame.data.begin(), _data_frame.data.end())) /
-            static_cast<double>(_data_frame.data.size())));
+                               static_cast<double>(_data_frame.data.size())));
 
     _family_z_no = lvs.size();
     _z_no        = _latent_variables.get_z_list().size();
 }
 
-ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Family* family) :
-      TSM{"ARIMA"}
-{
+ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Family* family) : TSM{"ARIMA"} {
     // Latent Variable information
     _ar                 = ar;
     _ma                 = ma;
@@ -75,16 +72,17 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Fa
 
     // Format the data
     SingleDataFrame checked_data = data_check(data_frame);
-    _data_frame.data       = checked_data.data;
-    _data_frame.data_name  = checked_data.data_name;
-    _data_frame.index      = checked_data.index;
-    _data_original         = _data_frame.data;
+    _data_frame.data             = checked_data.data;
+    _data_frame.data_name        = checked_data.data_name;
+    _data_frame.index            = checked_data.index;
+    _data_original               = _data_frame.data;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
         _data_frame.data = diff(_data_frame.data);
-    _data_frame.data_name.at(0) = "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
-    _data_length     = _data_frame.data.size();
+    _data_frame.data_name.at(0) =
+            "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
+    _data_length = _data_frame.data.size();
 
     _x = ar_matrix();
     create_latent_variables();
@@ -99,7 +97,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Fa
     _mean_transform     = fa.mean_transform;
     _cythonized         = fa.cythonized;
     _model_name         = _model_name2 + " ARIMA(" + std::to_string(_ar) + "," + std::to_string(_integ) + "," +
-            std::to_string(_ma) + ")";
+                  std::to_string(_ma) + ")";
 
     // Build any remaining latent variables that are specific to the family chosen
     std::vector<lv_to_build> lvs = _family->build_latent_variables();
@@ -110,7 +108,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Fa
     }
     _latent_variables.set_z_starting_value(
             0, _mean_transform(static_cast<double>(std::reduce(_data_frame.data.begin(), _data_frame.data.end())) /
-            static_cast<double>(_data_frame.data.size())));
+                               static_cast<double>(_data_frame.data.size())));
 
     _family_z_no = lvs.size();
     _z_no        = _latent_variables.get_z_list().size();
@@ -132,15 +130,16 @@ ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::
 
     // Format the data
     SingleDataFrame checked_data = data_check(data, index, target);
-    _data_frame.data       = checked_data.data;
-    _data_frame.data_name  = checked_data.data_name;
-    _data_frame.index      = checked_data.index;
+    _data_frame.data             = checked_data.data;
+    _data_frame.data_name        = checked_data.data_name;
+    _data_frame.index            = checked_data.index;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
         _data_frame.data = diff(_data_frame.data);
-    _data_frame.data_name.at(0) = "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
-    _data_length     = _data_frame.data.size();
+    _data_frame.data_name.at(0) =
+            "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
+    _data_length = _data_frame.data.size();
 
     _x = ar_matrix();
     create_latent_variables();
@@ -166,14 +165,14 @@ ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::
     }
     _latent_variables.set_z_starting_value(
             0, _mean_transform(static_cast<double>(std::reduce(_data_frame.data.begin(), _data_frame.data.end())) /
-            static_cast<double>(_data_frame.data.size())));
+                               static_cast<double>(_data_frame.data.size())));
 
     _family_z_no = lvs.size();
     _z_no        = _latent_variables.get_z_list().size();
 }
 
 ARIMA::ARIMA(const DataFrame& data_frame, const std::string& target, size_t ar, size_t ma, size_t integ, Family* family)
-             : TSM{"ARIMA"} {
+    : TSM{"ARIMA"} {
     // Latent Variable information
     _ar                 = ar;
     _ma                 = ma;
@@ -187,15 +186,16 @@ ARIMA::ARIMA(const DataFrame& data_frame, const std::string& target, size_t ar, 
 
     // Format the data
     SingleDataFrame checked_data = data_check(data_frame, target);
-    _data_frame.data       = checked_data.data;
-    _data_frame.data_name  = checked_data.data_name;
-    _data_frame.index      = checked_data.index;
+    _data_frame.data             = checked_data.data;
+    _data_frame.data_name        = checked_data.data_name;
+    _data_frame.index            = checked_data.index;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
         _data_frame.data = diff(_data_frame.data);
-    _data_frame.data_name.at(0) = "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
-    _data_length     = _data_frame.data.size();
+    _data_frame.data_name.at(0) =
+            "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
+    _data_length = _data_frame.data.size();
 
     _x = ar_matrix();
     create_latent_variables();
@@ -210,7 +210,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, const std::string& target, size_t ar, 
     _mean_transform     = fa.mean_transform;
     _cythonized         = fa.cythonized;
     _model_name         = _model_name2 + " ARIMA(" + std::to_string(_ar) + "," + std::to_string(_integ) + "," +
-            std::to_string(_ma) + ")";
+                  std::to_string(_ma) + ")";
 
     // Build any remaining latent variables that are specific to the family chosen
     std::vector<lv_to_build> lvs = _family->build_latent_variables();
@@ -221,7 +221,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, const std::string& target, size_t ar, 
     }
     _latent_variables.set_z_starting_value(
             0, _mean_transform(static_cast<double>(std::reduce(_data_frame.data.begin(), _data_frame.data.end())) /
-            static_cast<double>(_data_frame.data.size())));
+                               static_cast<double>(_data_frame.data.size())));
 
     _family_z_no = lvs.size();
     _z_no        = _latent_variables.get_z_list().size();
@@ -233,7 +233,8 @@ Eigen::MatrixXd ARIMA::ar_matrix() {
 
     if (_ar != 0) {
         for (Eigen::Index i{0}; i < _ar; i++)
-            std::copy(_data_frame.data.begin() + _max_lag - i - 1, _data_frame.data.end() - i - 1, X.row(i + 1).begin());
+            std::copy(_data_frame.data.begin() + _max_lag - i - 1, _data_frame.data.end() - i - 1,
+                      X.row(i + 1).begin());
     }
 
     return X;
@@ -694,8 +695,8 @@ ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::Ma
 void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) const {
     plt::figure_size(width.value(), height.value());
     std::vector<double> date_index;
-    std::copy(_data_frame.index.begin() + static_cast<long>(std::max(_ar, _ma)), _data_frame.index.begin() + static_cast<long>(_data_length),
-              std::back_inserter(date_index));
+    std::copy(_data_frame.index.begin() + static_cast<long>(std::max(_ar, _ma)),
+              _data_frame.index.begin() + static_cast<long>(_data_length), std::back_inserter(date_index));
     auto mu_Y = model(_latent_variables.get_z_values());
 
     // Catch specific family properties (imply different link functions/moments)
@@ -800,7 +801,8 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
         }
 
         plt::plot(plot_index, plot_values);
-        plt::title("Forecast for " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
+        plt::title("Forecast for " +
+                   std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
         plt::xlabel("Time");
         plt::ylabel(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
         plt::save("../data/arima/plot_predict.png");
@@ -809,16 +811,16 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
 }
 
 
-std::tuple<std::vector<Eigen::MatrixXd>, std::vector<double>, std::vector<std::string>>
-ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool intervals) {
-    std::tuple<std::vector<Eigen::MatrixXd>, std::vector<double>, std::vector<std::string>> predictions;
+DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool intervals) {
+    DataFrame predictions;
     LatentVariables saved_lvs{""};
 
-    std::string names[]{std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}), "1% Prediction Interval",
-                        "5% Prediction Interval", "95% Prediction Interval", "99% Prediction Interval"};
+    std::string names[]{std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}),
+                        "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
+                        "99% Prediction Interval"};
 
     std::vector<double> data_original_t, index;
-    std::tuple<std::vector<Eigen::VectorXd>, std::vector<double>, std::vector<std::string>> new_prediction;
+    DataFrame new_prediction;
     for (Eigen::Index t{0}; t < h; t++) {
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
@@ -836,14 +838,12 @@ ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool i
                 x._latent_variables = saved_lvs;
         }
         new_prediction = x.predict(1, intervals);
-        for (size_t i{0}; i < std::get<1>(new_prediction).size(); i++) {
-            if (t == 0)
-                std::get<0>(predictions)[i] = Eigen::MatrixXd(t, std::get<0>(new_prediction)[i].size());
-            std::get<0>(predictions)[i].row(t) = std::get<0>(new_prediction)[i];
-        }
+        for (size_t i{0}; i < new_prediction.data_name.size(); i++)
+            predictions.data[i].insert(predictions.data[i].end(), new_prediction.data[i].begin(),
+                                       new_prediction.data[i].end());
     }
 
-    std::copy(_data_frame.index.end() - static_cast<long>(h), _data_frame.index.end(), std::back_inserter(std::get<1>(predictions)));
+    std::copy(_data_frame.index.end() - static_cast<long>(h), _data_frame.index.end(), predictions.index.begin());
 
     return predictions;
 }
@@ -854,32 +854,26 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     auto predictions{predict_is(h, fit_once, fit_method)};
     std::vector<double> data;
     std::copy(_data_frame.data.end() - static_cast<long>(h), _data_frame.data.end(), std::back_inserter(data));
-    plt::named_plot("Data", std::get<1>(predictions), data);
-    for (size_t i{0}; i < std::get<2>(predictions).size(); i++) {
-        for (Eigen::Index j{0}; j < std::get<0>(predictions)[i].rows(); j++)
-            plt::named_plot("Predictions", std::get<1>(predictions),
-                            std::vector<double>(&std::get<0>(predictions)[i].row(j)[0],
-                                                std::get<0>(predictions)[i].row(j).data()),
-                            "k");
-    }
+    plt::named_plot("Data", predictions.index, data);
+    for (size_t i{0}; i < predictions.data_name.size(); i++)
+        plt::named_plot("Predictions", predictions.index, predictions.data[i], "k");
     plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
     plt::legend({{"loc", "2"}});
     plt::save("../data/arima/plot_predict_is.png");
     // plt::show();
 }
 
-std::tuple<std::vector<Eigen::VectorXd>, std::vector<double>, std::vector<std::string>> ARIMA::predict(size_t h,
-                                                                                                       bool intervals) {
+DataFrame ARIMA::predict(size_t h, bool intervals) {
     assert(_latent_variables.is_estimated() && "No latent variables estimated!");
 
     auto mu_Y{model(_latent_variables.get_z_values())};
     std::vector<double> date_index{shift_dates(h)};
 
     Eigen::MatrixXd sim_values;
-    std::tuple<std::vector<Eigen::VectorXd>, std::vector<double>, std::vector<std::string>> result;
+    DataFrame result;
     Eigen::VectorXd forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
     if (_latent_variables.get_estimation_method() == "M-H") {
-        sim_values = sim_prediction_bayes(5, 15000);
+        sim_values = sim_prediction_bayes(h, 15000);
         for (Eigen::Index i{0}; i < sim_values.rows(); i++) {
             forecasted_values[i] = (mean(sim_values.row(i)));
             prediction_01[i]     = (percentile(sim_values.row(i), 1));
@@ -907,33 +901,33 @@ std::tuple<std::vector<Eigen::VectorXd>, std::vector<double>, std::vector<std::s
                            [additional_loc](double x) { return x + additional_loc; });
         } else
             std::copy(mean_values.end() - static_cast<long>(h), mean_values.end(), forecasted_values.begin());
-
-        if (!intervals) {
-            std::get<0>(result).push_back(forecasted_values);
-            std::get<2>(result).push_back(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
-        } else {
-            if (_latent_variables.get_estimation_method() != "M-H") {
-                sim_values = sim_prediction_bayes(5, 15000);
-                for (Eigen::Index i{0}; i < sim_values.rows(); i++) {
-                    prediction_01[i] = (percentile(sim_values.row(i), 1));
-                    prediction_05[i] = (percentile(sim_values.row(i), 5));
-                    prediction_95[i] = (percentile(sim_values.row(i), 95));
-                    prediction_99[i] = (percentile(sim_values.row(i), 99));
-                }
-            }
-            Eigen::MatrixXd r(5, sim_values.rows());
-            r << forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
-            r = r.transpose();
-            std::string names[]{std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}),
-                                "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
-                                "99% Prediction Interval"};
-            for (Eigen::Index i{0}; i < r.rows(); i++) {
-                std::get<0>(result).push_back(r.row(i));
-                std::get<2>(result).push_back(names[i]);
+    }
+    if (!intervals) {
+        result.data.push_back(std::vector<double>(&forecasted_values[0], forecasted_values.data()));
+        result.data_name.push_back(
+                std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
+    } else {
+        if (_latent_variables.get_estimation_method() != "M-H") {
+            sim_values = sim_prediction_bayes(5, 15000);
+            for (Eigen::Index i{0}; i < sim_values.rows(); i++) {
+                prediction_01[i] = (percentile(sim_values.row(i), 1));
+                prediction_05[i] = (percentile(sim_values.row(i), 5));
+                prediction_95[i] = (percentile(sim_values.row(i), 95));
+                prediction_99[i] = (percentile(sim_values.row(i), 99));
             }
         }
+        Eigen::MatrixXd r(5, sim_values.rows());
+        r << forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
+        r = r.transpose();
+        std::string names[]{std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}),
+                            "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
+                            "99% Prediction Interval"};
+        for (Eigen::Index i{0}; i < r.rows(); i++) {
+            result.data.push_back(std::vector<double>(&r.row(i)[0], r.row(i).data()));
+            result.data_name.insert(result.data_name.end(), &names[0], &names[h - 1]);
+        }
     }
-    std::copy(date_index.end() - static_cast<long>(h), date_index.end(), std::back_inserter(std::get<1>(result)));
+    std::copy(date_index.end() - static_cast<long>(h), date_index.end(), result.index.begin());
 
     return result;
 }
@@ -967,8 +961,8 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
 
     plt::figure_size(width.value(), height.value());
     std::vector<double> date_index;
-    std::copy(_data_frame.index.begin() + static_cast<long>(std::max(_ar, _ma)), _data_frame.index.begin() + static_cast<long>(_data_length),
-              std::back_inserter(date_index));
+    std::copy(_data_frame.index.begin() + static_cast<long>(std::max(_ar, _ma)),
+              _data_frame.index.begin() + static_cast<long>(_data_length), std::back_inserter(date_index));
     auto mu_Y = model(_latent_variables.get_z_values());
     Eigen::MatrixXd draws{sample(nsims).transpose()};
     for (Eigen::Index i{0}; i < draws.rows(); i++)
@@ -978,7 +972,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
     if (plot_data)
         plt::named_plot("Data", date_index, std::vector<double>(&mu_Y.second[0], mu_Y.second.data()),
                         "sk"); // FIXME: alpha = 0.5 parameter only in hist method
-                        plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
+    plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
     plt::save("../data/arima/plot_sample.png");
     // plt::show();
 }

@@ -92,9 +92,10 @@ LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& 
     _latent_variables.set_estimation_method("Laplace");
     ModelOutput output{categorize_model_output(_latent_variables.get_z_values())};
 
-    return new LaplaceResults(_data_frame.data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, output.Y,
-                              _data_frame.index, _multivariate_model, obj_type, "Laplace", _z_hide, _max_lag, y->get_ihessian(),
-                              output.theta, output.scores, output.states, output.states_var);
+    return new LaplaceResults(_data_frame.data_name, output.X_names.value(), _model_name, _model_type,
+                              _latent_variables, output.Y, _data_frame.index, _multivariate_model, obj_type, "Laplace",
+                              _z_hide, _max_lag, y->get_ihessian(), output.theta, output.scores, output.states,
+                              output.states_var);
 }
 
 MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool printer, const std::string& method,
@@ -139,10 +140,10 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
 
     ModelOutput output{categorize_model_output(sample.mean_est)};
 
-    return new MCMCResults(_data_frame.data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, output.Y,
-                           _data_frame.index, _multivariate_model, _neg_logposterior, "Metropolis Hastings", _z_hide, _max_lag,
-                           sample.chain, sample.mean_est, sample.median_est, sample.upper_95_est, sample.lower_95_est,
-                           output.theta, output.scores, output.states, output.states_var);
+    return new MCMCResults(_data_frame.data_name, output.X_names.value(), _model_name, _model_type, _latent_variables,
+                           output.Y, _data_frame.index, _multivariate_model, _neg_logposterior, "Metropolis Hastings",
+                           _z_hide, _max_lag, sample.chain, sample.mean_est, sample.median_est, sample.upper_95_est,
+                           sample.lower_95_est, output.theta, output.scores, output.states, output.states_var);
 }
 
 MLEResults* TSM::_ols_fit() {
@@ -190,9 +191,9 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
 
     _latent_variables.set_estimation_method(method);
 
-    return new MLEResults(_data_frame.data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, p.x,
-                          output.Y, _data_frame.index, _multivariate_model, obj_type, method, _z_hide, _max_lag, ihessian,
-                          output.theta, output.scores, output.states, output.states_var);
+    return new MLEResults(_data_frame.data_name, output.X_names.value(), _model_name, _model_type, _latent_variables,
+                          p.x, output.Y, _data_frame.index, _multivariate_model, obj_type, method, _z_hide, _max_lag,
+                          ihessian, output.theta, output.scores, output.states, output.states_var);
 }
 
 Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixXd>& cov_matrix,
@@ -290,4 +291,8 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
             ind.push_back(distribution(generator));
         return chain(Eigen::all, ind);
     }
+}
+
+LatentVariables TSM::get_latent_variables() const {
+    return _latent_variables;
 }

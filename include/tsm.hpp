@@ -62,8 +62,8 @@ class TSM {
 protected:
     SingleDataFrame _data_frame;
     std::string _model_name;
-    std::string _model_name2;   ///< The self.model_name2 variable in python
-    std::string _model_type;    ///< The type of model (e.g. 'ARIMA', 'GARCH')
+    std::string _model_name2; ///< The self.model_name2 variable in python
+    std::string _model_type;  ///< The type of model (e.g. 'ARIMA', 'GARCH')
     bool _multivariate_model;
     std::function<double(Eigen::VectorXd)> _neg_logposterior;
     std::function<double(Eigen::VectorXd)> _neg_loglik;
@@ -211,7 +211,8 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5) const;
+    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15,
+                size_t height = 5) const;
 
     // Not used in Python
     // void plot_parameters(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t
@@ -230,4 +231,10 @@ public:
      * @return Matrix of draws
      */
     [[nodiscard]] virtual Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000) const;
+
+    /**
+     * @brief Returns the latent variables
+     * @return Latent variables
+     */
+    [[nodiscard]] virtual LatentVariables get_latent_variables() const;
 };

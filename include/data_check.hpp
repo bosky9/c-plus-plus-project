@@ -1,12 +1,12 @@
 #pragma once
 
+#include "headers.hpp"
+#include "tsm.hpp"
+
 #include <iterator>
 #include <map>
 #include <memory>
 #include <numeric>
-
-#include "headers.hpp"
-#include "tsm.hpp"
 
 /**
  * @brief Struct containing the data returned by mv_data_check
@@ -35,8 +35,8 @@ SingleDataFrame data_check(const std::vector<T>& data, const std::vector<double>
     assert(data.size() == index.size());
 
     SingleDataFrame checked_data;
-    checked_data.data = data;
-    checked_data.index = index;
+    checked_data.data      = data;
+    checked_data.index     = index;
     checked_data.data_name = {"Series"};
     return std::move(checked_data);
 }
@@ -56,8 +56,8 @@ SingleDataFrame data_check(const DataFrame& data_frame) {
     assert(data_frame.data.at(0).size() == data_frame.index.size());
 
     SingleDataFrame checked_data;
-    checked_data.data = data_frame.data.at(0);
-    checked_data.index = data_frame.index;
+    checked_data.data      = data_frame.data.at(0);
+    checked_data.index     = data_frame.index;
     checked_data.data_name = data_frame.data_name;
     return std::move(checked_data);
 }
@@ -73,15 +73,15 @@ SingleDataFrame data_check(const DataFrame& data_frame) {
  */
 template<typename T>
 SingleDataFrame data_check(const std::map<std::string, std::vector<T>>& data, const std::vector<double>& index,
-                        const std::string& target) {
+                           const std::string& target) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
     assert(data.at(target).size() == index.size());
 
     SingleDataFrame checked_data;
-    checked_data.data = data.at(target);
-    checked_data.index = index;
+    checked_data.data      = data.at(target);
+    checked_data.index     = index;
     checked_data.data_name = {target};
     return std::move(checked_data);
 }
@@ -105,8 +105,8 @@ SingleDataFrame data_check(const DataFrame& data_frame, const std::string& targe
     assert(data_frame.data.at(data_index).size() == data_frame.index.size());
 
     SingleDataFrame checked_data;
-    checked_data.data = data_frame.data.at(data_index);
-    checked_data.index = data_frame.index;
+    checked_data.data      = data_frame.data.at(data_index);
+    checked_data.index     = data_frame.index;
     checked_data.data_name = {target};
     return std::move(checked_data);
 }

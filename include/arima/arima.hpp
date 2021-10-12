@@ -6,6 +6,7 @@
 #include "families/normal.hpp"
 #include "headers.hpp"
 #include "matplotlibcpp.hpp"
+#include "multivariate_normal.hpp"
 #include "output/tableprinter.hpp"
 #include "tests/nhst.hpp"
 #include "tsm.hpp"
@@ -296,8 +297,7 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0,
-          Family* family = new Normal());
+    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
 
     /**
      * @brief Constructor for ARIMA object
@@ -321,8 +321,8 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(const DataFrame& data_frame,
-          const std::string& target, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
+    ARIMA(const DataFrame& data_frame, const std::string& target, size_t ar, size_t ma, size_t integ = 0,
+          Family* family = new Normal());
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for a generic family ARIMA model
@@ -385,8 +385,8 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    std::tuple<std::vector<Eigen::MatrixXd>, std::vector<double>, std::vector<std::string>>
-    predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE", bool intervals = false);
+    DataFrame predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
+                         bool intervals = false);
 
     /**
      * @brief Plots forecasts with the estimated model against data
@@ -405,8 +405,7 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    std::tuple<std::vector<Eigen::VectorXd>, std::vector<double>, std::vector<std::string>>
-    predict(size_t h = 5, bool intervals = false);
+    DataFrame predict(size_t h = 5, bool intervals = false);
 
     /**
      * @brief Samples from the posterior predictive distribution
