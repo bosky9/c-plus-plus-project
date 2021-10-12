@@ -313,6 +313,18 @@ public:
           const std::string& target, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
 
     /**
+     * @brief Constructor for ARIMA object
+     * @param data_frame The input data for the model
+     * @param target Which array index to use
+     * @param ar How many AR lags the model will have
+     * @param ma How many MA lags the model will have
+     * @param integ How many times to difference the time series (default 0)
+     * @param family E.g. Normal() (default)
+     */
+    ARIMA(const DataFrame& data_frame,
+          const std::string& target, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
+
+    /**
      * @brief Creates the structure of the model (model matrices etc) for a generic family ARIMA model
      * @param beta Contains untransformed starting values for the latent variables
      * @return Tuple of vectors:

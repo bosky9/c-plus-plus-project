@@ -28,13 +28,13 @@ struct CheckedDataMv final {
  *          to the function.
  */
 template<typename T>
-DataFrame data_check(const std::vector<T>& data, const std::vector<double>& index) {
+SingleDataFrame data_check(const std::vector<T>& data, const std::vector<double>& index) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
     assert(data.size() == index.size());
 
-    DataFrame checked_data;
+    SingleDataFrame checked_data;
     checked_data.data = data;
     checked_data.index = index;
     checked_data.data_name = {"Series"};
@@ -50,12 +50,13 @@ DataFrame data_check(const std::vector<T>& data, const std::vector<double>& inde
  *          is necessary to cover the python case where a np.array is passed
  *          to the function.
  */
-DataFrame data_check(const DataFrame& data_frame) {
-    assert(data_frame.data.size() == data_frame.index.size());
+SingleDataFrame data_check(const DataFrame& data_frame) {
     assert(data_frame.data_name.size() == 1);
+    assert(data_frame.data.size() == 1);
+    assert(data_frame.data.at(0).size() == data_frame.index.size());
 
-    DataFrame checked_data;
-    checked_data.data = data_frame.data;
+    SingleDataFrame checked_data;
+    checked_data.data = data_frame.data.at(0);
     checked_data.index = data_frame.index;
     checked_data.data_name = data_frame.data_name;
     return std::move(checked_data);
@@ -71,16 +72,41 @@ DataFrame data_check(const DataFrame& data_frame) {
  *          a pd.DataFrame is passed to the function.
  */
 template<typename T>
-DataFrame data_check(const std::map<std::string, std::vector<T>>& data, const std::vector<double>& index,
+SingleDataFrame data_check(const std::map<std::string, std::vector<T>>& data, const std::vector<double>& index,
                         const std::string& target) {
     static_assert(std::is_floating_point_v<T>,
                   "data_check accepts as data only a vector of floating points or a vector containing vectors of "
                   "floating points");
     assert(data.at(target).size() == index.size());
 
-    DataFrame checked_data;
+    SingleDataFrame checked_data;
     checked_data.data = data.at(target);
     checked_data.index = index;
+    checked_data.data_name = {target};
+    return std::move(checked_data);
+}
+
+/**
+ * @brief Checks data type
+ * @param data_frame Input data for the time-series model
+ * @param target Target column
+ * @return A struct containing the transformed data, relative name and indices
+ *
+ * @details Having a template function which takes an std::vector as an input
+ *          is necessary to cover the python case where a np.array is passed
+ *          to the function.
+ */
+SingleDataFrame data_check(const DataFrame& data_frame, const std::string& target) {
+    auto iterator = std::find(data_frame.data_name.begin(), data_frame.data_name.end(), target);
+    assert(iterator != data_frame.data_name.end());
+    assert(data_frame.data_name.size() == data_frame.data.size());
+
+    size_t data_index = iterator - data_frame.data_name.begin();
+    assert(data_frame.data.at(data_index).size() == data_frame.index.size());
+
+    SingleDataFrame checked_data;
+    checked_data.data = data_frame.data.at(data_index);
+    checked_data.index = data_frame.index;
     checked_data.data_name = {target};
     return std::move(checked_data);
 }

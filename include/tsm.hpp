@@ -17,12 +17,21 @@
 #include <string>
 
 /**
- * @brief Struct that represents the input data for a time-series model
+ * @brief Struct that represents the internal data of a time-series model
  */
-struct DataFrame final {
+struct SingleDataFrame final {
     std::vector<double> index;          ///< The times of the input data (years, days or seconds)
     std::vector<double> data;           ///< The univariate time series data (values) that will be used
     std::vector<std::string> data_name; ///< The names of the data
+};
+
+/**
+ * @brief Struct that represents the input data for a time-series model
+ */
+struct DataFrame final {
+    std::vector<double> index;             ///< The times of the input data (years, days or seconds)
+    std::vector<std::vector<double>> data; ///< The univariate time series data (values) that will be used
+    std::vector<std::string> data_name;    ///< The names of the data
 };
 
 /**
@@ -51,7 +60,7 @@ public:
  */
 class TSM {
 protected:
-    DataFrame _data_frame;
+    SingleDataFrame _data_frame;
     std::string _model_name;
     std::string _model_name2;   ///< The self.model_name2 variable in python
     std::string _model_type;    ///< The type of model (e.g. 'ARIMA', 'GARCH')
