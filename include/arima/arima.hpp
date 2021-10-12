@@ -290,6 +290,17 @@ public:
 
     /**
      * @brief Constructor for ARIMA object
+     * @param data_frame The input data for the model
+     * @param ar How many AR lags the model will have
+     * @param ma How many MA lags the model will have
+     * @param integ How many times to difference the time series (default 0)
+     * @param family E.g. Normal() (default)
+     */
+    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0,
+          Family* family = new Normal());
+
+    /**
+     * @brief Constructor for ARIMA object
      * @param data The univariate time series data that will be used
      * @param target Which array index to use
      * @param index The times of the input data (years, days or seconds)

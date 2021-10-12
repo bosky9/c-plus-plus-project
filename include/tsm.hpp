@@ -17,6 +17,15 @@
 #include <string>
 
 /**
+ * @brief Struct that represents the input data for a time-series model
+ */
+struct DataFrame final {
+    std::vector<double> index;          ///< The times of the input data (years, days or seconds)
+    std::vector<double> data;           ///< The univariate time series data (values) that will be used
+    std::vector<std::string> data_name; ///< The names of the data
+};
+
+/**
  * @brief Struct that represents the model output
  */
 struct ModelOutput final {
@@ -42,12 +51,10 @@ public:
  */
 class TSM {
 protected:
-    std::vector<std::string> _data_name;
+    DataFrame _data_frame;
     std::string _model_name;
     std::string _model_name2;   ///< The self.model_name2 variable in python
     std::string _model_type;    ///< The type of model (e.g. 'ARIMA', 'GARCH')
-    std::vector<double> _data;  ///< The univariate time series data that will be used
-    std::vector<double> _index; ///< The times of the input data (years, days or seconds)
     bool _multivariate_model;
     std::function<double(Eigen::VectorXd)> _neg_logposterior;
     std::function<double(Eigen::VectorXd)> _neg_loglik;

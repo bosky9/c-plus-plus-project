@@ -64,13 +64,13 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
     // LatentVariables latent_variables_store = _latent_variables; // No sense
 
-    return new BBVIResults{_data_name,
+    return new BBVIResults{_data_frame.data_name,
                            output.X_names.value(),
                            _model_name,
                            _model_type,
                            _latent_variables,
                            output.Y,
-                           _index,
+                           _data_frame.index,
                            _multivariate_model,
                            _neg_logposterior,
                            "BBVI",
@@ -92,8 +92,8 @@ LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& 
     _latent_variables.set_estimation_method("Laplace");
     ModelOutput output{categorize_model_output(_latent_variables.get_z_values())};
 
-    return new LaplaceResults(_data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, output.Y,
-                              _index, _multivariate_model, obj_type, "Laplace", _z_hide, _max_lag, y->get_ihessian(),
+    return new LaplaceResults(_data_frame.data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, output.Y,
+                              _data_frame.index, _multivariate_model, obj_type, "Laplace", _z_hide, _max_lag, y->get_ihessian(),
                               output.theta, output.scores, output.states, output.states_var);
 }
 
@@ -139,8 +139,8 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
 
     ModelOutput output{categorize_model_output(sample.mean_est)};
 
-    return new MCMCResults(_data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, output.Y,
-                           _index, _multivariate_model, _neg_logposterior, "Metropolis Hastings", _z_hide, _max_lag,
+    return new MCMCResults(_data_frame.data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, output.Y,
+                           _data_frame.index, _multivariate_model, _neg_logposterior, "Metropolis Hastings", _z_hide, _max_lag,
                            sample.chain, sample.mean_est, sample.median_est, sample.upper_95_est, sample.lower_95_est,
                            output.theta, output.scores, output.states, output.states_var);
 }
@@ -190,8 +190,8 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
 
     _latent_variables.set_estimation_method(method);
 
-    return new MLEResults(_data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, p.x,
-                          output.Y, _index, _multivariate_model, obj_type, method, _z_hide, _max_lag, ihessian,
+    return new MLEResults(_data_frame.data_name, output.X_names.value(), _model_name, _model_type, _latent_variables, p.x,
+                          output.Y, _data_frame.index, _multivariate_model, obj_type, method, _z_hide, _max_lag, ihessian,
                           output.theta, output.scores, output.states, output.states_var);
 }
 
@@ -231,9 +231,9 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
 }
 
 std::vector<double> TSM::shift_dates(size_t n) const {
-    assert(!_index.empty());
-    assert(_index.size() > _max_lag);
-    std::vector<double> date_index(_index.begin() + _max_lag, _index.end());
+    assert(!_data_frame.index.empty());
+    assert(_data_frame.index.size() > _max_lag);
+    std::vector<double> date_index(_data_frame.index.begin() + _max_lag, _data_frame.index.end());
     if (date_index.size() > 1) {
         for (size_t i{0}; i < n; i++)
             date_index.push_back(date_index.back() + (date_index.back() - date_index.at(date_index.size() - 2)));
