@@ -74,6 +74,13 @@ public:
     virtual void summary(bool transformed) = 0;
 
     /**
+     * @detail  Since we will be using Results* pointers
+     *          inside TSM to refer to Results subclasses,
+     *          a virtual destructor is necessary to avoid undefined behaviour.
+     */
+    virtual ~Results() = default;;
+
+    /**
      * @brief Returns latent variables
      * @return Latent variables in _z
      */

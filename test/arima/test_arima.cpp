@@ -18,9 +18,11 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
         std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
         size_t nan{0};
         for (size_t i{0}; i < lvs.size(); i++) {
-            if (!lvs[i].get_value().has_value())
+            if (!lvs[i].get_value())
                 nan++;
         }
         REQUIRE(nan == 0);
+
+        delete x;
     }
 }

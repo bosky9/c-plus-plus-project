@@ -170,15 +170,15 @@ public:
      * @brief Fits a model
      * @param method A fitting method (e.g. 'MLE')
      * @return Results of the fit
-     * Since the python function receives a list of kwargs,
-     * we decided to translate it explicitly as parameters,
-     * some of them tagged as "optional" because by default
-     * the python version inits them as None.
+     * @detail  Since the python function receives a list of kwargs,
+     *          we decided to translate it explicitly as parameters,
+     *          some of them tagged as "optional" because by default
+     *          the python version inits them as None.
      *
-     * Since the return type is "Results*",
-     * in order to return pointer to Results (an abstract class) subclasses
-     * it is necessary to declare their extension as public.
-     * es. "class MLEResults : public Results {...}".
+     *          Since the return type is "Results*",
+     *          in order to return pointer to Results (an abstract class) subclasses
+     *          it is necessary to declare their extension as public.
+     *          es. "class MLEResults : public Results {...}".
      */
     virtual Results* fit(std::string method = "", bool printer = true,
                          std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
