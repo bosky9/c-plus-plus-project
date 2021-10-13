@@ -50,7 +50,7 @@ SingleDataFrame data_check(const std::vector<T>& data, const std::vector<double>
  *          is necessary to cover the python case where a np.array is passed
  *          to the function.
  */
-SingleDataFrame data_check(const DataFrame& data_frame) {
+inline SingleDataFrame data_check(const DataFrame& data_frame) {
     assert(data_frame.data_name.size() == 1);
     assert(data_frame.data.size() == 1);
     assert(data_frame.data.at(0).size() == data_frame.index.size());
@@ -96,7 +96,7 @@ SingleDataFrame data_check(const std::map<std::string, std::vector<T>>& data, co
  *          is necessary to cover the python case where a np.array is passed
  *          to the function.
  */
-SingleDataFrame data_check(const DataFrame& data_frame, const std::string& target) {
+inline SingleDataFrame data_check(const DataFrame& data_frame, const std::string& target) {
     auto iterator = std::find(data_frame.data_name.begin(), data_frame.data_name.end(), target);
     assert(iterator != data_frame.data_name.end());
     assert(data_frame.data_name.size() == data_frame.data.size());
