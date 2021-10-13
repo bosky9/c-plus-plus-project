@@ -142,11 +142,11 @@ std::vector<lv_to_build> Family::build_latent_variables() const {
     return {};
 }
 
-Eigen::VectorXd Family::draw_variable(double loc, double scale, double shape, double skewness, int nsims) {
+Eigen::VectorXd Family::draw_variable(double loc, double scale, double shape, double skewness, int nsims) const {
     return {};
 }
 
-Eigen::VectorXd Family::draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness, int nsims) {
+Eigen::VectorXd Family::draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness, int nsims) const {
     return {};
 }
 

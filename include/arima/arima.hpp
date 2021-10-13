@@ -385,8 +385,8 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    DataFrame predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
-                         bool intervals = false);
+    [[nodiscard]] DataFrame predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
+                                       bool intervals = false) const;
 
     /**
      * @brief Plots forecasts with the estimated model against data
@@ -397,7 +397,7 @@ public:
      * @param height Height of the figure
      */
     void plot_predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
-                         std::optional<size_t> width = 10, std::optional<size_t> height = 7);
+                         std::optional<size_t> width = 10, std::optional<size_t> height = 7) const;
 
     /**
      * @brief Makes forecast with the estimated model
@@ -405,14 +405,14 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    DataFrame predict(size_t h = 5, bool intervals = false);
+    [[nodiscard]] DataFrame predict(size_t h = 5, bool intervals = false) const;
 
     /**
      * @brief Samples from the posterior predictive distribution
      * @param nsims How many draws from the posterior predictive distribution
      * @return Array of draws from the data
      */
-    Eigen::MatrixXd sample(size_t nsims = 1000);
+    [[nodiscard]] Eigen::MatrixXd sample(size_t nsims = 1000) const;
 
     /**
      * @brief Plots draws from the posterior predictive density against the data
@@ -422,7 +422,7 @@ public:
      * @param height Height of the figure
      */
     void plot_sample(size_t nsims = 10, bool plot_data = true, std::optional<size_t> width = 10,
-                     std::optional<size_t> height = 7);
+                     std::optional<size_t> height = 7) const;
 
     /**
      * @brief Computes posterior predictive p-value
@@ -430,7 +430,7 @@ public:
      * @param T A discrepancy measure - e.g. mean, std or max
      * @return Posterior predictive p-value
      */
-    double ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = mean);
+    double ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = mean) const;
 
     /**
      * @brief Plots histogram of the discrepancy from draws of the posterior
@@ -440,5 +440,5 @@ public:
      * @param height Height of the figure
      */
     void plot_ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = mean,
-                  std::string T_name = "mean", std::optional<size_t> width = 10, std::optional<size_t> height = 7);
+                  std::string T_name = "mean", std::optional<size_t> width = 10, std::optional<size_t> height = 7) const;
 };

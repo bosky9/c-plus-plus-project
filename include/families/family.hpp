@@ -147,10 +147,10 @@ public:
      * @return Random draws from the distribution, obtained thanks to the std::normal_distribution library.
      */
     [[nodiscard]] virtual Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness,
-                                                        int nsims);
+                                                        int nsims) const;
 
     [[nodiscard]] virtual Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness,
-                                                        int nsims);
+                                                        int nsims) const;
 
     /**
      * @brief Wrapper function for changing latent variables for variational inference

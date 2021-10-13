@@ -85,7 +85,7 @@ std::vector<lv_to_build> Normal::build_latent_variables() const {
     return std::move(lvs_to_build); // return lvs_to_build
 }
 
-Eigen::VectorXd Normal::draw_variable(double loc, double scale, double shape, double skewness, int nsims) {
+Eigen::VectorXd Normal::draw_variable(double loc, double scale, double shape, double skewness, int nsims) const {
     std::normal_distribution<double> my_normal{loc, scale}; // Uses the normal library function
     Eigen::VectorXd sims(nsims);
     std::random_device rd{};
@@ -97,7 +97,7 @@ Eigen::VectorXd Normal::draw_variable(double loc, double scale, double shape, do
 
 
 Eigen::VectorXd Normal::draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness,
-                                      int nsims) {
+                                      int nsims) const {
     assert(loc.size() == nsims);
     // Uses the normal library function
     Eigen::VectorXd sims(nsims);

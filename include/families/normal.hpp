@@ -119,9 +119,9 @@ public:
      * @param nsims Number of draws to take from the distribution
      * @return Random draws from the distribution, obtained thanks to the std::normal_distribution library.
      */
-    Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness, int nsims) override;
+    [[nodiscard]] Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness, int nsims) const override;
 
-    Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness, int nsims) override;
+    [[nodiscard]] Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness, int nsims) const override;
 
 
     /**

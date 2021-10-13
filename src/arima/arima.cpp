@@ -811,7 +811,7 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
 }
 
 
-DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool intervals) {
+DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool intervals) const {
     DataFrame predictions;
     LatentVariables saved_lvs{""};
 
@@ -849,7 +849,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
 }
 
 void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_method, std::optional<size_t> width,
-                            std::optional<size_t> height) {
+                            std::optional<size_t> height) const {
     plt::figure_size(width.value(), height.value());
     auto predictions{predict_is(h, fit_once, fit_method)};
     std::vector<double> data;
@@ -863,7 +863,7 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     // plt::show();
 }
 
-DataFrame ARIMA::predict(size_t h, bool intervals) {
+DataFrame ARIMA::predict(size_t h, bool intervals) const {
     assert(_latent_variables.is_estimated() && "No latent variables estimated!");
 
     auto mu_Y{model(_latent_variables.get_z_values())};
@@ -932,7 +932,7 @@ DataFrame ARIMA::predict(size_t h, bool intervals) {
     return result;
 }
 
-Eigen::MatrixXd ARIMA::sample(size_t nsims) {
+Eigen::MatrixXd ARIMA::sample(size_t nsims) const {
     assert((_latent_variables.get_estimation_method() == "BBVI" ||
             _latent_variables.get_estimation_method() == "M-H") &&
            "No latent variables estimated!");
@@ -954,7 +954,7 @@ Eigen::MatrixXd ARIMA::sample(size_t nsims) {
     return std::move(data_draws);
 }
 
-void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> width, std::optional<size_t> height) {
+void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> width, std::optional<size_t> height) const {
     assert((_latent_variables.get_estimation_method() == "BBVI" ||
             _latent_variables.get_estimation_method() == "M-H") &&
            "No latent variables estimated!");
@@ -977,7 +977,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
     // plt::show();
 }
 
-double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T) {
+double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T) const {
     assert((_latent_variables.get_estimation_method() == "BBVI" ||
             _latent_variables.get_estimation_method() == "M-H") &&
            "No latent variables estimated!");
@@ -1013,7 +1013,7 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
 }
 
 void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T, std::string T_name,
-                     std::optional<size_t> width, std::optional<size_t> height) {
+                     std::optional<size_t> width, std::optional<size_t> height) const {
     assert((_latent_variables.get_estimation_method() == "BBVI" ||
             _latent_variables.get_estimation_method() == "M-H") &&
            "No latent variables estimated!");
