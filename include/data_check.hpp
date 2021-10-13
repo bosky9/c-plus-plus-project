@@ -9,127 +9,78 @@
 #include <numeric>
 
 /**
- * @brief Struct containing the data returned by mv_data_check
- * @see data_check
- */
-struct CheckedDataMv final {
-    std::vector<std::vector<double>> transformed_data; ///< Raw data array for use in the model
-    std::vector<size_t> data_name;                     ///< Names of the data
-    std::vector<double> data_index;                    ///< The time indices for the data
-};
-
-/**
  * @brief Checks data type
  * @param data Field to specify the time series data that will be used
  * @return A struct containing the transformed data, relative name and indices
  *
- * @details Having a template function which takes an std::vector as an input
- *          is necessary to cover the python case where a np.array is passed
- *          to the function.
+ * @details Represents the Python case where a np.array is passed to the function, that identifies already the final
+ * data to process.
  */
-template<typename T>
-SingleDataFrame data_check(const std::vector<T>& data, const std::vector<double>& index) {
-    static_assert(std::is_floating_point_v<T>,
-                  "data_check accepts as data only a vector of floating points or a vector containing vectors of "
-                  "floating points");
-    assert(data.size() == index.size());
-
+inline SingleDataFrame data_check(const std::vector<double>& data) {
     SingleDataFrame checked_data;
-    checked_data.data      = data;
-    checked_data.index     = index;
-    checked_data.data_name = {"Series"};
+    checked_data.data  = data;
+    checked_data.index = std::vector<double>(data.size());
+    std::iota(checked_data.index.begin(), checked_data.index.end(), 0);
+    checked_data.data_name = "Series";
     return std::move(checked_data);
 }
 
 /**
  * @brief Checks data type
- * @param data_frame Input data for the time-series model
- * @return A struct containing the transformed data, relative name and indices
- *
- * @details Having a template function which takes an std::vector as an input
- *          is necessary to cover the python case where a np.array is passed
- *          to the function.
- */
-inline SingleDataFrame data_check(const DataFrame& data_frame) {
-    assert(data_frame.data_name.size() == 1);
-    assert(data_frame.data.size() == 1);
-    assert(data_frame.data.at(0).size() == data_frame.index.size());
-
-    SingleDataFrame checked_data;
-    checked_data.data      = data_frame.data.at(0);
-    checked_data.index     = data_frame.index;
-    checked_data.data_name = data_frame.data_name;
-    return std::move(checked_data);
-}
-
-/**
- * @brief Checks data type
- * @param data Field to specify the time series data that will be used
+ * @param data_frame Input data for the time-series model (including data, index and column names)
  * @param target Target column
  * @return A struct containing the transformed data, relative name and indices
  *
- * @details Using a map to approximate the python case where
- *          a pd.DataFrame is passed to the function.
+ * @details Represents the Python case where a pd.DataFrame is passed to the function.
  */
-template<typename T>
-SingleDataFrame data_check(const std::map<std::string, std::vector<T>>& data, const std::vector<double>& index,
-                           const std::string& target) {
-    static_assert(std::is_floating_point_v<T>,
-                  "data_check accepts as data only a vector of floating points or a vector containing vectors of "
-                  "floating points");
-    assert(data.at(target).size() == index.size());
-
-    SingleDataFrame checked_data;
-    checked_data.data      = data.at(target);
-    checked_data.index     = index;
-    checked_data.data_name = {target};
-    return std::move(checked_data);
-}
-
-/**
- * @brief Checks data type
- * @param data_frame Input data for the time-series model
- * @param target Target column
- * @return A struct containing the transformed data, relative name and indices
- *
- * @details Having a template function which takes an std::vector as an input
- *          is necessary to cover the python case where a np.array is passed
- *          to the function.
- */
-inline SingleDataFrame data_check(const DataFrame& data_frame, const std::string& target) {
-    auto iterator = std::find(data_frame.data_name.begin(), data_frame.data_name.end(), target);
-    assert(iterator != data_frame.data_name.end());
+inline SingleDataFrame data_check(const DataFrame& data_frame, const std::string& target = "") {
     assert(data_frame.data_name.size() == data_frame.data.size());
 
-    size_t data_index = iterator - data_frame.data_name.begin();
-    assert(data_frame.data.at(data_index).size() == data_frame.index.size());
-
     SingleDataFrame checked_data;
-    checked_data.data      = data_frame.data.at(data_index);
-    checked_data.index     = data_frame.index;
-    checked_data.data_name = {target};
+    if (target.empty()) {
+        checked_data.data      = data_frame.data.at(0);
+        checked_data.data_name = data_frame.data_name.at(0);
+    } else {
+        auto it{std::find(data_frame.data_name.begin(), data_frame.data_name.end(), target)};
+        assert(it != data_frame.data_name.end());
+        long col{std::distance(data_frame.data_name.begin(), it)};
+        assert(data_frame.data.at(col).size() == data_frame.index.size());
+        checked_data.data      = data_frame.data.at(col);
+        checked_data.data_name = target;
+    }
+    checked_data.index = data_frame.index;
+
     return std::move(checked_data);
 }
 
-// TODO: The following method (used only in VAR models) is useful? Consider to remove it
+// TODO: The following methods (used only in VAR models) is useful? Consider to remove it
+/**
+ * @brief Checks data type
+ * @param data_frame Input data for the time-series model
+ * @param target Target column
+ * @return A struct containing the transformed data, relative name and indices
+ *
+ * @details Represents the Python case where a np.array is passed to the function.
+ */
+inline DataFrame mv_data_check(const std::vector<std::vector<double>>& data) {
+    DataFrame checked_data;
+    checked_data.data = data;
+    checked_data.index.resize(data.at(0).size());
+    std::iota(checked_data.index.begin(), checked_data.index.end(), 0);
+    checked_data.data_name.resize(data.at(0).size());
+    std::transform(checked_data.index.begin(), checked_data.index.end(), checked_data.data_name.begin(),
+                   [](double x) { return std::to_string(static_cast<int>(x) + 1); });
+
+    return std::move(checked_data);
+}
 
 /**
  * @brief Checks data type
  * @param data Field to specify the time series data that will be used
  * @return A struct containing the transformed data, relative name and indices
+ *
+ * @details Represents the Python case where a pd.DataFrame is passed to the function.
  */
-template<typename T>
-CheckedDataMv mv_data_check(const std::vector<std::vector<T>>& data) {
-    static_assert(std::is_floating_point_v<T>,
-                  "data_check accepts as data only a vector of floating points or a vector containing vectors of "
-                  "floating points");
-
-    CheckedDataMv cd;
-    cd.transformed_data = data;
-    cd.data_index.resize(data.at(0).size());
-    std::iota(cd.data_index.begin(), cd.data_index.end(), 0);
-    cd.data_name.resize(data[0].size());
-    std::iota(cd.data_name.begin(), cd.data_name.end(), 1);
-
-    return std::move(cd);
+inline DataFrame mv_data_check(const DataFrame& data_frame) {
+    return std::move(DataFrame(data_frame));
 }

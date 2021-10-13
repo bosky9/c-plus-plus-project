@@ -20,9 +20,9 @@
  * @brief Struct that represents the internal data of a time-series model
  */
 struct SingleDataFrame final {
-    std::vector<double> index;          ///< The times of the input data (years, days or seconds)
-    std::vector<double> data;           ///< The univariate time series data (values) that will be used
-    std::vector<std::string> data_name; ///< The names of the data
+    std::vector<double> index; ///< The times of the input data (years, days or seconds)
+    std::vector<double> data;  ///< The univariate time series data (values) that will be used
+    std::string data_name;     ///< The names of the data
 };
 
 /**
@@ -180,14 +180,15 @@ public:
      * it is necessary to declare their extension as public.
      * es. "class MLEResults : public Results {...}".
      */
-    Results* fit(std::string method = "", bool printer = true,
-                 std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
-                 const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
-                 const std::optional<StochOptim>& optimizer = std::nullopt,
-                 const std::optional<uint8_t> batch_size = 12, const std::optional<size_t> mininbatch = std::nullopt,
-                 const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
-                 const std::optional<bool> record_elbo    = std::nullopt,
-                 const std::optional<bool> quiet_progress = false);
+    virtual Results* fit(std::string method = "", bool printer = true,
+                         std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
+                         const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
+                         const std::optional<StochOptim>& optimizer = std::nullopt,
+                         const std::optional<uint8_t> batch_size    = 12,
+                         const std::optional<size_t> mininbatch     = std::nullopt,
+                         const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
+                         const std::optional<bool> record_elbo    = std::nullopt,
+                         const std::optional<bool> quiet_progress = false);
 
     /**
      * @brief Auxiliary function for creating dates for forecasts

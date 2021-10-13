@@ -1,8 +1,6 @@
 #include "arima/arima.hpp"
 
-ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ,
-             Family* family)
-    : TSM{"ARIMA"} {
+ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, Family* family) : TSM{"ARIMA"} {
     // Latent Variable information
     _ar                 = ar;
     _ma                 = ma;
@@ -15,18 +13,17 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
     _multivariate_model = false;
 
     // Format the data
-    SingleDataFrame checked_data = data_check(data, index);
+    SingleDataFrame checked_data = data_check(data);
     _data_frame.data             = checked_data.data;
     _data_frame.data_name        = checked_data.data_name;
     _data_frame.index            = checked_data.index;
-    _data_original               = _data_frame.data;
+    _data_original               = data;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
         _data_frame.data = diff(_data_frame.data);
-    _data_frame.data_name.at(0) =
-            "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
-    _data_length = _data_frame.data.size();
+    _data_frame.data_name = "Differenced " + _data_frame.data_name;
+    _data_length          = _data_frame.data.size();
 
     _x = ar_matrix();
     create_latent_variables();
@@ -58,120 +55,7 @@ ARIMA::ARIMA(const std::vector<double>& data, const std::vector<double>& index, 
     _z_no        = _latent_variables.get_z_list().size();
 }
 
-ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Family* family) : TSM{"ARIMA"} {
-    // Latent Variable information
-    _ar                 = ar;
-    _ma                 = ma;
-    _integ              = integ;
-    _z_no               = _ar + _ma + 2;
-    _max_lag            = std::max(static_cast<int>(_ar), static_cast<int>(_ma));
-    _z_hide             = false; // Whether to cutoff latent variables from results table
-    _supported_methods  = {"MLE", "PML", "Laplace", "M-H", "BBVI"};
-    _default_method     = "MLE";
-    _multivariate_model = false;
-
-    // Format the data
-    SingleDataFrame checked_data = data_check(data_frame);
-    _data_frame.data             = checked_data.data;
-    _data_frame.data_name        = checked_data.data_name;
-    _data_frame.index            = checked_data.index;
-    _data_original               = _data_frame.data;
-
-    // Difference data
-    for (size_t order{0}; order < _integ; order++)
-        _data_frame.data = diff(_data_frame.data);
-    _data_frame.data_name.at(0) =
-            "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
-    _data_length = _data_frame.data.size();
-
-    _x = ar_matrix();
-    create_latent_variables();
-
-    _family.reset(family->clone());
-    FamilyAttributes fa = family->setup();
-    _model_name2        = fa.name;
-    _link               = fa.link;
-    _scale              = fa.scale;
-    _shape              = fa.shape;
-    _skewness           = fa.skewness;
-    _mean_transform     = fa.mean_transform;
-    _cythonized         = fa.cythonized;
-    _model_name         = _model_name2 + " ARIMA(" + std::to_string(_ar) + "," + std::to_string(_integ) + "," +
-                  std::to_string(_ma) + ")";
-
-    // Build any remaining latent variables that are specific to the family chosen
-    std::vector<lv_to_build> lvs = _family->build_latent_variables();
-    for (size_t no{0}; no < lvs.size(); no++) {
-        lv_to_build lv = lvs[no];
-        _latent_variables.add_z(std::get<0>(lv), std::get<1>(lv), std::get<2>(lv));
-        _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
-    }
-    _latent_variables.set_z_starting_value(
-            0, _mean_transform(static_cast<double>(std::reduce(_data_frame.data.begin(), _data_frame.data.end())) /
-                               static_cast<double>(_data_frame.data.size())));
-
-    _family_z_no = lvs.size();
-    _z_no        = _latent_variables.get_z_list().size();
-}
-
-ARIMA::ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index,
-             const std::string& target, size_t ar, size_t ma, size_t integ, Family* family)
-    : TSM{"ARIMA"} {
-    // Latent Variable information
-    _ar                 = ar;
-    _ma                 = ma;
-    _integ              = integ;
-    _z_no               = _ar + _ma + 2;
-    _max_lag            = std::max(static_cast<int>(_ar), static_cast<int>(_ma));
-    _z_hide             = false;
-    _supported_methods  = {"MLE", "PML", "Laplace", "M-H", "BBVI"};
-    _default_method     = "MLE";
-    _multivariate_model = false;
-
-    // Format the data
-    SingleDataFrame checked_data = data_check(data, index, target);
-    _data_frame.data             = checked_data.data;
-    _data_frame.data_name        = checked_data.data_name;
-    _data_frame.index            = checked_data.index;
-
-    // Difference data
-    for (size_t order{0}; order < _integ; order++)
-        _data_frame.data = diff(_data_frame.data);
-    _data_frame.data_name.at(0) =
-            "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
-    _data_length = _data_frame.data.size();
-
-    _x = ar_matrix();
-    create_latent_variables();
-
-    _family.reset(family->clone());
-    FamilyAttributes fa = family->setup();
-    _model_name2        = fa.name;
-    _link               = fa.link;
-    _scale              = fa.scale;
-    _shape              = fa.shape;
-    _skewness           = fa.skewness;
-    _mean_transform     = fa.mean_transform;
-    _cythonized         = fa.cythonized;
-    _model_name         = _model_name2 + " ARIMA(" + std::to_string(_ar) + "," + std::to_string(_integ) + "," +
-                  std::to_string(_ma) + ")";
-
-    // Build any remaining latent variables that are specific to the family chosen
-    std::vector<lv_to_build> lvs = _family->build_latent_variables();
-    for (size_t no{0}; no < lvs.size(); no++) {
-        lv_to_build lv = lvs[no];
-        _latent_variables.add_z(std::get<0>(lv), std::get<1>(lv), std::get<2>(lv));
-        _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
-    }
-    _latent_variables.set_z_starting_value(
-            0, _mean_transform(static_cast<double>(std::reduce(_data_frame.data.begin(), _data_frame.data.end())) /
-                               static_cast<double>(_data_frame.data.size())));
-
-    _family_z_no = lvs.size();
-    _z_no        = _latent_variables.get_z_list().size();
-}
-
-ARIMA::ARIMA(const DataFrame& data_frame, const std::string& target, size_t ar, size_t ma, size_t integ, Family* family)
+ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Family* family, const std::string& target)
     : TSM{"ARIMA"} {
     // Latent Variable information
     _ar                 = ar;
@@ -189,13 +73,13 @@ ARIMA::ARIMA(const DataFrame& data_frame, const std::string& target, size_t ar, 
     _data_frame.data             = checked_data.data;
     _data_frame.data_name        = checked_data.data_name;
     _data_frame.index            = checked_data.index;
+    _data_original               = _data_frame.data;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
         _data_frame.data = diff(_data_frame.data);
-    _data_frame.data_name.at(0) =
-            "Differenced " + std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{});
-    _data_length = _data_frame.data.size();
+    _data_frame.data_name = "Differenced " + _data_frame.data_name;
+    _data_length          = _data_frame.data.size();
 
     _x = ar_matrix();
     create_latent_variables();
@@ -825,7 +709,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
         std::iota(index.begin(), index.end(), 0);
-        ARIMA x{data_original_t, index, _ar, _ma, _integ, _family.get()};
+        ARIMA x{data_original_t, _ar, _ma, _integ, _family.get()};
         if (!fit_once)
             x.fit(fit_method, false);
         if (t == 0) {
@@ -903,7 +787,7 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
             std::copy(mean_values.end() - static_cast<long>(h), mean_values.end(), forecasted_values.begin());
     }
     if (!intervals) {
-        result.data.push_back(std::vector<double>(&forecasted_values[0], forecasted_values.data()));
+        result.data.emplace_back(&forecasted_values[0], forecasted_values.data());
         result.data_name.push_back(
                 std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
     } else {
@@ -923,7 +807,7 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
                             "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
                             "99% Prediction Interval"};
         for (Eigen::Index i{0}; i < r.rows(); i++) {
-            result.data.push_back(std::vector<double>(&r.row(i)[0], r.row(i).data()));
+            result.data.emplace_back(&r.row(i)[0], r.row(i).data());
             result.data_name.insert(result.data_name.end(), &names[0], &names[h - 1]);
         }
     }
@@ -1009,10 +893,10 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
             T_sims_greater.push_back(T_sims.at(i));
     }
 
-    return static_cast<double>(T_sims_greater.size()) / nsims;
+    return static_cast<double>(T_sims_greater.size() / nsims);
 }
 
-void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T, std::string T_name,
+void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T, const std::string& T_name,
                      std::optional<size_t> width, std::optional<size_t> height) const {
     assert((_latent_variables.get_estimation_method() == "BBVI" ||
             _latent_variables.get_estimation_method() == "M-H") &&

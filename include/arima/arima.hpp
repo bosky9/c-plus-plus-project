@@ -286,8 +286,7 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(const std::vector<double>& data, const std::vector<double>& index, size_t ar, size_t ma, size_t integ = 0,
-          Family* family = new Normal());
+    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
 
     /**
      * @brief Constructor for ARIMA object
@@ -296,33 +295,10 @@ public:
      * @param ma How many MA lags the model will have
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
-     */
-    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
-
-    /**
-     * @brief Constructor for ARIMA object
-     * @param data The univariate time series data that will be used
      * @param target Which array index to use
-     * @param index The times of the input data (years, days or seconds)
-     * @param ar How many AR lags the model will have
-     * @param ma How many MA lags the model will have
-     * @param integ How many times to difference the time series (default 0)
-     * @param family E.g. Normal() (default)
      */
-    ARIMA(const std::map<std::string, std::vector<double>>& data, const std::vector<double>& index,
-          const std::string& target, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
-
-    /**
-     * @brief Constructor for ARIMA object
-     * @param data_frame The input data for the model
-     * @param target Which array index to use
-     * @param ar How many AR lags the model will have
-     * @param ma How many MA lags the model will have
-     * @param integ How many times to difference the time series (default 0)
-     * @param family E.g. Normal() (default)
-     */
-    ARIMA(const DataFrame& data_frame, const std::string& target, size_t ar, size_t ma, size_t integ = 0,
-          Family* family = new Normal());
+    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal(),
+          const std::string& target = "");
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for a generic family ARIMA model
@@ -440,5 +416,6 @@ public:
      * @param height Height of the figure
      */
     void plot_ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = mean,
-                  std::string T_name = "mean", std::optional<size_t> width = 10, std::optional<size_t> height = 7) const;
+                  const std::string& T_name = "mean", std::optional<size_t> width = 10,
+                  std::optional<size_t> height = 7) const;
 };
