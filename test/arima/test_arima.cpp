@@ -114,6 +114,11 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
             double inf_max_element = *min_element(std::begin(predictions.data.at(i-1)), std::end(predictions.data.at(i-1)));
             REQUIRE(sup_min_element >= inf_max_element);
         }
+
+        double sup_min_element = *min_element(std::begin(predictions.data.at(3)), std::end(predictions.data.at(3)));
+        double inf_max_element = *min_element(std::begin(predictions.data.at(0)), std::end(predictions.data.at(0)));
+        REQUIRE(sup_min_element >= inf_max_element);
+
         delete x;
     }
 
