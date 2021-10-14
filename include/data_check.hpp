@@ -43,8 +43,10 @@ inline SingleDataFrame data_check(const DataFrame& data_frame, const std::string
     } else {
         auto it{std::find(data_frame.data_name.begin(), data_frame.data_name.end(), target)};
         assert(it != data_frame.data_name.end());
-        long col{std::distance(data_frame.data_name.begin(), it)};
+        assert(data_frame.data_name.size() == data_frame.data.size());
+        size_t col = it - data_frame.data_name.begin();
         assert(data_frame.data.at(col).size() == data_frame.index.size());
+
         checked_data.data      = data_frame.data.at(col);
         checked_data.data_name = target;
     }
