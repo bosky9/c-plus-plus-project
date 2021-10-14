@@ -1,9 +1,9 @@
 #include "tsm.hpp"
 
-Posterior::Posterior(const std::function<double(Eigen::VectorXd)>& posterior) : _posterior{_posterior} {}
+Posterior::Posterior(const std::function<double(vector_t)>& posterior) : FunctionXd{}, _posterior{posterior} {}
 
-Posterior::scalar_t Posterior::operator()(const vector_t& x) const {
-    return _posterior(x);
+FunctionXd::scalar_t Posterior::operator()(const vector_t& x) const {
+    return x[0];
 }
 
 TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_variables{model_type} {}
@@ -18,11 +18,11 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     if ((_model_type != "GPNARX" || _model_type != "GPR" || _model_type != "GP" || _model_type != "GASRank") &&
         !mini_batch.has_value()) {
         Posterior function{[posterior](Eigen::VectorXd x) { return posterior(std::move(x), std::nullopt); }};
-        cppoptlib::solver::Lbfgsb<Posterior> solver(
-                Eigen::VectorXd::Constant(phi.size(), std::numeric_limits<double>::min()),
-                Eigen::VectorXd::Constant(phi.size(), std::numeric_limits<double>::max()));
-        auto [solution, solver_state] = solver.Minimize(function, phi); // PML starting values
-        start_loc                     = 0.8 * solution.x + 0.2 * phi;
+        cppoptlib::solver::Lbfgsb<Posterior> solver{
+                FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::min()),
+                FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::max())};
+        auto [p, solver_state] = solver.Minimize(function, phi);
+        start_loc              = 0.8 * p.x + 0.2 * phi;
     } else
         start_loc = phi;
     Eigen::VectorXd start_ses{};
@@ -153,7 +153,7 @@ MLEResults* TSM::_ols_fit() {
 MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
                                const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
                                const std::optional<size_t> nsims, const std::optional<StochOptim>& optimizer,
-                               const std::optional<uint8_t> batch_size, const std::optional<size_t> mininbatch,
+                               const std::optional<uint8_t> batch_size, const std::optional<size_t> mini_batch,
                                const std::optional<bool> map_start, const std::optional<double> learning_rate,
                                const std::optional<bool> record_elbo, const std::optional<bool> quiet_progress,
                                const std::optional<bool> preopt_search, const std::optional<Eigen::VectorXd>& start) {
@@ -169,10 +169,9 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
 
     // Optimize using L-BFGS-B
     Posterior function{obj_type};
-    // the python solver equivalent has no bounds
-    cppoptlib::solver::Lbfgsb<Posterior> solver(
-            Eigen::VectorXd::Constant(phi.size(), std::numeric_limits<double>::min()),
-            Eigen::VectorXd::Constant(phi.size(), std::numeric_limits<double>::max()));
+    cppoptlib::solver::Lbfgsb<Posterior> solver{
+            FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::min()),
+            FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::max())};
     auto [p, solver_state] = solver.Minimize(function, phi);
 
     if (preoptimized) {

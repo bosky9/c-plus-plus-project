@@ -301,41 +301,6 @@ public:
           const std::string& target = "");
 
     /**
-     * @brief Creates the structure of the model (model matrices etc) for a generic family ARIMA model
-     * @param beta Contains untransformed starting values for the latent variables
-     * @return Tuple of vectors:
-     * - mu: contains the predicted values (location) for the time series
-     * - Y: contains the length-adjusted time series (accounting for lags)
-     */
-    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> model(const Eigen::VectorXd& beta) const;
-
-    /**
-     * @brief Creates the structure of the model (model matrices etc) for mini batch model.
-     * @param beta Contains untransformed starting values for the latent variables
-     * @param mini_batch Mini batch size for the data sampling
-     * @return Tuple of vectors:
-     * - mu: contains the predicted values (location) for the time series
-     * - Y: contains the length-adjusted time series (accounting for lags)
-     */
-    [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_model(const Eigen::VectorXd& beta,
-                                                                       size_t mini_batch) const;
-
-    /**
-     * @brief Calculates the negative log-likelihood of the model for a generic family
-     * @param beta Contains untransformed starting values for latent variables
-     * @return The negative logliklihood of the model
-     */
-    [[nodiscard]] double neg_loglik(const Eigen::VectorXd& beta) const;
-
-    /**
-     * @brief Calculates the negative log-likelihood of the model for generic family for a minibatch
-     * @param beta Contains untransformed starting values for latent variables
-     * @param mini_batch Size of each mini batch of data
-     * @return The negative logliklihood of the model
-     */
-    [[nodiscard]] double mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const;
-
-    /**
      * @brief Plots the fit of the model against the data
      * @param width Width of the figure
      * @param height Height of the figure

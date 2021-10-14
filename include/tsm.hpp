@@ -16,6 +16,8 @@
 #include <optional>
 #include <string>
 
+using FunctionXd = cppoptlib::function::Function<double>;
+
 /**
  * @brief Struct that represents the internal data of a time-series model
  */
@@ -46,11 +48,13 @@ struct ModelOutput final {
     std::optional<std::vector<std::string>> X_names;
 };
 
-class Posterior : public cppoptlib::function::Function<double> {
-    std::function<double(Eigen::VectorXd)> _posterior;
-
+class Posterior : public FunctionXd {
 public:
-    explicit Posterior(const std::function<double(Eigen::VectorXd)>& posterior);
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    std::function<double(vector_t)> _posterior;
+
+    explicit Posterior(const std::function<double(vector_t)>& posterior);
 
     scalar_t operator()(const vector_t& x) const override;
 };
@@ -66,7 +70,10 @@ protected:
     std::string _model_type;  ///< The type of model (e.g. 'ARIMA', 'GARCH')
     bool _multivariate_model;
     std::function<double(Eigen::VectorXd)> _neg_logposterior;
-    std::function<double(Eigen::VectorXd)> _neg_loglik;
+    std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&)> _model;
+    std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&, size_t mb)> _mb_model;
+    std::function<double(const Eigen::VectorXd&)> _neg_loglik;
+    std::function<double(const Eigen::VectorXd&, size_t mb)> _mb_neg_loglik;
     // Not used in Python
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior;
     std::function<double(Eigen::VectorXd, std::optional<size_t>)> _mb_neg_logposterior;
@@ -158,7 +165,7 @@ protected:
                   const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
                   const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
                   const std::optional<StochOptim>& optimizer = std::nullopt,
-                  const std::optional<uint8_t> batch_size = 12, const std::optional<size_t> mininbatch = std::nullopt,
+                  const std::optional<uint8_t> batch_size = 12, const std::optional<size_t> mini_batch = std::nullopt,
                   const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
                   const std::optional<bool> record_elbo    = std::nullopt,
                   const std::optional<bool> quiet_progress = false, const std::optional<bool> preopt_search = true,
