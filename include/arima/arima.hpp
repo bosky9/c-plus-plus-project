@@ -10,6 +10,7 @@
 #include "output/tableprinter.hpp"
 #include "tests/nhst.hpp"
 #include "tsm.hpp"
+#include "utilities.hpp"
 
 #include <map>
 #include <type_traits>

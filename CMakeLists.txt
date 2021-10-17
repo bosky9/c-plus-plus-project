@@ -13,7 +13,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 find_package(Python3 COMPONENTS Interpreter Development)
 include_directories(${Python3_INCLUDE_DIRS})
 
-# TESTS
+# FETCH EXTERNAL LIBRARIES
 Include(FetchContent)
 FetchContent_Declare(
         Catch2
@@ -21,6 +21,8 @@ FetchContent_Declare(
         GIT_TAG v3.0.0-preview3
 )
 FetchContent_MakeAvailable(Catch2)
+
+# TESTS
 add_executable(tests)
 file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE TESTS_LIST ${PROJECT_SOURCE_DIR}/test/*.cpp)

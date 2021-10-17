@@ -2,6 +2,7 @@
 
 #include "headers.hpp"
 #include "tsm.hpp"
+#include "utilities.hpp"
 
 #include <iterator>
 #include <map>
