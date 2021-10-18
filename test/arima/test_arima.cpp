@@ -19,7 +19,7 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
 
         size_t nan{0};
         for (size_t i{0}; i < lvs.size(); i++) {
-            if (!lvs[i].get_value())
+            if (!lvs[i].get_value().has_value())
                 nan++;
         }
         REQUIRE(nan == 0);
@@ -35,7 +35,7 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
 
         size_t nan{0};
         for (size_t i{0}; i < lvs.size(); i++) {
-            if (!lvs[i].get_value())
+            if (!lvs[i].get_value().has_value())
                 nan++;
         }
         REQUIRE(nan == 0);
@@ -68,8 +68,8 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
         Results* x{model.fit()};
         DataFrame test_df = model.predict(5);
 
-        for(auto& vec : test_df.data)
-            for(auto& elem : vec)
+        for (auto& vec : test_df.data)
+            for (auto& elem : vec)
                 REQUIRE(!std::isnan(elem));
         delete x;
     }
@@ -79,39 +79,40 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
         Results* x{model.fit()};
         DataFrame test_df = model.predict_is(5);
 
-        for(auto& vec : test_df.data)
-            for(auto& elem : vec)
+        for (auto& vec : test_df.data)
+            for (auto& elem : vec)
                 REQUIRE(!std::isnan(elem));
         delete x;
     }
 
-    SECTION("Test predictions not having constant values"){
+    SECTION("Test predictions not having constant values") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
         DataFrame predictions = model.predict(10, false);
-        REQUIRE(! (std::adjacent_find( predictions.data.begin(), predictions.data.end(), std::not_equal_to<>() )
-                  == predictions.data.end() ) );
+        REQUIRE(!(std::adjacent_find(predictions.data.begin(), predictions.data.end(), std::not_equal_to<>()) ==
+                  predictions.data.end()));
         delete x;
     }
 
-    SECTION("Test predictions not having constant values"){
+    SECTION("Test predictions not having constant values") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
         DataFrame predictions = model.predict_is(10, false);
-        REQUIRE(! (std::adjacent_find( predictions.data.begin(), predictions.data.end(), std::not_equal_to<>() )
-        == predictions.data.end() ) );
+        REQUIRE(!(std::adjacent_find(predictions.data.begin(), predictions.data.end(), std::not_equal_to<>()) ==
+                  predictions.data.end()));
         delete x;
     }
 
-    SECTION("Tests prediction intervals are ordered correctly"){
+    SECTION("Tests prediction intervals are ordered correctly") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
         DataFrame predictions = model.predict(10, false);
 
         // forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99
-        for(int i = 4; i > 1; i--) {
+        for (int i = 4; i > 1; i--) {
             double sup_min_element = *min_element(std::begin(predictions.data.at(i)), std::end(predictions.data.at(i)));
-            double inf_max_element = *min_element(std::begin(predictions.data.at(i-1)), std::end(predictions.data.at(i-1)));
+            double inf_max_element =
+                    *min_element(std::begin(predictions.data.at(i - 1)), std::end(predictions.data.at(i - 1)));
             REQUIRE(sup_min_element >= inf_max_element);
         }
 
@@ -133,14 +134,14 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
         Eigen::MatrixXd sample = model.sample(100);
 
         REQUIRE(sample.rows() == 100);
-        REQUIRE(sample.cols() == data.size()-2);
+        REQUIRE(sample.cols() == data.size() - 2);
 
         delete x;
     }
 
-    SECTION("Test ppc value"){
+    SECTION("Test ppc value") {
         ARIMA model{data, 2, 2};
-        auto op = std::nullopt;
+        auto op                                   = std::nullopt;
         std::optional<Eigen::MatrixXd>& op_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt;
         Results* x{model.fit("BBVI", false, op_matrix, 100, op, op, op, op, op, op, op, true)};
         double p_value = model.ppc();

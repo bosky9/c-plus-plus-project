@@ -79,7 +79,7 @@ void LatentVariable::plot_z(size_t width, size_t height) {
            "No information on latent variables to plot!");
     std::function<double(double)> transform = _prior->get_transform();
     if (_sample.has_value()) {
-        std::vector<double> x{&_sample.value()[0], _sample.value().data()};
+        std::vector<double> x{&_sample.value()[0], _sample.value().data() + _sample.value().size()};
         std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
         plt::named_plot(_method + " estimate of " + _name, x);
     } else if (_value.has_value() && _std.has_value()) {
@@ -87,13 +87,13 @@ void LatentVariable::plot_z(size_t width, size_t height) {
         if (_prior->get_transform_name().empty()) {
             Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(100, _value.value() - _std.value() * 3.5,
                                                            _value.value() + _std.value() * 3.5);
-            std::vector<double> x_v{&x[0], x.data()};
+            std::vector<double> x_v{&x[0], x.data() + x.size()};
             Eigen::VectorXd y = Mvn::pdf(x, _value.value(), _std.value());
-            std::vector<double> y_v{&y[0], y.data()};
+            std::vector<double> y_v{&y[0], y.data() + y.size()};
             plt::named_plot(_method + " estimate of " + _name, x_v, y_v);
         } else {
             Eigen::VectorXd sims{Mvn::random(_value.value(), _std.value(), 100000)};
-            std::vector<double> sims_v{&sims[0], sims.data()};
+            std::vector<double> sims_v{&sims[0], sims.data() + sims.size()};
             std::transform(sims_v.begin(), sims_v.end(), sims_v.begin(),
                            [transform](double n) { return transform(n); });
             plt::named_plot(_method + " estimate of " + _name, sims_v);
@@ -208,15 +208,15 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "("); // Creates a vector of indices_dim (
 
-    size_t previous_span = indices_dim;
+    size_t previous_span  = indices_dim;
     size_t previous_value = 1;
 
     for (Eigen::Index d{0}; d < dim.size(); d++) {
         // span is the remaining length
         // Eigen::Index span     = std::accumulate(dim.begin() + d + 1, dim.end(), 1, std::multiplies<>());
-        Eigen::Index span = previous_span / previous_value;
-        size_t current_dim = dim.at(d);
-        size_t divide_by = span / current_dim;
+        Eigen::Index span     = previous_span / previous_value;
+        size_t current_dim    = dim.at(d);
+        size_t divide_by      = span / current_dim;
         std::string separator = (d == dim.size() - 1) ? "," : ")";
         // append these fractions to each string of indices
         for (size_t indx{1}; indx < indices_dim; indx++) {
@@ -298,9 +298,9 @@ Eigen::VectorXd LatentVariables::get_z_starting_values(bool transformed) const {
 Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
     assert(_estimated);
     std::vector<std::function<double(double)>> transforms = get_z_transforms();
-    Eigen::VectorXd values(_z_list.size());
+    Eigen::VectorXd values{Eigen::VectorXd::Zero(_z_list.size())};
     for (Eigen::Index i{0}; i < _z_list.size(); i++) {
-        assert(_z_list[i].get_value());
+        assert(_z_list[i].get_value().has_value());
         values(i) = transformed ? transforms[i](_z_list[i].get_value().value()) : _z_list[i].get_value().value();
     }
     return values;
@@ -371,7 +371,8 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
             std::find(indices.value().begin(), indices.value().end(), z) == indices.value().end()) {
             std::function<double(double)> transform = _z_list[z].get_prior()->get_transform();
             if (_z_list[z].get_sample().has_value()) {
-                std::vector<double> x{&_z_list[z].get_sample().value()[0], _z_list[z].get_sample().value().data()};
+                std::vector<double> x{&_z_list[z].get_sample().value()[0],
+                                      _z_list[z].get_sample().value().data() + _z_list[z].get_sample().value().size()};
                 std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
                 plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), x);
             } else if (_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value()) {
@@ -379,14 +380,14 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
                     Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(
                             100, _z_list[z].get_value().value() - _z_list[z].get_std().value() * 3.5,
                             _z_list[z].get_value().value() + _z_list[z].get_std().value() * 3.5);
-                    std::vector<double> x_v{&x[0], x.data()};
+                    std::vector<double> x_v{&x[0], x.data() + x.size()};
                     Eigen::VectorXd y = Mvn::pdf(x, _z_list[z].get_value().value(), _z_list[z].get_std().value());
-                    std::vector<double> y_v{&y[0], y.data()};
+                    std::vector<double> y_v{&y[0], y.data() + y.size()};
                     plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), x_v, y_v);
                 } else {
                     Eigen::VectorXd sims{
                             Mvn::random(_z_list[z].get_value().value(), _z_list[z].get_std().value(), 100000)};
-                    std::vector<double> sims_v{&sims[0], sims.data()};
+                    std::vector<double> sims_v{&sims[0], sims.data() + sims.size()};
                     std::transform(sims_v.begin(), sims_v.end(), sims_v.begin(),
                                    [transform](double n) { return transform(n); });
                     plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), sims_v);
@@ -426,20 +427,20 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
             if (iteration >= 1 && iteration <= _z_list.size() * 4 + 1) {
                 std::function<double(double)> transform = _z_list[i].get_prior()->get_transform();
                 if (iteration % 4 == 1) {
-                    std::vector<double> x{&chain[0], chain.data()};
+                    std::vector<double> x{&chain[0], chain.data() + chain.size()};
                     std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
                     plt::plot(x, palette[i]);
                     plt::ylabel(_z_list[i].get_name());
                     if (iteration == 1)
                         plt::title("Density Estimate");
                 } else if (iteration % 4 == 2) {
-                    std::vector<double> x{&chain[0], chain.data()};
+                    std::vector<double> x{&chain[0], chain.data() + chain.size()};
                     std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
                     plt::plot(x, palette[i]);
                     if (iteration == 2)
                         plt::title("Trace Plot");
                 } else if (iteration % 4 == 3) {
-                    std::vector<double> x{&chain[0], chain.data()};
+                    std::vector<double> x{&chain[0], chain.data() + chain.size()};
                     std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
                     std::partial_sum(x.begin(), x.end(), x.begin());
                     std::vector<double> indices(chain.size());

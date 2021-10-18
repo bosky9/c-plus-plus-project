@@ -114,7 +114,7 @@ Eigen::VectorXd Normal::draw_variable_local(size_t size) const {
     return Mvn::random(_mu0, _sigma0, size);
 }
 
-double Normal::logpdf(double mu) {
+double Normal::logpdf(double mu) const {
     if (!_transform_name.empty())
         mu = _transform(mu);
     return -log(_sigma0) - (0.5 * std::pow(mu - _mu0, 2)) / std::pow(_sigma0, 2);

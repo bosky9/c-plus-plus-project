@@ -60,14 +60,13 @@ protected:
     std::string _model_name2; ///< The self.model_name2 variable in python
     std::string _model_type;  ///< The type of model (e.g. 'ARIMA', 'GARCH')
     bool _multivariate_model;
-    std::function<double(Eigen::VectorXd)> _neg_logposterior;
+    std::function<double(const Eigen::VectorXd&)> _neg_logposterior;
+    std::function<double(const Eigen::VectorXd&, size_t)> _mb_neg_logposterior;
+    // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior; // Only for VAR models
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&)> _model;
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&, size_t mb)> _mb_model;
     std::function<double(const Eigen::VectorXd&)> _neg_loglik;
     std::function<double(const Eigen::VectorXd&, size_t mb)> _mb_neg_loglik;
-    // Not used in Python
-    // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior;
-    std::function<double(Eigen::VectorXd, std::optional<size_t>)> _mb_neg_logposterior;
     bool _z_hide;
     int _max_lag;
     LatentVariables _latent_variables; ///< Holding variables for model output
@@ -163,7 +162,7 @@ protected:
                   const std::optional<Eigen::VectorXd>& start = std::nullopt);
 
 public:
-    //@Todo: consider using only optional on None parameters
+    //@TODO: consider using only optional on None parameters
     /**
      * @brief Fits a model
      * @param method A fitting method (e.g. 'MLE')
@@ -187,6 +186,24 @@ public:
                          const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
                          const std::optional<bool> record_elbo    = std::nullopt,
                          const std::optional<bool> quiet_progress = false);
+
+    /**
+     * @brief Returns negative log posterior
+     * @param beta Contains untransformed starting values for latent variables
+     * @return Negative log posterior
+     */
+    [[nodiscard]] double neg_logposterior(const Eigen::VectorXd& beta);
+
+    /**
+     * @brief Returns negative log posterior
+     * @param beta Contains untransformed starting values for latent variables
+     * @param mini_batch Batch size for the data
+     * @return Negative log posterior
+     */
+    [[nodiscard]] double mb_neg_logposterior(const Eigen::VectorXd& beta, size_t mini_batch);
+
+    // Used only in VAR models
+    //[[nodiscard]] double multivariate_neg_logposterior(const Eigen::VectorXd& beta);
 
     /**
      * @brief Auxiliary function for creating dates for forecasts

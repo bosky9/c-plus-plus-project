@@ -6,7 +6,12 @@ FunctionXd::scalar_t Posterior::operator()(const vector_t& x) const {
     return x[0];
 }
 
-TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_variables{model_type} {}
+TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_variables{model_type} {
+    _neg_logposterior    = {[this](const Eigen::VectorXd& x) { return neg_logposterior(x); }};
+    _mb_neg_logposterior = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_neg_logposterior(x, mb); }};
+    //_multivariate_neg_logposterior = {[this](const Eigen::VectorXd& x) { return multivariate_neg_logposterior(x); }};
+    //// Only for VAR models
+}
 
 BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
                             const std::string& optimizer, size_t iterations, bool map_start, size_t batch_size,
@@ -20,7 +25,10 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         Posterior function{[posterior](Eigen::VectorXd x) { return posterior(std::move(x), std::nullopt); }};
         cppoptlib::solver::Lbfgsb<Posterior> solver{
                 FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::min()),
-                FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::max())};
+                FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::max()),
+                cppoptlib::solver::DefaultStoppingSolverState<FunctionXd::scalar_t>(),
+                cppoptlib::solver::GetEmptyStepCallback<FunctionXd::scalar_t, FunctionXd::vector_t,
+                                                        FunctionXd::hessian_t>()};
         auto [p, solver_state] = solver.Minimize(function, phi);
         start_loc              = 0.8 * p.x + 0.2 * phi;
     } else
@@ -160,7 +168,7 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
     // Starting values - Check to see if model has preoptimize method, if not, simply use default starting values
     Eigen::VectorXd phi;
     bool preoptimized{false};
-    if (start != std::nullopt)
+    if (start.has_value())
         phi = start.value();
     else {
         // Possible call to  _preoptimize_model() (from subclass)
@@ -171,7 +179,10 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
     Posterior function{obj_type};
     cppoptlib::solver::Lbfgsb<Posterior> solver{
             FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::min()),
-            FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::max())};
+            FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::max()),
+            cppoptlib::solver::DefaultStoppingSolverState<FunctionXd::scalar_t>(),
+            cppoptlib::solver::GetEmptyStepCallback<FunctionXd::scalar_t, FunctionXd::vector_t,
+                                                    FunctionXd::hessian_t>()};
     auto [p, solver_state] = solver.Minimize(function, phi);
 
     if (preoptimized) {
@@ -190,9 +201,10 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
 
     _latent_variables.set_estimation_method(method);
 
-    return new MLEResults({_data_frame.data_name}, output.X_names.value(), _model_name, _model_type, _latent_variables,
-                          p.x, output.Y, _data_frame.index, _multivariate_model, obj_type, method, _z_hide, _max_lag,
-                          ihessian, output.theta, output.scores, output.states, output.states_var);
+    return new MLEResults({_data_frame.data_name}, output.X_names.value_or(std::vector<std::string>{}), _model_name,
+                          _model_type, _latent_variables, p.x, output.Y, _data_frame.index, _multivariate_model,
+                          obj_type, method, _z_hide, _max_lag, ihessian, output.theta, output.scores, output.states,
+                          output.states_var);
 }
 
 Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixXd>& cov_matrix,
@@ -220,14 +232,28 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
         return _laplace_fit(_neg_logposterior);
 
     else if (method == "BBVI") {
-        std::function<double(Eigen::VectorXd, std::optional<size_t>)> posterior;
+        std::function<double(const Eigen::VectorXd&, std::optional<size_t>)> posterior;
         if (!mininbatch) {
             posterior = change_function_params(_neg_logposterior);
         } else
-            posterior = _mb_neg_logposterior;
+            posterior = change_function_params(_mb_neg_logposterior);
         return _bbvi_fit(posterior);
     } else if (method == "OLS")
         return _ols_fit();
+}
+
+[[nodiscard]] double TSM::neg_logposterior(const Eigen::VectorXd& beta) {
+    double post = _neg_loglik(beta);
+    for (Eigen::Index k{0}; k < _z_no; k++)
+        post += -_latent_variables.get_z_list()[k].get_prior()->logpdf(beta[k]);
+    return post;
+}
+
+[[nodiscard]] double TSM::mb_neg_logposterior(const Eigen::VectorXd& beta, size_t mini_batch) {
+    double post = (_data_frame.data.size() / mini_batch) * _mb_neg_loglik(beta, mini_batch);
+    for (Eigen::Index k{0}; k < _z_no; k++)
+        post += -_latent_variables.get_z_list()[k].get_prior()->logpdf(beta[k]);
+    return post;
 }
 
 std::vector<double> TSM::shift_dates(size_t n) const {

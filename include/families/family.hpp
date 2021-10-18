@@ -149,8 +149,8 @@ public:
     [[nodiscard]] virtual Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness,
                                                         int nsims) const;
 
-    [[nodiscard]] virtual Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness,
-                                                        int nsims) const;
+    [[nodiscard]] virtual Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, double shape,
+                                                        double skewness, int nsims) const;
 
     /**
      * @brief Wrapper function for changing latent variables for variational inference
@@ -158,6 +158,13 @@ public:
      * @return Array of Family random variable
      */
     [[nodiscard]] virtual Eigen::VectorXd draw_variable_local(size_t size) const;
+
+    /**
+     * @brief Log PDF for generic Family prior
+     * @param mu Latent variable for which the prior is being formed over
+     * @return log(p(mu))
+     */
+    [[nodiscard]] virtual double logpdf(double mu) const;
 
     /**
      * @brief Returns the attributes of this family if using in a probabilistic model

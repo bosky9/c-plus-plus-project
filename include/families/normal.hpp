@@ -119,9 +119,11 @@ public:
      * @param nsims Number of draws to take from the distribution
      * @return Random draws from the distribution, obtained thanks to the std::normal_distribution library.
      */
-    [[nodiscard]] Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness, int nsims) const override;
+    [[nodiscard]] Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skewness,
+                                                int nsims) const override;
 
-    [[nodiscard]] Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness, int nsims) const override;
+    [[nodiscard]] Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness,
+                                                int nsims) const override;
 
 
     /**
@@ -136,7 +138,7 @@ public:
      * @param mu Latent variable for which the prior is being formed over
      * @return log(p(mu))
      */
-    double logpdf(double mu);
+    [[nodiscard]] double logpdf(double mu) const override;
 
     /**
      * @brief Markov blanket for each likelihood term - used for space state models

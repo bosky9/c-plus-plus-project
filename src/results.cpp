@@ -320,7 +320,7 @@ inline std::ostream& operator<<(std::ostream& stream, const BBVIResults& results
 
 void BBVIResults::plot_elbo(size_t width, size_t height) const {
     plt::figure_size(width, height);
-    std::vector<double> elbo_records{&_elbo_records[0], _elbo_records.data()};
+    std::vector<double> elbo_records{&_elbo_records[0], _elbo_records.data() + _elbo_records.size()};
     plt::plot(elbo_records);
     plt::xlabel("Iterations");
     plt::ylabel("ELBO");
@@ -451,7 +451,7 @@ inline std::ostream& operator<<(std::ostream& stream, const BBVISSResults& resul
 
 void BBVISSResults::plot_elbo(size_t width, size_t height) const {
     plt::figure_size(width, height);
-    std::vector<double> elbo_records{&_elbo_records[0], _elbo_records.data()};
+    std::vector<double> elbo_records{&_elbo_records[0], _elbo_records.data() + _elbo_records.size()};
     plt::plot(elbo_records);
     plt::xlabel("Iterations");
     plt::ylabel("ELBO");

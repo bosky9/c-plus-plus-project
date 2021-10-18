@@ -146,7 +146,8 @@ Eigen::VectorXd Family::draw_variable(double loc, double scale, double shape, do
     return {};
 }
 
-Eigen::VectorXd Family::draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness, int nsims) const {
+Eigen::VectorXd Family::draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skewness,
+                                      int nsims) const {
     return {};
 }
 
@@ -154,11 +155,16 @@ Eigen::VectorXd Family::draw_variable_local(size_t size) const {
     return {};
 }
 
+double Family::logpdf(double mu) const {
+    return {};
+}
+
 Family* Family::clone() const {
     return new Family(*this);
 }
 
-double Family::neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale, double shape, double skewness) const {
+double Family::neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale, double shape,
+                                 double skewness) const {
     return 0;
 }
 

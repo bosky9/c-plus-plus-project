@@ -235,7 +235,7 @@ private:
      * @param t_z A vector of (transformed) latent variables
      * @return h-length vector of mean predictions
      */
-    [[nodiscard]] Eigen::VectorXd mean_prediction(Eigen::VectorXd mu, Eigen::VectorXd Y, size_t h,
+    [[nodiscard]] Eigen::VectorXd mean_prediction(const Eigen::VectorXd& mu, const Eigen::VectorXd& Y, size_t h,
                                                   Eigen::VectorXd t_z) const;
 
     /**
