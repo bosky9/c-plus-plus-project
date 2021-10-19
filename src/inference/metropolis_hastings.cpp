@@ -1,7 +1,7 @@
 #include "inference/metropolis_hastings.hpp"
 
-MetropolisHastings::MetropolisHastings(std::function<double(Eigen::VectorXd)>& posterior, double scale, size_t nsims,
-                                       const Eigen::VectorXd& initials,
+MetropolisHastings::MetropolisHastings(std::function<double(const Eigen::VectorXd&)>& posterior, double scale,
+                                       size_t nsims, const Eigen::VectorXd& initials,
                                        const std::optional<Eigen::MatrixXd>& cov_matrix, int thinning,
                                        bool warm_up_period, // TODO: TSM model_object = nullptr,
                                        bool quiet_progress)

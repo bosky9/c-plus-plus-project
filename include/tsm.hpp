@@ -41,11 +41,9 @@ struct ModelOutput final {
 
 class Posterior : public FunctionXd {
 public:
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    std::function<double(const vector_t&)> _posterior;
 
-    std::function<double(vector_t)> _posterior;
-
-    explicit Posterior(const std::function<double(vector_t)>& posterior);
+    explicit Posterior(const std::function<double(const vector_t&)>& posterior);
 
     scalar_t operator()(const vector_t& x) const override;
 };

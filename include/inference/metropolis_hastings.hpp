@@ -37,7 +37,7 @@ public:
      * // TODO: TSM model_object A model object (for use in SPDK sampling)
      * @param quiet_progress Whether to print progress to console or stay quiet
      */
-    MetropolisHastings(std::function<double(Eigen::VectorXd)>& posterior, double scale, size_t nsims,
+    MetropolisHastings(std::function<double(const Eigen::VectorXd&)>& posterior, double scale, size_t nsims,
                        const Eigen::VectorXd& initials, const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
                        int thinning = 2, bool warm_up_period = true, // TODO: TSM model_object = nullptr,
                        bool quiet_progress = false);

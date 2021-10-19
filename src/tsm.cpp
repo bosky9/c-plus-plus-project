@@ -1,9 +1,9 @@
 #include "tsm.hpp"
 
-Posterior::Posterior(const std::function<double(vector_t)>& posterior) : FunctionXd{}, _posterior{posterior} {}
+Posterior::Posterior(const std::function<double(const vector_t&)>& posterior) : FunctionXd{}, _posterior{posterior} {}
 
 FunctionXd::scalar_t Posterior::operator()(const vector_t& x) const {
-    return x[0];
+    return _posterior(x);
 }
 
 TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_variables{model_type} {
@@ -184,6 +184,7 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
             cppoptlib::solver::GetEmptyStepCallback<FunctionXd::scalar_t, FunctionXd::vector_t,
                                                     FunctionXd::hessian_t>()};
     auto [p, solver_state] = solver.Minimize(function, phi);
+    std::cout << p.x << " vs " << obj_type(phi) << "\n";
 
     if (preoptimized) {
         auto [p2, solver_state2] = solver.Minimize(function, _latent_variables.get_z_starting_values());
