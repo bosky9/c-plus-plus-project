@@ -16,3 +16,5 @@ struct DataFrame final {
 };
 
 DataFrame parse_csv(const std::string& path);
+
+DataFrame parse_csv(std::ifstream& path);

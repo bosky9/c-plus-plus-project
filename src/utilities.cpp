@@ -1,17 +1,17 @@
 #include "utilities.hpp"
 
 #include <sstream>
+#include <type_traits>
 
-DataFrame parse_csv(const std::string& path) {
+DataFrame csvToDataFrame(std::ifstream& file) {
     DataFrame df;
     std::string line;
-    std::ifstream myfile(path);
-    if (myfile.is_open()) {
+    if (file.is_open()) {
         // First line (if there aren't column with name "time", simulate it incrementing by 1 the time value)
         bool found_index_col{false};
         size_t index_col{0};
         std::vector<size_t> data_cols;
-        if (std::getline (myfile,line)) {
+        if (std::getline(file,line)) {
             std::stringstream lineStream(line);
             std::string cell;
             size_t i{0};
@@ -32,7 +32,7 @@ DataFrame parse_csv(const std::string& path) {
         }
         df.data.resize(data_cols.size());
         // Other lines
-        while (std::getline (myfile,line) ) {
+        while (std::getline(file,line)) {
             std::stringstream lineStream(line);
             std::string cell;
             bool added_index_val{false};
@@ -56,7 +56,18 @@ DataFrame parse_csv(const std::string& path) {
             for (; i < data_cols.size(); i++)
                 df.data.at(i).push_back(0);
         }
-        myfile.close();
     }
-    return df;
+    return std::move(df);
 }
+
+DataFrame parse_csv(const std::string& file) {
+    std::ifstream myfile(file);
+    DataFrame df = csvToDataFrame(myfile);
+    myfile.close();
+    return std::move(df);
+}
+
+DataFrame parse_csv(std::ifstream& file) {
+    return std::move(csvToDataFrame(file));
+}
+
