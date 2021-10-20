@@ -1,8 +1,77 @@
 #include <catch2/catch_test_macros.hpp>
+#include <lbfgspp/LBFGS.h>
 
 #include "arima/arima.hpp"
 
 #include <random>
+
+/*
+double ARIMA::normal_neg_loglik(const Eigen::VectorXd& beta) const {
+    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = normal_model(beta);
+    Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
+    return -Mvn::logpdf(mu_y.second, mu_y.first, scale).sum();
+}
+ */
+
+/*
+std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::VectorXd& beta) const {
+    Eigen::VectorXd Y(_data_frame.data.size() - _max_lag);
+    std::copy(_data_frame.data.begin() + _max_lag, _data_frame.data.end(), Y.begin());
+
+    // Transform latent variables
+    Eigen::VectorXd z(beta.size());
+    for (Eigen::Index i{0}; i < beta.size(); i++) {
+        z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
+    }
+
+    // Constant and AR terms
+    Eigen::VectorXd mu;
+    if (_ar != 0)
+        mu = _x.transpose() * z(Eigen::seq(0, Eigen::last - static_cast<Eigen::Index>(_family_z_no + _ma)));
+    else
+        mu = Eigen::VectorXd::Zero(Y.size()) * z[0];
+
+    // MA terms
+    if (_ma != 0)
+        mu = arima_recursion_normal(z, mu, Y, _max_lag, Y.size(), _ar, _ma);
+
+    return {mu, Y};
+}
+ *
+ */
+
+TEST_CASE("Test normal_neg_loglik", "[ARIMA]") {
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0, 1);
+    std::vector<double> data(10, 0);
+    for (size_t i{1}; i < 10; i++)
+        data[i] = 0.9 * data[i - 1] + distribution(generator);
+
+    ARIMA my_arima{data, 2, 2};
+
+    Eigen::VectorXd beta = my_arima.get_phi();
+
+    // Set up parameters
+    LBFGSpp::LBFGSParam<double> param;
+    param.epsilon = 1e-6;
+    param.max_iterations = 100;
+
+    // Create solver and function object
+    LBFGSpp::LBFGSSolver<double> solver(param);
+    Eigen::VectorXd x = Eigen::VectorXd::Constant(beta.size(), 0.5);
+
+    double y = my_arima.normal_neg_loglik(beta);
+
+    double fx;
+    int niter = solver.minimize(my_arima, x, fx);
+
+    std::cout << niter << " iterations" << std::endl;
+    std::cout << "x = \n" << x.transpose() << std::endl;
+    std::cout << "Beta: " << beta << '\n';
+    std::cout << "f(x) = " << fx << std::endl;
+
+    std::cout << y;
+}
 
 TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
     std::default_random_engine generator;

@@ -196,13 +196,6 @@ private:
     //  TODO: Non abbiamo implementato in families Poisson!
 
     /**
-     * @brief Calculates the negative log-likelihood of the model for Normal family
-     * @param beta Contains untransformed starting values for latent variables
-     * @return The negative logliklihood of the model
-     */
-    [[nodiscard]] double normal_neg_loglik(const Eigen::VectorXd& beta) const;
-
-    /**
      * @brief Calculates the negative log-likelihood of the model for Normal family for a minibatch
      * @param beta Contains untransformed starting values for latent variables
      * @param mini_batch Size of each mini batch of data
@@ -210,12 +203,7 @@ private:
      */
     [[nodiscard]] double normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const;
 
-    /**
-     * @brief Calculates the negative log-likelihood of the model for non-Normal family
-     * @param beta Contains untransformed starting values for latent variables
-     * @return The negative logliklihood of the model
-     */
-    [[nodiscard]] double non_normal_neg_loglik(const Eigen::VectorXd& beta) const;
+
 
     /**
      * @brief Calculates the negative log-likelihood of the model for non-Normal family for a minibatch
@@ -288,6 +276,15 @@ public:
      * @param family E.g. Normal() (default)
      */
     ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
+
+    /**
+    * @brief Calculates the negative log-likelihood of the model for non-Normal family
+    * @param beta Contains untransformed starting values for latent variables
+    * @return The negative logliklihood of the model
+    */
+    [[nodiscard]] double non_normal_neg_loglik(const Eigen::VectorXd& beta) const;
+
+    [[nodiscard]] double normal_neg_loglik(const Eigen::VectorXd& beta) const;
 
     /**
      * @brief Constructor for ARIMA object
@@ -384,4 +381,61 @@ public:
     void plot_ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = mean,
                   const std::string& T_name = "mean", std::optional<size_t> width = 10,
                   std::optional<size_t> height = 7) const;
+
+    Eigen::VectorXd get_phi(){
+        return _latent_variables.get_z_starting_values();
+    }
+
+
+    double operator()(const Eigen::VectorXd& beta, Eigen::VectorXd& grad) {
+        // Copies of beta
+        Eigen::VectorXd beta_temp_plus = beta;
+        Eigen::VectorXd beta_temp_minus = beta;
+
+        for (int i = 0; i < beta.size(); i++){
+            // Init h
+
+            double h;
+
+            if(beta[i] != 0) {
+                h             = std::cbrt(std::numeric_limits<double>::epsilon()) * beta[i];
+                double volatile temp = beta[i] + h;
+                h                    = temp - beta[i];
+            }
+            else{
+                h             = std::cbrt(std::numeric_limits<double>::epsilon()) * 1e-6;
+                double volatile temp = 1e-6 + h;
+                h                    = temp - 1e-6;
+            }
+
+            // Add h
+            beta_temp_plus[i]   = beta[i] + h;
+            beta_temp_minus[i]  = beta[i] - h;
+
+            // Create f(x+h), f(x-h)
+            std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = normal_model(beta_temp_plus);
+            Eigen::VectorXd scale_plus{{_latent_variables.get_z_priors().back()->get_transform()(beta_temp_plus(Eigen::last))}};
+            double f_plus = -Mvn::logpdf(mu_y.second, mu_y.first, scale_plus).sum();
+
+            mu_y = normal_model(beta_temp_minus);
+            Eigen::VectorXd scale_minus{{_latent_variables.get_z_priors().back()->get_transform()(beta_temp_minus(Eigen::last))}};
+            double f_minus = -Mvn::logpdf(mu_y.second, mu_y.first, scale_minus).sum();
+
+            // Compute gradient
+            grad[i] = (f_plus - f_minus)/(2*h);
+
+            // Refresh copy vectors
+            beta_temp_plus[i]   = beta[i];
+            beta_temp_minus[i]  = beta[i];
+
+        }
+
+        // Compute actual value
+        std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = normal_model(beta);
+        Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
+
+
+        return -Mvn::logpdf(mu_y.second, mu_y.first, scale).sum();
+    }
+
 };
