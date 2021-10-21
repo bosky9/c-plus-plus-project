@@ -1,19 +1,22 @@
 #include <catch2/catch_test_macros.hpp>
 #include <lbfgspp/LBFGS.h>
+#include <pybind11/eigen.h>
+#include <pybind11/embed.h>
+#include <pybind11/functional.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <random>
 
 #include "arima/arima.hpp"
 
-#include <random>
+namespace py = pybind11;
 
-/*
-double ARIMA::normal_neg_loglik(const Eigen::VectorXd& beta) const {
+/*double ARIMA::normal_neg_loglik(const Eigen::VectorXd& beta) const {
     std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = normal_model(beta);
     Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
     return -Mvn::logpdf(mu_y.second, mu_y.first, scale).sum();
 }
- */
 
-/*
 std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::VectorXd& beta) const {
     Eigen::VectorXd Y(_data_frame.data.size() - _max_lag);
     std::copy(_data_frame.data.begin() + _max_lag, _data_frame.data.end(), Y.begin());
@@ -36,9 +39,11 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::Vec
         mu = arima_recursion_normal(z, mu, Y, _max_lag, Y.size(), _ar, _ma);
 
     return {mu, Y};
+}*/
+
+double prova(Eigen::VectorXd x) {
+    return x[0];
 }
- *
- */
 
 TEST_CASE("Test normal_neg_loglik", "[ARIMA]") {
     std::default_random_engine generator;
@@ -49,28 +54,28 @@ TEST_CASE("Test normal_neg_loglik", "[ARIMA]") {
 
     ARIMA my_arima{data, 2, 2};
 
-    Eigen::VectorXd beta = my_arima.get_phi();
+    Eigen::VectorXd beta                       = my_arima.get_phi();
+    std::function<double(Eigen::VectorXd)> fun = [](const Eigen::VectorXd& x) { return 1; };
 
-    // Set up parameters
-    LBFGSpp::LBFGSParam<double> param;
-    param.epsilon = 1e-6;
-    param.max_iterations = 100;
+    py::scoped_interpreter guard{};
 
-    // Create solver and function object
-    LBFGSpp::LBFGSSolver<double> solver(param);
-    Eigen::VectorXd x = Eigen::VectorXd::Constant(beta.size(), 0.5);
+    py::function minimize = py::module::import("scipy.optimize").attr("minimize");
+    py::function py_fun   = py::cast(fun);
+    py::object p          = minimize(py_fun, beta);
+    Eigen::VectorXd x     = p.attr("x").cast<Eigen::VectorXd>();
+    bool success          = p.attr("success").cast<bool>();
+    int niter             = p.attr("nit").cast<int>();
+    double f              = p.attr("fun").cast<double>();
 
-    double y = my_arima.normal_neg_loglik(beta);
-
-    double fx;
-    int niter = solver.minimize(my_arima, x, fx);
+    // double y = fun(beta);
 
     std::cout << niter << " iterations" << std::endl;
     std::cout << "x = \n" << x.transpose() << std::endl;
+    std::cout << "Success: " << success << std::endl;
     std::cout << "Beta: " << beta << '\n';
-    std::cout << "f(x) = " << fx << std::endl;
+    std::cout << "f(x) = " << f << std::endl;
 
-    std::cout << y;
+    // std::cout << y;
 }
 
 TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {

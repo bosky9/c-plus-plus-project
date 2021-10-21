@@ -11,6 +11,12 @@ TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_varia
     _mb_neg_logposterior = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_neg_logposterior(x, mb); }};
     //_multivariate_neg_logposterior = {[this](const Eigen::VectorXd& x) { return multivariate_neg_logposterior(x); }};
     //// Only for VAR models
+    py::initialize_interpreter();
+    _minimize = py::module::import("scipy.optimize").attr("minimize");
+}
+
+TSM::~TSM() {
+    py::finalize_interpreter();
 }
 
 BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
@@ -175,36 +181,30 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
         phi = _latent_variables.get_z_starting_values();
     }
 
-    // Optimize using L-BFGS-B
-    Posterior function{obj_type};
-    cppoptlib::solver::Lbfgsb<Posterior> solver{
-            FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::min()),
-            FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::max()),
-            cppoptlib::solver::DefaultStoppingSolverState<FunctionXd::scalar_t>(),
-            cppoptlib::solver::GetEmptyStepCallback<FunctionXd::scalar_t, FunctionXd::vector_t,
-                                                    FunctionXd::hessian_t>()};
-    auto [p, solver_state] = solver.Minimize(function, phi);
-    std::cout << p.x << " vs " << obj_type(phi) << "\n";
+    py::function obj_type_py = py::cast(obj_type);
+    py::object p             = _minimize(obj_type_py, phi);
+    Eigen::VectorXd x        = p.attr("x").cast<Eigen::VectorXd>();
 
     if (preoptimized) {
-        auto [p2, solver_state2] = solver.Minimize(function, _latent_variables.get_z_starting_values());
-        if (_neg_loglik(p2.x) < _neg_loglik(p.x))
+        py::object p2      = _minimize(obj_type_py, _latent_variables.get_z_starting_values());
+        Eigen::VectorXd x2 = p2.attr("x").cast<Eigen::VectorXd>();
+        if (_neg_loglik(x2) < _neg_loglik(x))
             p = p2;
     }
 
-    ModelOutput output{categorize_model_output(p.x)};
+    ModelOutput output{categorize_model_output(x)};
 
     // Check that matrix is non-singular, act accordingly
-    Eigen::MatrixXd ihessian{derivatives::hessian(obj_type, p.x).inverse()};
+    Eigen::MatrixXd ihessian{derivatives::hessian(obj_type, x).inverse()};
     Eigen::MatrixXd ses{ihessian.diagonal().cwiseAbs().array().pow(0.5)};
-    _latent_variables.set_z_values(p.x, method, ses);
+    _latent_variables.set_z_values(x, method, ses);
     // _latent_variables.set_z_values(p.x, method);
 
     _latent_variables.set_estimation_method(method);
 
     return new MLEResults({_data_frame.data_name}, output.X_names.value_or(std::vector<std::string>{}), _model_name,
-                          _model_type, _latent_variables, p.x, output.Y, _data_frame.index, _multivariate_model,
-                          obj_type, method, _z_hide, _max_lag, ihessian, output.theta, output.scores, output.states,
+                          _model_type, _latent_variables, x, output.Y, _data_frame.index, _multivariate_model, obj_type,
+                          method, _z_hide, _max_lag, ihessian, output.theta, output.scores, output.states,
                           output.states_var);
 }
 

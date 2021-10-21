@@ -9,12 +9,18 @@
 #include "inference/stoch_optim.hpp"
 #include "latent_variables.hpp"
 #include "posterior.hpp"
+#include "pybind11/eigen.h"
+#include "pybind11/embed.h"
+#include "pybind11/functional.h"
+#include "pybind11/stl.h"
 #include "results.hpp"
 
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
+
+namespace py = pybind11;
 
 using FunctionXd = cppoptlib::function::Function<double>;
 
@@ -61,6 +67,7 @@ protected:
     std::function<double(const Eigen::VectorXd&)> _neg_logposterior;
     std::function<double(const Eigen::VectorXd&, size_t)> _mb_neg_logposterior;
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior; // Only for VAR models
+    py::function _minimize;
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&)> _model;
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&, size_t mb)> _mb_model;
     std::function<double(const Eigen::VectorXd&)> _neg_loglik;
@@ -78,6 +85,7 @@ protected:
     bool _is_pandas;
 
     explicit TSM(const std::string& model_type);
+    ~TSM();
 
     // TODO: I seguenti metodi sono presenti solo nella sottoclasse VAR
     //  Limitare i metodi che li usano solo alla classe VAR ?
