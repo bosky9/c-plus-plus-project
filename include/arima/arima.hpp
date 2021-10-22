@@ -62,11 +62,6 @@ inline double percentile(Eigen::VectorXd v, uint8_t p) {
     }
 }
 
-template<typename Base, typename T>
-inline bool instanceof (const T*) {
-    return std::is_base_of_v<Base, T>;
-}
-
 /**
  * @brief AutoRegressive Integrated Moving Average (ARIMA) models
  * (inherits time series methods from the TSM parent class)
@@ -381,61 +376,4 @@ public:
     void plot_ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = mean,
                   const std::string& T_name = "mean", std::optional<size_t> width = 10,
                   std::optional<size_t> height = 7) const;
-
-    Eigen::VectorXd get_phi(){
-        return _latent_variables.get_z_starting_values();
-    }
-
-
-    double operator()(const Eigen::VectorXd& beta, Eigen::VectorXd& grad) {
-        // Copies of beta
-        Eigen::VectorXd beta_temp_plus = beta;
-        Eigen::VectorXd beta_temp_minus = beta;
-
-        for (int i = 0; i < beta.size(); i++){
-            // Init h
-
-            double h;
-
-            if(beta[i] != 0) {
-                h             = std::cbrt(std::numeric_limits<double>::epsilon()) * beta[i];
-                double volatile temp = beta[i] + h;
-                h                    = temp - beta[i];
-            }
-            else{
-                h             = std::cbrt(std::numeric_limits<double>::epsilon()) * 1e-6;
-                double volatile temp = 1e-6 + h;
-                h                    = temp - 1e-6;
-            }
-
-            // Add h
-            beta_temp_plus[i]   = beta[i] + h;
-            beta_temp_minus[i]  = beta[i] - h;
-
-            // Create f(x+h), f(x-h)
-            std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = normal_model(beta_temp_plus);
-            Eigen::VectorXd scale_plus{{_latent_variables.get_z_priors().back()->get_transform()(beta_temp_plus(Eigen::last))}};
-            double f_plus = -Mvn::logpdf(mu_y.second, mu_y.first, scale_plus).sum();
-
-            mu_y = normal_model(beta_temp_minus);
-            Eigen::VectorXd scale_minus{{_latent_variables.get_z_priors().back()->get_transform()(beta_temp_minus(Eigen::last))}};
-            double f_minus = -Mvn::logpdf(mu_y.second, mu_y.first, scale_minus).sum();
-
-            // Compute gradient
-            grad[i] = (f_plus - f_minus)/(2*h);
-
-            // Refresh copy vectors
-            beta_temp_plus[i]   = beta[i];
-            beta_temp_minus[i]  = beta[i];
-
-        }
-
-        // Compute actual value
-        std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = normal_model(beta);
-        Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
-
-
-        return -Mvn::logpdf(mu_y.second, mu_y.first, scale).sum();
-    }
-
 };

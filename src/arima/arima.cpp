@@ -55,7 +55,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _z_no        = _latent_variables.get_z_list().size();
 
     // If Normal family is selected, we use faster likelihood functions
-    if (instanceof <Normal>(_family.get())) {
+    if (_family->get_name() == "Normal") {
         _model         = {[this](const Eigen::VectorXd& x) { return normal_model(x); }};
         _mb_model      = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_normal_model(x, mb); }};
         _neg_loglik    = {[this](const Eigen::VectorXd& x) { return normal_neg_loglik(x); }};
@@ -126,7 +126,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Fa
     _z_no        = _latent_variables.get_z_list().size();
 
     // If Normal family is selected, we use faster likelihood functions
-    if (instanceof <Normal>(_family.get())) {
+    if (_family->get_name() == "Normal") {
         _model         = {[this](const Eigen::VectorXd& x) { return normal_model(x); }};
         _mb_model      = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_normal_model(x, mb); }};
         _neg_loglik    = {[this](const Eigen::VectorXd& x) { return normal_neg_loglik(x); }};

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "cppoptlib/solver/lbfgsb.h"
 #include "families/family.hpp"
 #include "headers.hpp"
 #include "hessian.hpp"
@@ -15,8 +14,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-
-using FunctionXd = cppoptlib::function::Function<double>;
 
 /**
  * @brief Struct that represents the internal data of a time-series model
@@ -37,15 +34,6 @@ struct ModelOutput final {
     std::optional<Eigen::VectorXd> states;
     std::optional<Eigen::VectorXd> states_var;
     std::optional<std::vector<std::string>> X_names;
-};
-
-class Posterior : public FunctionXd {
-public:
-    std::function<double(const vector_t&)> _posterior;
-
-    explicit Posterior(const std::function<double(const vector_t&)>& posterior);
-
-    scalar_t operator()(const vector_t& x) const override;
 };
 
 /**

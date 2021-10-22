@@ -1,10 +1,8 @@
 #include "tsm.hpp"
 
-Posterior::Posterior(const std::function<double(const vector_t&)>& posterior) : FunctionXd{}, _posterior{posterior} {}
+#include "optimizer_function.hpp"
 
-FunctionXd::scalar_t Posterior::operator()(const vector_t& x) const {
-    return _posterior(x);
-}
+#include <lbfgspp/LBFGS.h>
 
 TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_variables{model_type} {
     _neg_logposterior    = {[this](const Eigen::VectorXd& x) { return neg_logposterior(x); }};
@@ -22,6 +20,8 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     Eigen::VectorXd start_loc;
     if ((_model_type != "GPNARX" || _model_type != "GPR" || _model_type != "GP" || _model_type != "GASRank") &&
         !mini_batch.has_value()) {
+        // TODO: Sostituire con il nuovo LBFGS
+        /*
         Posterior function{[posterior](Eigen::VectorXd x) { return posterior(std::move(x), std::nullopt); }};
         cppoptlib::solver::Lbfgsb<Posterior> solver{
                 FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::min()),
@@ -31,6 +31,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
                                                         FunctionXd::hessian_t>()};
         auto [p, solver_state] = solver.Minimize(function, phi);
         start_loc              = 0.8 * p.x + 0.2 * phi;
+         */
     } else
         start_loc = phi;
     Eigen::VectorXd start_ses{};
@@ -175,35 +176,38 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
         phi = _latent_variables.get_z_starting_values();
     }
 
-    // Optimize using L-BFGS-B
-    Posterior function{obj_type};
-    cppoptlib::solver::Lbfgsb<Posterior> solver{
-            FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::min()),
-            FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::max()),
-            cppoptlib::solver::DefaultStoppingSolverState<FunctionXd::scalar_t>(),
-            cppoptlib::solver::GetEmptyStepCallback<FunctionXd::scalar_t, FunctionXd::vector_t,
-                                                    FunctionXd::hessian_t>()};
-    auto [p, solver_state] = solver.Minimize(function, phi);
-    std::cout << p.x << " vs " << obj_type(phi) << "\n";
+    // Optimize using L-BFGS
+    // Set up parameters
+    LBFGSpp::LBFGSParam<double> param;
+    param.epsilon = 1e-6;
+    param.max_iterations = 100;
+    // Create solver and function object
+    LBFGSpp::LBFGSSolver<double> solver(param);
+    double fx;
+    OptimizerFunction function(obj_type);
+    Eigen::VectorXd x = Eigen::VectorXd::Constant(phi.size(), 0.5);
+    // TODO: Sostituire x con phi ?
+    int niter = solver.minimize(function, x, fx);
 
     if (preoptimized) {
-        auto [p2, solver_state2] = solver.Minimize(function, _latent_variables.get_z_starting_values());
-        if (_neg_loglik(p2.x) < _neg_loglik(p.x))
-            p = p2;
+        Eigen::VectorXd phi2 = _latent_variables.get_z_starting_values();
+        int niter = solver.minimize(function, phi2, fx);
+        if (_neg_loglik(phi2) < _neg_loglik(phi))
+            phi = phi2;
     }
 
-    ModelOutput output{categorize_model_output(p.x)};
+    ModelOutput output{categorize_model_output(phi)};
 
     // Check that matrix is non-singular, act accordingly
-    Eigen::MatrixXd ihessian{derivatives::hessian(obj_type, p.x).inverse()};
+    Eigen::MatrixXd ihessian{derivatives::hessian(obj_type, phi).inverse()};
     Eigen::MatrixXd ses{ihessian.diagonal().cwiseAbs().array().pow(0.5)};
-    _latent_variables.set_z_values(p.x, method, ses);
+    _latent_variables.set_z_values(phi, method, ses);
     // _latent_variables.set_z_values(p.x, method);
 
     _latent_variables.set_estimation_method(method);
 
     return new MLEResults({_data_frame.data_name}, output.X_names.value_or(std::vector<std::string>{}), _model_name,
-                          _model_type, _latent_variables, p.x, output.Y, _data_frame.index, _multivariate_model,
+                          _model_type, _latent_variables, phi, output.Y, _data_frame.index, _multivariate_model,
                           obj_type, method, _z_hide, _max_lag, ihessian, output.theta, output.scores, output.states,
                           output.states_var);
 }
