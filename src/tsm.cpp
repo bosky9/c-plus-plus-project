@@ -6,17 +6,30 @@ FunctionXd::scalar_t Posterior::operator()(const vector_t& x) const {
     return _posterior(x);
 }
 
-TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_variables{model_type} {
+TSM::TSM(const std::string& model_type, py::function minimize) :
+      _model_type{model_type},
+      _latent_variables{model_type},
+      _minimize{minimize}   {
     _neg_logposterior    = {[this](const Eigen::VectorXd& x) { return neg_logposterior(x); }};
     _mb_neg_logposterior = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_neg_logposterior(x, mb); }};
     //_multivariate_neg_logposterior = {[this](const Eigen::VectorXd& x) { return multivariate_neg_logposterior(x); }};
     //// Only for VAR models
-    py::initialize_interpreter();
-    _minimize = py::module::import("scipy.optimize").attr("minimize");
+/*
+    if(!_is_python_active) {
+        py::initialize_interpreter();
+        _minimize         = py::module::import("scipy.optimize").attr("minimize");
+        _is_python_active = true;
+    }
+*/
 }
 
 TSM::~TSM() {
-    py::finalize_interpreter();
+/*
+      if(_is_python_active) {
+         py::finalize_interpreter();
+          _is_python_active = false;
+      }
+*/
 }
 
 BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
@@ -165,6 +178,18 @@ MLEResults* TSM::_ols_fit() {
 }
 
 MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
+                                   const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
+                                   const std::optional<size_t> nsims, const std::optional<StochOptim>& optimizer,
+                                   const std::optional<uint8_t> batch_size, const std::optional<size_t> mini_batch,
+                                   const std::optional<bool> map_start, const std::optional<double> learning_rate,
+                                   const std::optional<bool> record_elbo, const std::optional<bool> quiet_progress,
+                                   const std::optional<bool> preopt_search, const std::optional<Eigen::VectorXd>& start) {
+    MLEResults* r = true_optimize_fit(method, obj_type, cov_matrix, iterations, nsims, optimizer, batch_size, mini_batch,
+                         map_start, learning_rate, record_elbo, quiet_progress);
+    return r;
+}
+
+MLEResults* TSM::true_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
                                const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
                                const std::optional<size_t> nsims, const std::optional<StochOptim>& optimizer,
                                const std::optional<uint8_t> batch_size, const std::optional<size_t> mini_batch,
@@ -182,6 +207,7 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
     }
 
     py::function obj_type_py = py::cast(obj_type);
+
     py::object p             = _minimize(obj_type_py, phi);
     Eigen::VectorXd x        = p.attr("x").cast<Eigen::VectorXd>();
 

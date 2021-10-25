@@ -15,8 +15,14 @@
 #include <map>
 #include <type_traits>
 #include <vector>
+#include <cmath>
 
 namespace plt = matplotlibcpp;
+
+constexpr int       NTAB    =   10;
+constexpr double    CON     =   1.4;
+constexpr double    CON2    =   CON*CON;
+constexpr double    SAFE    =   2.0;
 
 /**
  * @brief Mean function applied to a vector
@@ -275,7 +281,7 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
+    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, py::function minimize, size_t integ = 0, Family* family = new Normal());
 
     /**
     * @brief Calculates the negative log-likelihood of the model for non-Normal family
@@ -295,7 +301,7 @@ public:
      * @param family E.g. Normal() (default)
      * @param target Which array index to use
      */
-    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal(),
+    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, py::function minimize, size_t integ = 0, Family* family = new Normal(),
           const std::string& target = "");
 
     /**
@@ -388,6 +394,7 @@ public:
 
 
     double operator()(const Eigen::VectorXd& beta, Eigen::VectorXd& grad) {
+        /*
         // Copies of beta
         Eigen::VectorXd beta_temp_plus = beta;
         Eigen::VectorXd beta_temp_minus = beta;
@@ -398,12 +405,12 @@ public:
             double h;
 
             if(beta[i] != 0) {
-                h             = std::cbrt(std::numeric_limits<double>::epsilon()) * beta[i];
+                h             = std::sqrt(std::numeric_limits<double>::epsilon()) * (beta[i]);
                 double volatile temp = beta[i] + h;
                 h                    = temp - beta[i];
             }
             else{
-                h             = std::cbrt(std::numeric_limits<double>::epsilon()) * 1e-6;
+                h             = std::sqrt(std::numeric_limits<double>::epsilon()) * 1e-6;
                 double volatile temp = 1e-6 + h;
                 h                    = temp - 1e-6;
             }
@@ -429,6 +436,20 @@ public:
             beta_temp_minus[i]  = beta[i];
 
         }
+         */
+
+        for(int my_idx = 0; my_idx < beta.size(); my_idx++){
+            double h = beta[my_idx];
+            if (h == 0.0)
+                h = 1e-1;
+
+            double volatile temp = beta[my_idx] + h;
+            h                    = temp - beta[my_idx];
+
+            double err = std::numeric_limits<double>::infinity();
+
+            grad[my_idx] = dfridr(beta, h, err, my_idx);
+        }
 
         // Compute actual value
         std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = normal_model(beta);
@@ -438,4 +459,49 @@ public:
         return -Mvn::logpdf(mu_y.second, mu_y.first, scale).sum();
     }
 
+    double dfridr(const Eigen::VectorXd& beta, double h, double& err, const int& my_idx) {
+        int i, j;
+        double errt, fac, hh, ans;
+        Eigen::MatrixXd a(NTAB, NTAB);
+
+        Eigen::VectorXd btp{beta};    //beta_temp_plus
+        Eigen::VectorXd btm{beta};     //beta_temp_minus
+
+        hh = h;
+        double volatile temp = beta[my_idx] + hh;
+        hh                    = temp - beta[my_idx];
+        btp[my_idx]  = beta[my_idx] + hh;
+        btm[my_idx]  = beta[my_idx] - hh;
+
+        a(0,0) = (normal_neg_loglik(btp) - normal_neg_loglik(btm)) / 2.0*hh;
+        err = std::numeric_limits<double>::infinity();
+
+        for(i = 1; i < NTAB; i++) {
+            hh /= CON;
+            double volatile temp = beta[my_idx] + hh;
+            hh                    = temp - beta[my_idx];
+
+            btp[my_idx]  = beta[my_idx] + hh;
+            btm[my_idx]  = beta[my_idx] - hh;
+
+            a(0,i) = (normal_neg_loglik(btp) - normal_neg_loglik(btm)) / 2.0*hh;
+            fac = CON2;
+            for (j = 1; j <= i; j++) {
+                a(j, i) = a(j-1, i)*fac - a(j-1, i-1)/(fac-1.0);
+                fac = CON2 * fac;
+                errt = std::max(fabs(a(j,i)-a(j-1,i)), fabs(a(j,i)-a(j-1,i-1)));
+
+                if (errt <= err) {
+                    err = errt;
+                    ans = a(j,i);
+                }
+            }
+            if (fabs(a(i,i)-a(i-1,i-1)) >= SAFE*err)
+                break;
+        }
+
+        return ans;
+    }
+
 };
+

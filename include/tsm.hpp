@@ -59,6 +59,9 @@ public:
  */
 class TSM {
 protected:
+    static bool _is_python_active;
+    static bool _is_minimize_defined;
+
     SingleDataFrame _data_frame;
     std::string _model_name;
     std::string _model_name2; ///< The self.model_name2 variable in python
@@ -67,10 +70,10 @@ protected:
     std::function<double(const Eigen::VectorXd&)> _neg_logposterior;
     std::function<double(const Eigen::VectorXd&, size_t)> _mb_neg_logposterior;
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior; // Only for VAR models
-    py::function _minimize;
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&)> _model;
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&, size_t mb)> _mb_model;
-    std::function<double(const Eigen::VectorXd&)> _neg_loglik;
+    py::function _minimize;
+
     std::function<double(const Eigen::VectorXd&, size_t mb)> _mb_neg_loglik;
     bool _z_hide;
     int _max_lag;
@@ -84,7 +87,7 @@ protected:
     size_t _ylen;
     bool _is_pandas;
 
-    explicit TSM(const std::string& model_type);
+    explicit TSM(const std::string& model_type, py::function minimize);
     ~TSM();
 
     // TODO: I seguenti metodi sono presenti solo nella sottoclasse VAR
@@ -167,7 +170,21 @@ protected:
                   const std::optional<bool> quiet_progress = false, const std::optional<bool> preopt_search = true,
                   const std::optional<Eigen::VectorXd>& start = std::nullopt);
 
+    MLEResults*
+    true_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type = {},
+                  const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
+                  const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
+                  const std::optional<StochOptim>& optimizer = std::nullopt,
+                  const std::optional<uint8_t> batch_size = 12, const std::optional<size_t> mini_batch = std::nullopt,
+                  const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
+                  const std::optional<bool> record_elbo    = std::nullopt,
+                  const std::optional<bool> quiet_progress = false, const std::optional<bool> preopt_search = true,
+                  const std::optional<Eigen::VectorXd>& start = std::nullopt);
+
 public:
+
+    std::function<double(const Eigen::VectorXd&)> _neg_loglik;
+
     //@TODO: consider using only optional on None parameters
     /**
      * @brief Fits a model

@@ -10,8 +10,12 @@ TEST_CASE("Tests an ARIMA model", "[TSM]") {
     for (size_t i{1}; i < 100; i++)
         data[i] = 0.9 * data[i - 1] + distribution(generator);
 
+    py::scoped_interpreter guard{};
+
+    py::function minimize = py::module::import("scipy.optimize").attr("minimize");
+
     SECTION("Fit", "[fit]") {
-        ARIMA model{data, 1, 2};
+        ARIMA model{data, 1, 2, minimize};
         Results* x{model.fit()};
     }
 }

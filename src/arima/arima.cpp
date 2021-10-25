@@ -1,6 +1,6 @@
 #include "arima/arima.hpp"
 
-ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, Family* family) : TSM{"ARIMA"} {
+ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, py::function minimize, size_t integ, Family* family) : TSM{"ARIMA", minimize} {
     // Latent Variable information
     _ar                 = ar;
     _ma                 = ma;
@@ -55,7 +55,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _z_no        = _latent_variables.get_z_list().size();
 
     // If Normal family is selected, we use faster likelihood functions
-    if (instanceof <Normal>(_family.get())) {
+    if (_family->get_name() == "Normal") {
         _model         = {[this](const Eigen::VectorXd& x) { return normal_model(x); }};
         _mb_model      = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_normal_model(x, mb); }};
         _neg_loglik    = {[this](const Eigen::VectorXd& x) { return normal_neg_loglik(x); }};
@@ -70,8 +70,8 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     }
 }
 
-ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Family* family, const std::string& target)
-    : TSM{"ARIMA"} {
+ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, py::function minimize, size_t integ, Family* family, const std::string& target)
+    : TSM{"ARIMA", minimize} {
     // Latent Variable information
     _ar                 = ar;
     _ma                 = ma;
@@ -707,7 +707,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
         std::iota(index.begin(), index.end(), 0);
-        ARIMA x{data_original_t, _ar, _ma, _integ, _family.get()};
+        ARIMA x{data_original_t, _ar, _ma, _minimize,_integ, _family.get()};
         if (!fit_once)
             x.fit(fit_method, false);
         if (t == 0) {
@@ -950,3 +950,6 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     plt::save("../data/arima/plot_ppc.png");
     // plt::show();
 }
+
+bool TSM::_is_python_active = false;
+bool TSM::_is_minimize_defined = false;
