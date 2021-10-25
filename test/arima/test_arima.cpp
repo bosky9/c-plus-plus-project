@@ -5,6 +5,13 @@
 
 #include <random>
 
+TEST_CASE("Test normal neg loglik", "[normal_neg_loglik]") {
+    std::vector<double> data = {2,4,7,9,13,18,25,30,38,45,65};
+    ARIMA my_arima{data, 2, 2};
+    Eigen::VectorXd phi = my_arima.get_latent_variables().get_z_starting_values();
+    //REQUIRE(my_arima.normal_neg_loglik(phi) == 1548.38);
+}
+
 TEST_CASE("Test optimize fit", "[optimize_fit]") {
     std::vector<double> data = {2,4,7,9,13,18,25,30,38,45,65};
     ARIMA my_arima{data, 2, 2};

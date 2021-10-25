@@ -185,9 +185,9 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
     LBFGSpp::LBFGSSolver<double> solver(param);
     double fx;
     OptimizerFunction function(obj_type);
-    Eigen::VectorXd x = Eigen::VectorXd::Constant(phi.size(), 0.5);
-    // TODO: Sostituire x con phi ?
-    int niter = solver.minimize(function, x, fx);
+    // TODO: Check con phi ?
+    int niter = solver.minimize(function, phi, fx);
+    std::cout << "\n\nfx = " << fx;
 
     if (preoptimized) {
         Eigen::VectorXd phi2 = _latent_variables.get_z_starting_values();

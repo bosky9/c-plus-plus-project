@@ -142,7 +142,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Fa
 }
 
 Eigen::MatrixXd ARIMA::ar_matrix() {
-    Eigen::MatrixXd X{Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(_ar + 1),
+    Eigen::MatrixXd X{Eigen::MatrixXd::Ones(static_cast<Eigen::Index>(_ar + 1),
                                             static_cast<Eigen::Index>(_data_length - _max_lag))};
 
     if (_ar != 0) {
