@@ -111,7 +111,7 @@ double BBVI::create_normal_logq(Eigen::VectorXd& z) const {
 }
 
 Eigen::VectorXd BBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
-    assert(z.cols() == _sims);
+    // assert(z.cols() == _sims);
     Eigen::MatrixXd z_t            = z.transpose();
     Eigen::VectorXd log_q_res      = normal_log_q(z_t, initial);
     Eigen::VectorXd log_p_res      = log_p(z_t);
@@ -153,7 +153,7 @@ Eigen::MatrixXd BBVI::draw_normal(bool initial) {
     else
         pair = get_means_and_scales();
 
-    return Mvn::random(pair.first, pair.second, pair.first.size()).transpose();
+    return Mvn::random(pair.first, pair.second, _sims).transpose();
 }
 
 Eigen::MatrixXd BBVI::draw_variables() {
@@ -280,8 +280,9 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(Eigen::Vect
             stored_predictive_likelihood[i] = neg_posterior(stored_means.row(i));
         }
 
-        if (_printer)
-            print_progress(static_cast<double>(i), optim_parameters);
+        // FIXME: Error calling _neg_logposterior inside print_progress()
+        // if (_printer)
+        // print_progress(static_cast<double>(i), optim_parameters);
 
         // Construct final parameters using final 10% of samples
         if (static_cast<double>(i) > static_cast<double>(_iterations) - round(static_cast<double>(_iterations) / 10)) {
@@ -426,6 +427,7 @@ Eigen::MatrixXd CBBVI::normal_log_q(Eigen::MatrixXd& z, bool initial) {
 }
 
 Eigen::VectorXd CBBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
+    assert(z.cols() == _sims);
     Eigen::MatrixXd z_t       = z.transpose();
     Eigen::MatrixXd log_q_res = normal_log_q(z_t, initial);
     // Replace nan with 0, inside log_q_res

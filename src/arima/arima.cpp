@@ -55,7 +55,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _z_no        = _latent_variables.get_z_list().size();
 
     // If Normal family is selected, we use faster likelihood functions
-    if (_family->get_name() == "Normal") {
+    if (instanceof <Normal>(_family.get())) {
         _model         = {[this](const Eigen::VectorXd& x) { return normal_model(x); }};
         _mb_model      = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_normal_model(x, mb); }};
         _neg_loglik    = {[this](const Eigen::VectorXd& x) { return normal_neg_loglik(x); }};
@@ -126,7 +126,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Fa
     _z_no        = _latent_variables.get_z_list().size();
 
     // If Normal family is selected, we use faster likelihood functions
-    if (_family->get_name() == "Normal") {
+    if (instanceof <Normal>(_family.get())) {
         _model         = {[this](const Eigen::VectorXd& x) { return normal_model(x); }};
         _mb_model      = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_normal_model(x, mb); }};
         _neg_loglik    = {[this](const Eigen::VectorXd& x) { return normal_neg_loglik(x); }};
@@ -758,15 +758,15 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
 
     Eigen::MatrixXd sim_values;
     DataFrame result;
-    Eigen::VectorXd forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
+    std::vector<double> forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
     if (_latent_variables.get_estimation_method() == "M-H") {
         sim_values = sim_prediction_bayes(h, 15000);
         for (Eigen::Index i{0}; i < sim_values.rows(); i++) {
-            forecasted_values[i] = (mean(sim_values.row(i)));
-            prediction_01[i]     = (percentile(sim_values.row(i), 1));
-            prediction_05[i]     = (percentile(sim_values.row(i), 5));
-            prediction_95[i]     = (percentile(sim_values.row(i), 95));
-            prediction_99[i]     = (percentile(sim_values.row(i), 99));
+            forecasted_values.push_back(mean(sim_values.row(i)));
+            prediction_01.push_back(percentile(sim_values.row(i), 1));
+            prediction_05.push_back(percentile(sim_values.row(i), 5));
+            prediction_95.push_back(percentile(sim_values.row(i), 95));
+            prediction_99.push_back(percentile(sim_values.row(i), 99));
         }
     } else {
         Eigen::VectorXd t_z{transform_z()};
@@ -777,7 +777,7 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
         else
             sim_values = sim_prediction(mu_Y.first, mu_Y.second, h, t_z, 2);
 
-        forecasted_values = Eigen::VectorXd(h);
+        forecasted_values = std::vector<double>(h);
         if (_model_name2 == "Skewt") {
             auto scale_shape_skew{get_scale_and_shape(t_z)};
             double m1{(std::sqrt(std::get<1>(scale_shape_skew)) *
@@ -791,28 +791,32 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
             std::copy(mean_values.end() - static_cast<long>(h), mean_values.end(), forecasted_values.begin());
     }
     if (!intervals) {
-        result.data.emplace_back(&forecasted_values[0], forecasted_values.data() + forecasted_values.size());
+        result.data.emplace_back(forecasted_values);
         result.data_name.push_back(
                 std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
     } else {
         if (_latent_variables.get_estimation_method() != "M-H") {
-            sim_values = sim_prediction_bayes(5, 15000);
+            // sim_values = sim_prediction(mu_Y.first, mu_Y.second, 5, t_z, 15000);
             for (Eigen::Index i{0}; i < sim_values.rows(); i++) {
-                prediction_01[i] = (percentile(sim_values.row(i), 1));
-                prediction_05[i] = (percentile(sim_values.row(i), 5));
-                prediction_95[i] = (percentile(sim_values.row(i), 95));
-                prediction_99[i] = (percentile(sim_values.row(i), 99));
+                prediction_01.push_back(percentile(sim_values.row(i), 1));
+                prediction_05.push_back(percentile(sim_values.row(i), 5));
+                prediction_95.push_back(percentile(sim_values.row(i), 95));
+                prediction_99.push_back(percentile(sim_values.row(i), 99));
             }
         }
         Eigen::MatrixXd r(5, sim_values.rows());
-        r << forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
-        r = r.transpose();
+        r.row(0)            = Eigen::VectorXd::Map(forecasted_values.data(), forecasted_values.size());
+        r.row(1)            = Eigen::VectorXd::Map(prediction_01.data(), prediction_01.size());
+        r.row(2)            = Eigen::VectorXd::Map(prediction_05.data(), prediction_05.size());
+        r.row(3)            = Eigen::VectorXd::Map(prediction_95.data(), prediction_95.size());
+        r.row(4)            = Eigen::VectorXd::Map(prediction_99.data(), prediction_99.size());
+        Eigen::MatrixXd r_t = r.transpose();
         std::string names[]{std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}),
                             "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
                             "99% Prediction Interval"};
         for (Eigen::Index i{0}; i < r.rows(); i++) {
             result.data.emplace_back(&r.row(i)[0], r.row(i).data() + r.row(i).size());
-            result.data_name.insert(result.data_name.end(), &names[0], &names[h - 1]);
+            result.data_name.insert(result.data_name.end(), std::begin(names), std::end(names));
         }
     }
     std::copy(date_index.end() - static_cast<long>(h), date_index.end(), std::back_inserter(result.index));
@@ -829,10 +833,10 @@ Eigen::MatrixXd ARIMA::sample(size_t nsims) const {
     for (Eigen::Index i{0}; i < nsims; i++)
         mus.push_back(normal_model(lv_draws.col(i)).first);
 
-    Eigen::VectorXd temp_mus(mus[0].size());
+    Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
     for (Eigen::Index i{0}; i < nsims; i++) {
-        auto scale_shape_skew{get_scale_and_shape(lv_draws.row(i))};
+        auto scale_shape_skew{get_scale_and_shape(lv_draws.col(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         data_draws.row(i) =
                 _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew),
@@ -881,7 +885,7 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
     for (Eigen::Index i{0}; i < nsims; i++) {
-        auto scale_shape_skew{get_scale_and_shape(lv_draws.row(i))};
+        auto scale_shape_skew{get_scale_and_shape(lv_draws.col(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         data_draws.row(i) =
                 _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew),
@@ -892,7 +896,7 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
     std::vector<double> T_sims;
     for (Eigen::Index i{0}; i < sample_data.cols(); i++)
         T_sims.push_back(T(sample_data.col(i)));
-    double T_actual{T(Eigen::VectorXd(_data_frame.data.size(), _data_frame.data.size()))};
+    double T_actual{T(Eigen::VectorXd::Map(_data_frame.data.data(), _data_frame.data.size()))};
 
     std::vector<double> T_sims_greater;
     for (size_t i{0}; i < T_sims.size(); i++) {

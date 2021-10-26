@@ -5,19 +5,6 @@
 
 #include <random>
 
-TEST_CASE("Test normal neg loglik", "[normal_neg_loglik]") {
-    std::vector<double> data = {2,4,7,9,13,18,25,30,38,45,65};
-    ARIMA my_arima{data, 2, 2};
-    Eigen::VectorXd phi = my_arima.get_latent_variables().get_z_starting_values();
-    //REQUIRE(my_arima.normal_neg_loglik(phi) == 1548.38);
-}
-
-TEST_CASE("Test optimize fit", "[optimize_fit]") {
-    std::vector<double> data = {2,4,7,9,13,18,25,30,38,45,65};
-    ARIMA my_arima{data, 2, 2};
-    Results* r = my_arima.fit();
-}
-
 TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(0, 1);
@@ -77,7 +64,7 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
         delete x;
     }
 
-    SECTION("Test that the predictions are not nans") {
+    SECTION("Test that the predictions are not nans", "[predict]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
         DataFrame test_df = model.predict(5);
@@ -88,7 +75,7 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
         delete x;
     }
 
-    SECTION("Test that the predictions IS are not nans") {
+    SECTION("Test that the predictions IS are not nans", "[predict_is]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
         DataFrame test_df = model.predict_is(5);
@@ -99,39 +86,48 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
         delete x;
     }
 
-    SECTION("Test predictions not having constant values") {
+    SECTION("Test predictions not having constant values", "[predict]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
         DataFrame predictions = model.predict(10, false);
-        REQUIRE(!(std::adjacent_find(predictions.data.begin(), predictions.data.end(), std::not_equal_to<>()) ==
-                  predictions.data.end()));
+        REQUIRE(std::adjacent_find(predictions.data[0].begin(), predictions.data[0].end(), std::not_equal_to<>()) !=
+                predictions.data[0].end());
         delete x;
     }
 
-    SECTION("Test predictions not having constant values") {
+    SECTION("Test predictions not having constant values", "[predict_is]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
         DataFrame predictions = model.predict_is(10, false);
-        REQUIRE(!(std::adjacent_find(predictions.data.begin(), predictions.data.end(), std::not_equal_to<>()) ==
-                  predictions.data.end()));
+        REQUIRE(std::adjacent_find(predictions.data[0].begin(), predictions.data[0].end(), std::not_equal_to<>()) !=
+                predictions.data[0].end());
         delete x;
     }
 
-    SECTION("Tests prediction intervals are ordered correctly") {
+    SECTION("Tests prediction intervals are ordered correctly", "[predict]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
-        DataFrame predictions = model.predict(10, false);
+        DataFrame predictions = model.predict(10, true);
+        std::cout << predictions.data_name[0] << " " << predictions.data.size() << std::endl;
 
-        // forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99
-        for (int i = 4; i > 1; i--) {
-            double sup_min_element = *min_element(std::begin(predictions.data.at(i)), std::end(predictions.data.at(i)));
-            double inf_max_element =
-                    *min_element(std::begin(predictions.data.at(i - 1)), std::end(predictions.data.at(i - 1)));
-            REQUIRE(sup_min_element >= inf_max_element);
-        }
+        // 99% Prediction Interval > 95% Prediction Interval
+        double inf_max_element = *max_element(predictions.data.at(4).begin(), predictions.data.at(4).end());
+        double sup_min_element = *min_element(predictions.data.at(3).begin(), predictions.data.at(3).end());
+        REQUIRE(sup_min_element >= inf_max_element);
 
-        double sup_min_element = *min_element(std::begin(predictions.data.at(3)), std::end(predictions.data.at(3)));
-        double inf_max_element = *min_element(std::begin(predictions.data.at(0)), std::end(predictions.data.at(0)));
+        // 95% Prediction Interval > Forecasted values
+        inf_max_element = *max_element(predictions.data.at(3).begin(), predictions.data.at(3).end());
+        sup_min_element = *min_element(predictions.data.at(0).begin(), predictions.data.at(0).end());
+        REQUIRE(sup_min_element >= inf_max_element);
+
+        // Forecasted values > 5% Prediction Interval
+        inf_max_element = *max_element(predictions.data.at(0).begin(), predictions.data.at(0).end());
+        sup_min_element = *min_element(predictions.data.at(2).begin(), predictions.data.at(2).end());
+        REQUIRE(sup_min_element >= inf_max_element);
+
+        // 5% Prediction Interval > 1% Prediction Interval
+        inf_max_element = *max_element(predictions.data.at(2).begin(), predictions.data.at(2).end());
+        sup_min_element = *min_element(predictions.data.at(1).begin(), predictions.data.at(1).end());
         REQUIRE(sup_min_element >= inf_max_element);
 
         delete x;
@@ -139,12 +135,11 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
 
     //@TODO: se giusto, fai tutti gli altri (fino a riga 161)
 
-    SECTION("Test sampling function") {
+    SECTION("Test sampling function", "[sample]") {
         ARIMA model{data, 2, 2};
-        auto op = std::nullopt;
-        // ok cosa
-        std::optional<Eigen::MatrixXd>& op_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt;
-        Results* x{model.fit("BBVI", false, op_matrix, 100, op, op, op, op, op, op, op, true)};
+        std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
+        Results* x{model.fit("BBVI", false, op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03,
+                             std::nullopt, true)};
         Eigen::MatrixXd sample = model.sample(100);
 
         REQUIRE(sample.rows() == 100);
@@ -153,11 +148,11 @@ TEST_CASE("Tests an ARIMA model with a Normal family", "[ARIMA]") {
         delete x;
     }
 
-    SECTION("Test ppc value") {
+    SECTION("Test ppc value", "[ppc]") {
         ARIMA model{data, 2, 2};
-        auto op                                   = std::nullopt;
-        std::optional<Eigen::MatrixXd>& op_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt;
-        Results* x{model.fit("BBVI", false, op_matrix, 100, op, op, op, op, op, op, op, true)};
+        std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
+        Results* x{model.fit("BBVI", false, op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03,
+                             std::nullopt, true)};
         double p_value = model.ppc();
 
         REQUIRE(p_value >= 0.0);

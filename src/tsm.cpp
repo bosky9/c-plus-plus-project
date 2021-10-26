@@ -20,25 +20,25 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     Eigen::VectorXd start_loc;
     if ((_model_type != "GPNARX" || _model_type != "GPR" || _model_type != "GP" || _model_type != "GASRank") &&
         !mini_batch.has_value()) {
-        // TODO: Sostituire con il nuovo LBFGS
-        /*
-        Posterior function{[posterior](Eigen::VectorXd x) { return posterior(std::move(x), std::nullopt); }};
-        cppoptlib::solver::Lbfgsb<Posterior> solver{
-                FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::min()),
-                FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::max()),
-                cppoptlib::solver::DefaultStoppingSolverState<FunctionXd::scalar_t>(),
-                cppoptlib::solver::GetEmptyStepCallback<FunctionXd::scalar_t, FunctionXd::vector_t,
-                                                        FunctionXd::hessian_t>()};
-        auto [p, solver_state] = solver.Minimize(function, phi);
-        start_loc              = 0.8 * p.x + 0.2 * phi;
-         */
+        // Optimize using L-BFGS
+        // Set up parameters
+        LBFGSpp::LBFGSParam<double> param;
+        param.epsilon        = 1e-6;
+        param.max_iterations = 100;
+        // Create solver and function object
+        LBFGSpp::LBFGSSolver<double> solver(param);
+        double fx;
+        OptimizerFunction function(reverse_function_params(posterior));
+        Eigen::VectorXd x{phi};
+        int niter = solver.minimize(function, x, fx);
+        start_loc = 0.8 * x + 0.2 * phi;
     } else
         start_loc = phi;
     Eigen::VectorXd start_ses{};
 
     for (size_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
         std::unique_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
-        if (static_cast<std::string>(typeid(approx_dist).name()) == "Normal") {
+        if (instanceof <Normal>(approx_dist.get())) {
             _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
                 _latent_variables.get_z_list()[i].get_q()->vi_change_param(1, std::exp(-3.0));
@@ -51,13 +51,13 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     for (size_t i{0}; i < _latent_variables.get_z_list().size(); i++)
         q_list.push_back(dynamic_cast<Normal*>(_latent_variables.get_z_list()[i].get_q()));
 
-    std::unique_ptr<BBVI> bbvi_obj;
+    BBVI* bbvi_obj; // TODO: Trovare un modo per eliminare il puntatore senza che crei segmentation fault!
     if (!mini_batch.has_value())
-        bbvi_obj = std::make_unique<BBVI>(posterior, q_list, batch_size, optimizer, iterations, learning_rate,
-                                          record_elbo, quiet_progress);
+        bbvi_obj = new BBVI(posterior, q_list, batch_size, optimizer, iterations, learning_rate, record_elbo,
+                            quiet_progress);
     else
-        bbvi_obj = std::make_unique<BBVIM>(posterior, _neg_logposterior, q_list, mini_batch.value(), optimizer,
-                                           iterations, learning_rate, mini_batch.value(), record_elbo, quiet_progress);
+        bbvi_obj = new BBVIM(posterior, _neg_logposterior, q_list, mini_batch.value(), optimizer, iterations,
+                             learning_rate, mini_batch.value(), record_elbo, quiet_progress);
 
     BBVIReturnData data{bbvi_obj->run(false)};
     std::transform(data.final_ses.begin(), data.final_ses.end(), data.final_ses.begin(),
@@ -74,7 +74,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     // LatentVariables latent_variables_store = _latent_variables; // No sense
 
     return new BBVIResults{{_data_frame.data_name},
-                           output.X_names.value(),
+                           output.X_names.value_or(std::vector<std::string>{}),
                            _model_name,
                            _model_type,
                            _latent_variables,
@@ -161,7 +161,7 @@ MLEResults* TSM::_ols_fit() {
 
 MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
                                const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
-                               const std::optional<size_t> nsims, const std::optional<StochOptim>& optimizer,
+                               const std::optional<size_t> nsims, const std::optional<std::string>& optimizer,
                                const std::optional<uint8_t> batch_size, const std::optional<size_t> mini_batch,
                                const std::optional<bool> map_start, const std::optional<double> learning_rate,
                                const std::optional<bool> record_elbo, const std::optional<bool> quiet_progress,
@@ -179,19 +179,18 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
     // Optimize using L-BFGS
     // Set up parameters
     LBFGSpp::LBFGSParam<double> param;
-    param.epsilon = 1e-6;
+    param.epsilon        = 1e-6;
     param.max_iterations = 100;
     // Create solver and function object
     LBFGSpp::LBFGSSolver<double> solver(param);
     double fx;
     OptimizerFunction function(obj_type);
-    // TODO: Check con phi ?
     int niter = solver.minimize(function, phi, fx);
     std::cout << "\n\nfx = " << fx;
 
     if (preoptimized) {
         Eigen::VectorXd phi2 = _latent_variables.get_z_starting_values();
-        int niter = solver.minimize(function, phi2, fx);
+        int niter            = solver.minimize(function, phi2, fx);
         if (_neg_loglik(phi2) < _neg_loglik(phi))
             phi = phi2;
     }
@@ -214,8 +213,8 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
 
 Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixXd>& cov_matrix,
                   const std::optional<size_t> iterations, const std::optional<size_t> nsims,
-                  const std::optional<StochOptim>& optimizer, const std::optional<uint8_t> batch_size,
-                  const std::optional<size_t> mininbatch, const std::optional<bool> map_start,
+                  const std::optional<std::string>& optimizer, const std::optional<uint8_t> batch_size,
+                  const std::optional<size_t> mini_batch, const std::optional<bool> map_start,
                   const std::optional<double> learning_rate, const std::optional<bool> record_elbo,
                   const std::optional<bool> quiet_progress) {
     if (method.empty())
@@ -224,12 +223,12 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
            "Method not supported!");
 
     if (method == "MLE")
-        return _optimize_fit(method, _neg_loglik, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch,
+        return _optimize_fit(method, _neg_loglik, cov_matrix, iterations, nsims, optimizer, batch_size, mini_batch,
                              map_start, learning_rate, record_elbo, quiet_progress);
 
     else if (method == "PML")
         return _optimize_fit(method, _neg_logposterior, cov_matrix, iterations, nsims, optimizer, batch_size,
-                             mininbatch, map_start, learning_rate, record_elbo, quiet_progress);
+                             mini_batch, map_start, learning_rate, record_elbo, quiet_progress);
 
     else if (method == "M-H")
         return _mcmc_fit(1.0, nsims, true, "M-H", cov_matrix, map_start, quiet_progress);
@@ -238,11 +237,12 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
 
     else if (method == "BBVI") {
         std::function<double(const Eigen::VectorXd&, std::optional<size_t>)> posterior;
-        if (!mininbatch) {
+        if (!mini_batch) {
             posterior = change_function_params(_neg_logposterior);
         } else
             posterior = change_function_params(_mb_neg_logposterior);
-        return _bbvi_fit(posterior);
+        return _bbvi_fit(posterior, optimizer.value(), iterations.value(), map_start.value(), batch_size.value(),
+                         mini_batch, learning_rate.value(), record_elbo.value_or(false), quiet_progress.value());
     } else if (method == "OLS")
         return _ols_fit();
 }

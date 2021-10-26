@@ -43,6 +43,10 @@ Eigen::VectorXd StochOptim::get_parameters() const {
     return _parameters;
 }
 
+std::string StochOptim::get_name() const {
+    return {};
+}
+
 RMSProp::RMSProp(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances,
                  double learning_rate, double ewma)
     : _ewma{ewma}, StochOptim{starting_parameters, starting_variances, learning_rate} {}
@@ -88,6 +92,10 @@ Eigen::VectorXd RMSProp::update(Eigen::VectorXd& gradient) {
 
     _t += 1;
     return _parameters;
+}
+
+std::string RMSProp::get_name() const {
+    return "RMSProp";
 }
 
 ADAM::ADAM(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances, double learning_rate,
@@ -147,4 +155,8 @@ Eigen::VectorXd ADAM::update(Eigen::VectorXd& gradient) {
     }
     _t += 1;
     return _parameters;
+}
+
+std::string ADAM::get_name() const {
+    return "ADAM";
 }

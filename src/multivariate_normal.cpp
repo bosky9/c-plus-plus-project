@@ -62,14 +62,14 @@ Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& mea
     Eigen::VectorXd result(size);
     const double ONE_OVER_SQRT_2PI = 0.39894228040143267793994605993438;
     for (Eigen::Index i{0}; i < size; i++) {
-        double x_val = x.size() == 1 ? x(0) : x(i);
-        double mean  = means.size() == 1 ? means(0) : means(i);
-        double scale = scales.size() == 1 ? scales(0) : scales(i);
+        double x_val  = x.size() == 1 ? x(0) : x(i);
+        double mean   = means.size() == 1 ? means(0) : means(i);
+        double scale  = scales.size() == 1 ? scales(0) : scales(i);
         long double e = expl(-0.5 * pow((x_val - mean) / scale, 2.0));
         if (e == 0)
             result(i) = -(0.5 * pow((x_val - mean) / scale, 2.0)) + log(ONE_OVER_SQRT_2PI / scale);
         else
-            result(i)    = log((ONE_OVER_SQRT_2PI / scale) * e);
+            result(i) = log((ONE_OVER_SQRT_2PI / scale) * e);
     }
     return result;
 }
@@ -105,7 +105,7 @@ Eigen::MatrixXd Mvn::random(Eigen::VectorXd mean, Eigen::VectorXd scale, size_t 
     std::default_random_engine generator(seed);
     Eigen::MatrixXd rands(n, mean.size());
     for (Eigen::Index i{0}; i < n; i++) {
-        for (Eigen::Index j{0}; j < n; j++) {
+        for (Eigen::Index j{0}; j < mean.size(); j++) {
             std::normal_distribution<double> distribution{mean(j), scale(j)};
             rands(i, j) = distribution(generator);
         }

@@ -51,15 +51,13 @@ inline std::vector<double> diff(const std::vector<double>& v) {
 
 inline double percentile(Eigen::VectorXd v, uint8_t p) {
     std::sort(v.begin(), v.end());
-    double n{static_cast<double>((v.size() + 1) * p)};
-    if (n == 1.0)
-        return v[0];
-    else if (n == static_cast<double>(v.size()))
-        return v[v.size() - 1];
-    else {
-        Eigen::Index k{static_cast<Eigen::Index>(n)};
-        return v[k - 1] + (n - static_cast<double>(k)) * (v[k] - v[k - 1]);
-    }
+    size_t index{static_cast<size_t>(std::ceil(p / 100.0 * v.size()))};
+    return v(index - 1);
+}
+
+template<typename T>
+inline bool instanceof (Family * obj) {
+    return obj == dynamic_cast<T*>(obj);
 }
 
 /**
@@ -199,7 +197,6 @@ private:
     [[nodiscard]] double normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const;
 
 
-
     /**
      * @brief Calculates the negative log-likelihood of the model for non-Normal family for a minibatch
      * @param beta Contains untransformed starting values for latent variables
@@ -273,10 +270,10 @@ public:
     ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
 
     /**
-    * @brief Calculates the negative log-likelihood of the model for non-Normal family
-    * @param beta Contains untransformed starting values for latent variables
-    * @return The negative logliklihood of the model
-    */
+     * @brief Calculates the negative log-likelihood of the model for non-Normal family
+     * @param beta Contains untransformed starting values for latent variables
+     * @return The negative logliklihood of the model
+     */
     [[nodiscard]] double non_normal_neg_loglik(const Eigen::VectorXd& beta) const;
 
     [[nodiscard]] double normal_neg_loglik(const Eigen::VectorXd& beta) const;

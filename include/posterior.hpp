@@ -11,3 +11,5 @@ using posterior_with_mb = std::function<double(Eigen::VectorXd, size_t)>;
 posterior change_function_params(posterior_wo_mb function);
 
 posterior change_function_params(posterior_with_mb function);
+
+posterior_wo_mb reverse_function_params(posterior function);

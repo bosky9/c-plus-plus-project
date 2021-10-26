@@ -41,8 +41,24 @@ public:
      */
     StochOptim& operator=(StochOptim&& stochOptim) noexcept;
 
+    /**
+     * @brief
+     * @param gradient
+     * @return
+     */
     virtual Eigen::VectorXd update(Eigen::VectorXd& gradient);
+
+    /**
+     * @brief
+     * @return
+     */
     [[nodiscard]] Eigen::VectorXd get_parameters() const;
+
+    /**
+     * @brief Get the name of the optimizer
+     * @return Optimizer's name
+     */
+    virtual std::string get_name() const;
 };
 
 /**
@@ -93,6 +109,12 @@ public:
      * @return
      */
     Eigen::VectorXd update(Eigen::VectorXd& gradient) override;
+
+    /**
+     * @brief Get the name of the optimizer
+     * @return Optimizer's name
+     */
+    std::string get_name() const override;
 };
 
 /**
@@ -148,6 +170,12 @@ public:
      * @return
      */
     Eigen::VectorXd update(Eigen::VectorXd& gradient) override;
+
+    /**
+     * @brief Get the name of the optimizer
+     * @return Optimizer's name
+     */
+    std::string get_name() const override;
 };
 
 inline double StochOptim::_epsilon = pow(10, -8);
