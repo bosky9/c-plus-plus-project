@@ -118,7 +118,7 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
         MLEResults* y{dynamic_cast<MLEResults*>(fit("PML", false))};
         starting_values = y->get_z().get_z_values();
 
-        Eigen::VectorXd ses = y->get_ihessian().diagonal().cwiseAbs();
+        Eigen::VectorXd ses{y->get_ihessian().diagonal().cwiseAbs()};
         ses.unaryExpr([](double v) { return std::isnan(v) ? 1.0 : v; });
         cov_matrix.emplace(ses.asDiagonal());
     } else

@@ -78,7 +78,8 @@ public:
      *          inside TSM to refer to Results subclasses,
      *          a virtual destructor is necessary to avoid undefined behaviour.
      */
-    virtual ~Results() = default;;
+    virtual ~Results() = default;
+    ;
 
     /**
      * @brief Returns latent variables
@@ -146,10 +147,10 @@ public:
     /**
      * @brief Stream operator for MLEResults
      * @param stream Output stream
-     * @param mleresults MLEResults object
+     * @param mle_results MLEResults object
      * @return Output stream
      */
-    friend std::ostream& operator<<(std::ostream& stream, const MLEResults& mleresults);
+    friend std::ostream& operator<<(std::ostream& stream, const MLEResults& results);
 
     /**
      * @brief Prints results

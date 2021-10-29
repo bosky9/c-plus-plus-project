@@ -12,7 +12,7 @@ double Mvn::pdf(const Eigen::VectorXd& x) const {
 }
 
 Eigen::VectorXd Mvn::sample(unsigned int nr_iterations) const {
-    Eigen::Index n = _mean.rows();
+    Eigen::Index n = _mean.size();
 
     // Generate x from the N(0, I) distribution
     Eigen::VectorXd x(n);

@@ -136,7 +136,7 @@ Sample MetropolisHastings::sample() {
         Eigen::VectorXd a_rate{Eigen::VectorXd::Zero(sims_to_do)};
         Eigen::VectorXd crit{Eigen::VectorXd::Random(sims_to_do)};
         Mvn post{Eigen::VectorXd::Zero(_param_no), _cov_matrix};
-        Eigen::MatrixXd rnums;
+        Eigen::MatrixXd rnums(sims_to_do, _param_no);
         for (Eigen::Index i{0}; i < sims_to_do; i++) {
             rnums.row(i) = post.sample() * _scale;
         }

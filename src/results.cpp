@@ -70,39 +70,39 @@ MLEResults::MLEResults(std::vector<std::string> data_name, std::vector<std::stri
     }
 }
 
-inline std::ostream& operator<<(std::ostream& stream, const MLEResults& mle_results) {
-    if (mle_results._method == "MLE")
+std::ostream& operator<<(std::ostream& stream, const MLEResults& results) {
+    if (results._method == "MLE")
         stream << "MLE Results Object";
-    else if (mle_results._method == "OLS")
+    else if (results._method == "OLS")
         stream << "OLS Results Object";
     else
         stream << "PML Results Object";
     stream << "\n=========================="
               "\nDependent variable: "
-           << mle_results._data_name << "\nRegressors: ";
-    for (const std::string& s : mle_results._x_names)
+           << results._data_name << "\nRegressors: ";
+    for (const std::string& s : results._x_names)
         stream << s << " ";
     stream << "\n=========================="
               "\nLatent Variable Attributes: ";
-    if (mle_results._ihessian.size() > 0)
+    if (results._ihessian.size() > 0)
         stream << "\n.ihessian: Inverse Hessian";
     stream << "\n.z : LatentVariables() object";
-    if (mle_results._results.size() > 0)
+    if (results._results.size() > 0)
         stream << "\n.results : optimizer results";
     stream << "\n\nImplied Model Attributes: "
               "\n.aic: Akaike Information Criterion"
               "\n.bic: Bayesian Information Criterion"
               "\n.data: Model Data"
               "\n.index: Model Index";
-    if (mle_results._method == "MLE" || mle_results._method == "OLS")
+    if (results._method == "MLE" || results._method == "OLS")
         stream << "\n.loglik: Loglikelihood";
-    if (mle_results._scores.has_value())
+    if (results._scores.has_value())
         stream << "\n.scores: Model Scores";
-    if (mle_results._signal.size() > 0)
+    if (results._signal.size() > 0)
         stream << "\n.signal: Model Signal";
-    if (mle_results._states.has_value())
+    if (results._states.has_value())
         stream << "\n.states: Model States";
-    if (mle_results._states_var.has_value())
+    if (results._states_var.has_value())
         stream << "\n.states_var: Model State Variances";
     stream << "\n.results : optimizer results"
               "\n\nMethods: "
@@ -295,7 +295,7 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
     }
 }
 
-inline std::ostream& operator<<(std::ostream& stream, const BBVIResults& results) {
+std::ostream& operator<<(std::ostream& stream, const BBVIResults& results) {
     stream << "BBVI Results Object"
               "\n=========================="
               "\nDependent variable: "
@@ -426,7 +426,7 @@ BBVISSResults::BBVISSResults(std::vector<std::string> data_name, std::vector<std
     }
 }
 
-inline std::ostream& operator<<(std::ostream& stream, const BBVISSResults& results) {
+std::ostream& operator<<(std::ostream& stream, const BBVISSResults& results) {
     stream << "BBVI Results Object"
               "\n=========================="
               "\nDependent variable: "
