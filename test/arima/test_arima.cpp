@@ -44,7 +44,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
         REQUIRE(model.get_latent_variables().get_z_list().size() == 2);
 
         std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
-        long nan{std::count_if(lvs.begin(), lvs.end(),
+        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
                                [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
         REQUIRE(nan == 0);
 
@@ -61,7 +61,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
         REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
 
         std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
-        long nan{std::count_if(lvs.begin(), lvs.end(),
+        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
                                [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
         REQUIRE(nan == 0);
 
@@ -78,7 +78,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
         REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
 
         std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
-        long nan{std::count_if(lvs.begin(), lvs.end(),
+        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
                                [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
         REQUIRE(nan == 0);
 
