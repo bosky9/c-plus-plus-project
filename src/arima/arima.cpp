@@ -804,20 +804,16 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
                 prediction_99.push_back(percentile(sim_values.row(i), 99));
             }
         }
-        Eigen::MatrixXd r(5, sim_values.rows());
-        r.row(0)            = Eigen::VectorXd::Map(forecasted_values.data(), forecasted_values.size());
-        r.row(1)            = Eigen::VectorXd::Map(prediction_01.data(), prediction_01.size());
-        r.row(2)            = Eigen::VectorXd::Map(prediction_05.data(), prediction_05.size());
-        r.row(3)            = Eigen::VectorXd::Map(prediction_95.data(), prediction_95.size());
-        r.row(4)            = Eigen::VectorXd::Map(prediction_99.data(), prediction_99.size());
-        Eigen::MatrixXd r_t = r.transpose();
-        std::string names[]{std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}),
-                            "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
-                            "99% Prediction Interval"};
-        for (Eigen::Index i{0}; i < r.rows(); i++) {
-            result.data.emplace_back(&r.row(i)[0], r.row(i).data() + r.row(i).size());
-            result.data_name.insert(result.data_name.end(), std::begin(names), std::end(names));
-        }
+        result.data_name.push_back(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
+        result.data.push_back(forecasted_values);
+        result.data_name.emplace_back("1% Prediction Interval");
+        result.data.push_back(prediction_01);
+        result.data_name.emplace_back("5% Prediction Interval");
+        result.data.push_back(prediction_05);
+        result.data_name.emplace_back("95% Prediction Interval");
+        result.data.push_back(prediction_95);
+        result.data_name.emplace_back("99% Prediction Interval");
+        result.data.push_back(prediction_99);
     }
     std::copy(date_index.end() - static_cast<long>(h), date_index.end(), std::back_inserter(result.index));
 

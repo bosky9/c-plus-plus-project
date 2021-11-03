@@ -6,7 +6,6 @@
 OptimizerFunction::OptimizerFunction(std::function<double(Eigen::VectorXd)>  function) : _function{std::move(function)} {}
 
 double OptimizerFunction::operator()(const Eigen::VectorXd& beta, Eigen::VectorXd& grad) {
-    std::cout << "\n\nbeta:\n" << beta;
     // Copies of beta
     Eigen::VectorXd beta_temp_plus = beta;
     Eigen::VectorXd beta_temp_minus = beta;

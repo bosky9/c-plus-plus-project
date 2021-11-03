@@ -5,25 +5,22 @@
 
 namespace catch_utilities {
 void check_intervals_order(std::vector<std::vector<double>> predictions) {
+    REQUIRE(predictions.at(0).size() == predictions.at(1).size());
+    REQUIRE(predictions.at(1).size() == predictions.at(2).size());
+    REQUIRE(predictions.at(2).size() == predictions.at(3).size());
+    REQUIRE(predictions.at(3).size() == predictions.at(4).size());
+
     // 99% Prediction Interval > 95% Prediction Interval
-    double inf_max_element = *max_element(predictions.at(4).begin(), predictions.at(4).end());
-    double sup_min_element = *min_element(predictions.at(3).begin(), predictions.at(3).end());
-    REQUIRE(sup_min_element >= inf_max_element);
+    for (size_t i{0}; i < predictions.at(4).size(); i++)
+        REQUIRE(predictions.at(4).at(i) >= predictions.at(3).at(i));
 
-    // 95% Prediction Interval > Forecasted values
-    inf_max_element = *max_element(predictions.at(3).begin(), predictions.at(3).end());
-    sup_min_element = *min_element(predictions.at(0).begin(), predictions.at(0).end());
-    REQUIRE(sup_min_element >= inf_max_element);
-
-    // Forecasted values > 5% Prediction Interval
-    inf_max_element = *max_element(predictions.at(0).begin(), predictions.at(0).end());
-    sup_min_element = *min_element(predictions.at(2).begin(), predictions.at(2).end());
-    REQUIRE(sup_min_element >= inf_max_element);
+    // 95% Prediction Interval > 5% Prediction Interval
+    for (size_t i{0}; i < predictions.at(3).size(); i++)
+        REQUIRE(predictions.at(3).at(i) >= predictions.at(2).at(i));
 
     // 5% Prediction Interval > 1% Prediction Interval
-    inf_max_element = *max_element(predictions.at(2).begin(), predictions.at(2).end());
-    sup_min_element = *min_element(predictions.at(1).begin(), predictions.at(1).end());
-    REQUIRE(sup_min_element >= inf_max_element);
+    for (size_t i{0}; i < predictions.at(2).size(); i++)
+        REQUIRE(predictions.at(2).at(i) >= predictions.at(1).at(i));
 }
 } // namespace catch_utilities
 
