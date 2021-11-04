@@ -533,7 +533,7 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
             mu_exp = Eigen::VectorXd::Map(mu_exp_v.data(), static_cast<Eigen::Index>(mu_exp_v.size()));
 
             // For indexing consistency
-            std::vector<double> Y_exp_h(Y_exp_v.size());
+            std::vector<double> Y_exp_h;
             std::copy(Y_exp_v.end() - static_cast<long>(h), Y_exp_v.end(), std::back_inserter(Y_exp_h));
             sim_vector.row(n) = Eigen::VectorXd::Map(Y_exp_h.data(), static_cast<Eigen::Index>(Y_exp_h.size()));
         }
@@ -804,7 +804,8 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
                 prediction_99.push_back(percentile(sim_values.row(i), 99));
             }
         }
-        result.data_name.push_back(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
+        result.data_name.push_back(
+                std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
         result.data.push_back(forecasted_values);
         result.data_name.emplace_back("1% Prediction Interval");
         result.data.push_back(prediction_01);

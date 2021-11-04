@@ -160,8 +160,7 @@ Sample MetropolisHastings::sample() {
 
     std::vector<double> median_est{}, upper_95_est{}, lower_5_est{};
     for (Eigen::Index i{0}; i < _param_no; i++) {
-        std::vector<double> col_sort(_phi.rows());
-        Eigen::VectorXd::Map(&col_sort[0], _nsims) = _phi.col(i);
+        Eigen::VectorXd col_sort{_phi.col(i)};
         std::sort(col_sort.begin(), col_sort.end());
 
         if (static_cast<bool>(_phi.rows() % 2))

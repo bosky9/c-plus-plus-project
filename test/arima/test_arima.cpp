@@ -42,7 +42,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
 
         std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
         int64_t nan{std::count_if(lvs.begin(), lvs.end(),
-                               [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
+                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
         REQUIRE(nan == 0);
 
         delete x;
@@ -59,7 +59,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
 
         std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
         int64_t nan{std::count_if(lvs.begin(), lvs.end(),
-                               [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
+                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
         REQUIRE(nan == 0);
 
         delete x;
@@ -76,7 +76,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
 
         std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
         int64_t nan{std::count_if(lvs.begin(), lvs.end(),
-                               [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
+                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
         REQUIRE(nan == 0);
 
         delete x;
@@ -154,7 +154,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     SECTION("Test predictions IS not having constant values", "[predict_is]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
-        DataFrame predictions = model.predict_is(10, false);
+        DataFrame predictions = model.predict_is(10, true, "MLE", false);
         REQUIRE(std::adjacent_find(predictions.data.at(0).begin(), predictions.data.at(0).end(),
                                    std::not_equal_to<>()) != predictions.data.at(0).end());
         delete x;
@@ -180,7 +180,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
 
-        DataFrame predictions = model.predict_is(10, true);
+        DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
     }
 
@@ -190,7 +190,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     SECTION("Test prediction intervals are ordered correctly using BBVI", "[predict]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
-        Results* x{model.fit("BBVI", {}, opt_matrix, 100, 10000, std::nullopt, 12, std::nullopt, true, 1e-03,
+        Results* x{model.fit("BBVI", true, opt_matrix, 100, 10000, std::nullopt, 12, std::nullopt, true, 1e-03,
                              std::nullopt, true)};
 
         DataFrame predictions = model.predict(10, true);
@@ -205,10 +205,10 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     SECTION("Test prediction IS intervals are ordered correctly using BBVI", "[predict_is]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
-        Results* x{model.fit("BBVI", {}, opt_matrix, 100, 10000, std::nullopt, 12, std::nullopt, true, 1e-03,
+        Results* x{model.fit("BBVI", true, opt_matrix, 100, 10000, std::nullopt, 12, std::nullopt, true, 1e-03,
                              std::nullopt, true)};
 
-        DataFrame predictions = model.predict_is(10, true);
+        DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
 
         delete x;
@@ -218,11 +218,10 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
      * @brief Tests that prediction intervals are ordered correctly using Metropolis-Hastings method
      */
 
-    // FIXME: Controlla errore in metropolis_hastings.cpp riga 164
     SECTION("Test prediction intervals are ordered correctly using MH", "[predict]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
-        Results* x{model.fit("M-H", {}, opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03,
+        Results* x{model.fit("M-H", true, opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03,
                              std::nullopt, true)};
 
         DataFrame predictions = model.predict(10, true);
@@ -237,10 +236,10 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     SECTION("Test prediction IS intervals are ordered correctly using MH", "[predict_is]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
-        Results* x{model.fit("M-H", {}, opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03,
+        Results* x{model.fit("M-H", true, opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03,
                              std::nullopt, true)};
 
-        DataFrame predictions = model.predict_is(10, true);
+        DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
 
         delete x;
