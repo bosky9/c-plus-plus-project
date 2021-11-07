@@ -20,7 +20,7 @@ const int N95 = NSIMS * 95 / 100;
  * @brief 5-th percentile of simulations
  */
 const int N5 = NSIMS * 5 / 100;
-// Chiedere al prof
+
 // 1 dispari    (true)
 // 0 pari       (false)
 /**

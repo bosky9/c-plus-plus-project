@@ -45,9 +45,7 @@ protected:
     BBVIReturnData run_with(bool store, const std::function<double(Eigen::VectorXd)>& neg_posterior);
 
 public:
-    // @TODO: chiedere a Busato (e considera unique pointer)
     std::unique_ptr<StochOptim> _optim{nullptr}; ///<
-    // new StochOptim(Eigen::Vector<double, 1>{3.0}, Eigen::Vector<double, 1>{1.0}, 0)
 
     /**
      * @brief Base constructor for BBVI
@@ -62,8 +60,8 @@ public:
      * @param optimizer
      * @param iterations How many iterations to run
      * @param learning_rate
-     * @param record_elbo
-     * @param quiet_progress
+     * @param record_elbo Wheter to record the ELBO at every iteration
+     * @param quiet_progress Wheter to print progress or stay quiet
      */
     BBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior, std::vector<Normal*>& q,
          size_t sims, std::string optimizer = "RMSProp", size_t iterations = 1000, double learning_rate = 0.001,
@@ -103,20 +101,29 @@ public:
 
     /**
      * @brief Utility function for changing the approximate distribution parameters
-     * @param params
+     * @param params Vector of parameters to change to (i.e., mean and distribution)
+     *
+     * @details Please notice that the function wil iterate over the number of parameters
+     *          of the distribution, changing every one of them.
      */
     void change_parameters(Eigen::VectorXd& params);
 
     /**
      * @brief Create logq components for mean-field normal family (the entropy estimate)
      * @param z
-     * @return
+     * @return The sum over all the logpdf of the z variables.
+     *
+     * @details Each z variable has its own mean and variance.
      */
     double create_normal_logq(Eigen::VectorXd& z) const;
 
     /**
      * @brief Obtains an array with the current parameters
      * @return An array of parameters
+     *
+     * @details Inside the function,values are appended to a std::vector,
+     *          which is then converted to a Eigen::VectorXd,
+     *          by means of the Map(pointer, size) function.
      */
     [[nodiscard]] Eigen::VectorXd current_parameters() const;
 

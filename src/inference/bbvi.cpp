@@ -121,19 +121,24 @@ Eigen::VectorXd BBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
     log_q_res = log_q_res.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
     // Create gradient matrix
     Eigen::MatrixXd gradient(grad_log_q_res.rows(), _sims);
+    // In python this is an element product between a matrix and a vector
     for (Eigen::Index i = 0; i < gradient.rows(); i++)
         gradient.row(i) = grad_log_q_res.row(i).array() * (log_p_res - log_q_res).transpose().array();
 
     Eigen::VectorXd alpha0 = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_approx_param_no.sum()));
     alpha_recursion(alpha0, grad_log_q_res, gradient, static_cast<size_t>(_approx_param_no.sum()));
 
+    // Variance of grad_log_q vector, array() is used for element by element operations
     double var = pow((grad_log_q_res.array() - grad_log_q_res.mean()).abs(), 2).mean();
     Eigen::MatrixXd vectorized(gradient.rows(), gradient.cols());
     Eigen::MatrixXd sub(gradient.cols(), gradient.rows());
+    // row by row element multiplication
     for (Eigen::Index i = 0; i < sub.rows(); i++)
+        // transposing alpha0 is necessary for Eigen
         sub.row(i) = (alpha0.transpose().array() / var) * grad_log_q_res.transpose().row(i).array();
     vectorized = gradient - sub.transpose();
 
+    // mean over each single row
     return vectorized.rowwise().mean();
 }
 
