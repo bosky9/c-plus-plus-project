@@ -130,7 +130,12 @@ public:
     /**
      * @brief The control variate augmented Monte Carlo gradient estimate
      * @param z
+     * @param initial cv_gradient or cv_gradient_initial.
      * @return
+     *
+     * @details In python, there are two identical functions,
+     *          differing only on the log_q initializations.
+     *          Using the "initial" parameter allows to write a single function.
      */
     virtual Eigen::VectorXd cv_gradient(Eigen::MatrixXd& z, bool initial);
 
@@ -181,7 +186,6 @@ public:
      * @param z
      * @return
      */
-    // In Python ritorna una matrice, ma poi assegna un double ad ogni riga (?)
     Eigen::MatrixXd grad_log_q(Eigen::MatrixXd& z);
 
     /**
@@ -216,6 +220,12 @@ public:
      * @brief The core BBVI routine - Draws Monte Carlo gradients and uses a stochastic optimizer
      * @param store If true, stores rgw history of updates for the benefit of a pretty animation
      * @return
+     * @details Using store, this function translates both
+     *          "run" and "run_and_store".
+     *
+     *          This "run" actually calls another function, run_with;
+     *          this is to avoid troubles with the optional parameters of
+     *          neg_posterior.
      */
     virtual BBVIReturnData run(bool store);
 };
