@@ -261,7 +261,6 @@ public:
      *          we need to cast x as an Eigen:Array:
      *          ... x.array() + 4 ... adds 4 to each element of x.
      */
-    // @Todo: chiedere a Busato
     template<typename T>
     T vi_scale_score(const T& x) const;
 
@@ -271,7 +270,6 @@ public:
      * @param index 0 or 1 depending on which latent variable
      * @return The gradient of the scale latent variable at x
      */
-    // TODO: (NEW) perché è stata implementata qui?
     template<typename T>
     T vi_score(const T& x, size_t index) const {
         static_assert(std::is_same_v<T, double> || std::is_same_v<T, Eigen::VectorXd>);

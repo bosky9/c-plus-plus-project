@@ -15,6 +15,9 @@ struct DataFrame final {
     std::vector<std::string> data_name;    ///< The names of the data
 };
 
+/**
+ * @brief Returns a DataFrame from a csv file.
+ */
 DataFrame parse_csv(const std::string& path);
 
 DataFrame parse_csv(std::ifstream& path);

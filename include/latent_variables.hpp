@@ -181,14 +181,14 @@ public:
 };
 
 /**
- * @brief Class that represents a list of latent variables
+ * @brief Class that represents a list of latent variables.
  * Holds latent variable objects and contains method for latent variable manipulation. Latent variables are
  * referred to as z as shorthand. This is convention in much of the literature.
  */
 class LatentVariables final {
 private:
     std::string _model_name;                                         ///< Model's name
-    std::vector<LatentVariable> _z_list;                             ///< List of latent variables
+    std::vector<LatentVariable> _z_list;                             ///< List of latent variables, as a std::vector
     [[maybe_unused]] std::map<std::string, std::map<std::string, size_t>> _z_indices; ///< Info about latent variables
     bool _estimated                               = false;           ///<
     std::optional<std::string> _estimation_method = std::nullopt;    ///<
@@ -209,7 +209,7 @@ public:
     friend std::ostream& operator<<(std::ostream& stream, const LatentVariables& latent_variables);
 
     /**
-     * @brief Adds a latent variable
+     * @brief Appends a latent variable to the _z_list array
      * @param name Name of the latent variable
      * @param prior Which prior distribution? E.g. Normal(0,1)
      * @param q Which distribution to use for variational approximation
