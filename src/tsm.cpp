@@ -12,9 +12,10 @@ TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_varia
 }
 
 BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
-                            const std::string& optimizer, size_t iterations, bool map_start, size_t batch_size,
-                            std::optional<size_t> mini_batch, double learning_rate, bool record_elbo,
-                            bool quiet_progress, const Eigen::VectorXd& start) {
+                            const std::optional<std::string>& optimizer, std::optional<size_t> iterations, std::optional<bool> map_start,
+                            std::optional<size_t> batch_size,
+                            std::optional<size_t> mini_batch, std::optional<double> learning_rate, std::optional<bool> record_elbo,
+                            std::optional<bool> quiet_progress, const Eigen::VectorXd& start) {
     Eigen::VectorXd phi{(start.size() > 0) ? start : _latent_variables.get_z_starting_values()}; // If user supplied
 
     Eigen::VectorXd start_loc;
@@ -51,13 +52,32 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     for (size_t i{0}; i < _latent_variables.get_z_list().size(); i++)
         q_list.push_back(dynamic_cast<Normal*>(_latent_variables.get_z_list()[i].get_q()));
 
+    std::string actual_optimizer = "ADAM";
+    if(optimizer.has_value())
+        actual_optimizer = optimizer.value();
+    size_t actual_iterations = 1000;
+    if(iterations.has_value())
+        actual_iterations = iterations.value();
+    size_t actual_learn_rate = 0.001;
+    if(learning_rate.has_value())
+        actual_learn_rate = learning_rate.value();
+    size_t actual_batch_size = 100;
+    if(batch_size.has_value())
+        actual_batch_size = batch_size.value();
+    bool actual_elbo = false;
+    if(record_elbo.has_value())
+        actual_elbo = record_elbo.value();
+    bool actual_quiet = false;
+    if(quiet_progress.has_value())
+        actual_quiet = quiet_progress.value();
+
     BBVI* bbvi_obj; // TODO: Trovare un modo per eliminare il puntatore senza che crei segmentation fault!
     if (!mini_batch.has_value())
-        bbvi_obj = new BBVI(posterior, q_list, batch_size, optimizer, iterations, learning_rate, record_elbo,
-                            quiet_progress);
+        bbvi_obj = new BBVI(posterior, q_list, actual_batch_size, actual_optimizer, actual_iterations, actual_learn_rate, actual_elbo,
+                            actual_quiet);
     else
-        bbvi_obj = new BBVIM(posterior, _neg_logposterior, q_list, mini_batch.value(), optimizer, iterations,
-                             learning_rate, mini_batch.value(), record_elbo, quiet_progress);
+        bbvi_obj = new BBVIM(posterior, _neg_logposterior, q_list, mini_batch.value(), actual_optimizer, actual_iterations,
+                             actual_learn_rate, mini_batch.value(), actual_elbo, actual_quiet);
 
     BBVIReturnData data{bbvi_obj->run(false)};
     std::transform(data.final_ses.begin(), data.final_ses.end(), data.final_ses.begin(),
@@ -242,8 +262,8 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
             posterior = change_function_params(_neg_logposterior);
         } else
             posterior = change_function_params(_mb_neg_logposterior);
-        return _bbvi_fit(posterior, optimizer.value(), iterations.value(), map_start.value(), batch_size.value(),
-                         mini_batch, learning_rate.value(), record_elbo.value_or(false), quiet_progress.value());
+        return _bbvi_fit(posterior, optimizer, iterations, map_start, batch_size,
+                         mini_batch, learning_rate, record_elbo.value_or(false), quiet_progress);
     } else if (method == "OLS")
         return _ols_fit();
 }

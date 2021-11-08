@@ -97,9 +97,11 @@ protected:
      * @return A BBVIResults object
      */
     BBVIResults* _bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
-                           const std::string& optimizer = "RMSProp", size_t iterations = 1000, bool map_start = true,
-                           size_t batch_size = 12, std::optional<size_t> mini_batch = std::nullopt,
-                           double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false,
+                           const std::optional<std::string>& optimizer = std::nullopt, std::optional<size_t> iterations = 1000,
+                           std::optional<bool> map_start = true,
+                           std::optional<size_t> batch_size = 12, std::optional<size_t> mini_batch = std::nullopt,
+                           std::optional<double> learning_rate = 0.001, std::optional<bool> record_elbo = false,
+                           std::optional<bool> quiet_progress = false,
                            const Eigen::VectorXd& start = Eigen::VectorXd::Zero(0));
 
     /**
