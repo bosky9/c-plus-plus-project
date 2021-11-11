@@ -1,6 +1,5 @@
 #pragma once
 
-#include "cppoptlib/solver/lbfgsb.h"
 #include "families/family.hpp"
 #include "headers.hpp"
 #include "hessian.hpp"
@@ -22,8 +21,6 @@
 
 namespace py = pybind11;
 
-using FunctionXd = cppoptlib::function::Function<double>;
-
 /**
  * @brief Struct that represents the internal data of a time-series model
  */
@@ -43,15 +40,6 @@ struct ModelOutput final {
     std::optional<Eigen::VectorXd> states;
     std::optional<Eigen::VectorXd> states_var;
     std::optional<std::vector<std::string>> X_names;
-};
-
-class Posterior : public FunctionXd {
-public:
-    std::function<double(const vector_t&)> _posterior;
-
-    explicit Posterior(const std::function<double(const vector_t&)>& posterior);
-
-    scalar_t operator()(const vector_t& x) const override;
 };
 
 /**
@@ -121,9 +109,9 @@ protected:
      */
     BBVIResults* _bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
                            const std::string& optimizer = "RMSProp", size_t iterations = 1000, bool map_start = true,
-                           size_t batch_size = 12, std::optional<size_t> mini_batch = std::nullopt,
-                           double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false,
-                           const Eigen::VectorXd& start = Eigen::VectorXd::Zero(0));
+                           size_t batch_size = 12, std::optional<size_t> mini_batch = 12, double learning_rate = 0.001,
+                           bool record_elbo = false, bool quiet_progress = false,
+                           const std::optional<Eigen::VectorXd>& start = std::nullopt);
 
     /**
      * @brief Performs a Laplace approximation to the posterior
@@ -143,10 +131,8 @@ protected:
      * @param quiet_progress
      * @return A MCMCResults object
      */
-    MCMCResults* _mcmc_fit(double scale = 1.0, std::optional<size_t> nsims = 10000, bool printer = true,
-                           const std::string& method                  = "M-H",
-                           std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
-                           std::optional<bool> map_start = true, std::optional<bool> quiet_progress = false);
+    MCMCResults* _mcmc_fit(double scale, size_t nsims, const std::string& method,
+                           std::optional<Eigen::MatrixXd>& cov_matrix, bool map_start, bool quiet_progress);
 
     /**
      * @brief Performs OLS
@@ -159,30 +145,11 @@ protected:
      * @param obj_type method
      * @return A MLEResults object
      */
-    MLEResults*
-    _optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type = {},
-                  const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
-                  const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
-                  const std::optional<StochOptim>& optimizer = std::nullopt,
-                  const std::optional<uint8_t> batch_size = 12, const std::optional<size_t> mini_batch = std::nullopt,
-                  const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
-                  const std::optional<bool> record_elbo    = std::nullopt,
-                  const std::optional<bool> quiet_progress = false, const std::optional<bool> preopt_search = true,
-                  const std::optional<Eigen::VectorXd>& start = std::nullopt);
-
-    MLEResults*
-    true_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type = {},
-                  const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
-                  const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
-                  const std::optional<StochOptim>& optimizer = std::nullopt,
-                  const std::optional<uint8_t> batch_size = 12, const std::optional<size_t> mini_batch = std::nullopt,
-                  const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
-                  const std::optional<bool> record_elbo    = std::nullopt,
-                  const std::optional<bool> quiet_progress = false, const std::optional<bool> preopt_search = true,
-                  const std::optional<Eigen::VectorXd>& start = std::nullopt);
+    MLEResults* _optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type = {},
+                              std::optional<bool> preopt_search           = true,
+                              const std::optional<Eigen::VectorXd>& start = std::nullopt);
 
 public:
-
     std::function<double(const Eigen::VectorXd&)> _neg_loglik;
 
     //@TODO: consider using only optional on None parameters
@@ -200,15 +167,13 @@ public:
      *          it is necessary to declare their extension as public.
      *          es. "class MLEResults : public Results {...}".
      */
-    virtual Results* fit(std::string method = "", bool printer = true,
-                         std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
-                         const std::optional<size_t> iterations = 1000, const std::optional<size_t> nsims = 10000,
-                         const std::optional<StochOptim>& optimizer = std::nullopt,
-                         const std::optional<uint8_t> batch_size    = 12,
-                         const std::optional<size_t> mininbatch     = std::nullopt,
-                         const std::optional<bool> map_start = true, const std::optional<double> learning_rate = 1e-03,
-                         const std::optional<bool> record_elbo    = std::nullopt,
-                         const std::optional<bool> quiet_progress = false);
+    Results* fit(std::string method                         = "",
+                 std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
+                 std::optional<size_t> iterations = 1000, std::optional<size_t> nsims = 1000,
+                 const std::optional<std::string>& optimizer = "RMSProp", std::optional<uint8_t> batch_size = 12,
+                 std::optional<size_t> mini_batch = std::nullopt, std::optional<bool> map_start = true,
+                 std::optional<double> learning_rate = 0.001, std::optional<bool> record_elbo = std::nullopt,
+                 std::optional<bool> quiet_progress = false);
 
     /**
      * @brief Returns negative log posterior
