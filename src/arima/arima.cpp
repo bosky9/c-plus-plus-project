@@ -709,10 +709,10 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
         std::iota(index.begin(), index.end(), 0);
         ARIMA x{data_original_t, _ar, _ma, _integ, _family.get()};
         if (!fit_once)
-            x.fit(fit_method, false);
+            x.fit(fit_method);
         if (t == 0) {
             if (fit_once) {
-                x.fit(fit_method, false);
+                x.fit(fit_method);
                 saved_lvs = x._latent_variables;
             }
         } else {

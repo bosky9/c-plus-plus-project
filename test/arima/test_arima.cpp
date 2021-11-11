@@ -25,7 +25,8 @@ void check_intervals_order(std::vector<std::vector<double>> predictions) {
 } // namespace catch_utilities
 
 TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
-    std::default_random_engine generator;
+    // std::random_device rnd;
+    std::default_random_engine generator{};
     std::normal_distribution<double> distribution(0, 1);
     std::vector<double> data(100, 0);
     for (size_t i{1}; i < 100; i++)
@@ -176,7 +177,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     /**
      * @brief Tests that in-sample prediction intervals are ordered correctly
      */
-    SECTION("Test prediction iS intervals are ordered correctly", "[predict_is]") {
+    SECTION("Test prediction IS intervals are ordered correctly", "[predict_is]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
 
@@ -190,8 +191,8 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     SECTION("Test prediction intervals are ordered correctly using BBVI", "[predict]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
-        Results* x{model.fit("BBVI", true, opt_matrix, 100, 10000, std::nullopt, 12, std::nullopt, true, 1e-03,
-                             std::nullopt, true)};
+        Results* x{model.fit("BBVI", opt_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt,
+                             true)};
 
         DataFrame predictions = model.predict(10, true);
         catch_utilities::check_intervals_order(predictions.data);
@@ -205,8 +206,8 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     SECTION("Test prediction IS intervals are ordered correctly using BBVI", "[predict_is]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
-        Results* x{model.fit("BBVI", true, opt_matrix, 100, 10000, std::nullopt, 12, std::nullopt, true, 1e-03,
-                             std::nullopt, true)};
+        Results* x{model.fit("BBVI", opt_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt,
+                             true)};
 
         DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
@@ -221,8 +222,8 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     SECTION("Test prediction intervals are ordered correctly using MH", "[predict]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
-        Results* x{model.fit("M-H", true, opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03,
-                             std::nullopt, true)};
+        Results* x{model.fit("M-H", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03, std::nullopt,
+                             true)};
 
         DataFrame predictions = model.predict(10, true);
         catch_utilities::check_intervals_order(predictions.data);
@@ -236,8 +237,8 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     SECTION("Test prediction IS intervals are ordered correctly using MH", "[predict_is]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
-        Results* x{model.fit("M-H", true, opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03,
-                             std::nullopt, true)};
+        Results* x{model.fit("M-H", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03, std::nullopt,
+                             true)};
 
         DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
@@ -251,8 +252,8 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     SECTION("Test sampling function", "[sample]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
-        Results* x{model.fit("BBVI", false, op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03,
-                             std::nullopt, true)};
+        Results* x{
+                model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
 
         Eigen::MatrixXd sample = model.sample(100);
         REQUIRE(sample.rows() == 100);
@@ -267,8 +268,8 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     SECTION("Test PPC value", "[ppc]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
-        Results* x{model.fit("BBVI", false, op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03,
-                             std::nullopt, true)};
+        Results* x{
+                model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
 
         double p_value = model.ppc();
         REQUIRE(p_value >= 0.0);

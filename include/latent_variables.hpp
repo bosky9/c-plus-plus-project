@@ -189,7 +189,7 @@ class LatentVariables final {
 private:
     std::string _model_name;                                         ///< Model's name
     std::vector<LatentVariable> _z_list;                             ///< List of latent variables, as a std::vector
-    [[maybe_unused]] std::map<std::string, std::map<std::string, size_t>> _z_indices; ///< Info about latent variables
+    std::map<std::string, std::map<std::string, size_t>> _z_indices; ///< Info about latent variables
     bool _estimated                               = false;           ///<
     std::optional<std::string> _estimation_method = std::nullopt;    ///<
 
