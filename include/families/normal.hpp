@@ -279,6 +279,7 @@ public:
             return vi_loc_score(x);
         else if (index == 1)
             return vi_scale_score(x);
+        return {};
     }
 
     [[nodiscard]] std::string get_name() const override;

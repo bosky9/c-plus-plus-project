@@ -12,17 +12,17 @@
 #include "tsm.hpp"
 #include "utilities.hpp"
 
+#include <cmath>
 #include <map>
 #include <type_traits>
 #include <vector>
-#include <cmath>
 
 namespace plt = matplotlibcpp;
 
-constexpr int       NTAB    =   10;
-constexpr double    CON     =   1.4;
-constexpr double    CON2    =   CON*CON;
-constexpr double    SAFE    =   2.0;
+constexpr int NTAB    = 10;
+constexpr double CON  = 1.4;
+constexpr double CON2 = CON * CON;
+constexpr double SAFE = 2.0;
 
 /**
  * @brief Mean function applied to a vector
@@ -210,7 +210,6 @@ private:
     [[nodiscard]] double normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const;
 
 
-
     /**
      * @brief Calculates the negative log-likelihood of the model for non-Normal family for a minibatch
      * @param beta Contains untransformed starting values for latent variables
@@ -281,13 +280,14 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      */
-    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, py::function minimize, size_t integ = 0, Family* family = new Normal());
+    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, py::function minimize, size_t integ = 0,
+          Family* family = new Normal());
 
     /**
-    * @brief Calculates the negative log-likelihood of the model for non-Normal family
-    * @param beta Contains untransformed starting values for latent variables
-    * @return The negative logliklihood of the model
-    */
+     * @brief Calculates the negative log-likelihood of the model for non-Normal family
+     * @param beta Contains untransformed starting values for latent variables
+     * @return The negative logliklihood of the model
+     */
     [[nodiscard]] double non_normal_neg_loglik(const Eigen::VectorXd& beta) const;
 
     [[nodiscard]] double normal_neg_loglik(const Eigen::VectorXd& beta) const;
@@ -301,8 +301,8 @@ public:
      * @param family E.g. Normal() (default)
      * @param target Which array index to use
      */
-    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, py::function minimize, size_t integ = 0, Family* family = new Normal(),
-          const std::string& target = "");
+    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, py::function minimize, size_t integ = 0,
+          Family* family = new Normal(), const std::string& target = "");
 
     /**
      * @brief Plots the fit of the model against the data
@@ -388,7 +388,7 @@ public:
                   const std::string& T_name = "mean", std::optional<size_t> width = 10,
                   std::optional<size_t> height = 7) const;
 
-    Eigen::VectorXd get_phi(){
+    Eigen::VectorXd get_phi() {
         return _latent_variables.get_z_starting_values();
     }
 
@@ -421,12 +421,14 @@ public:
 
             // Create f(x+h), f(x-h)
             std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = normal_model(beta_temp_plus);
-            Eigen::VectorXd scale_plus{{_latent_variables.get_z_priors().back()->get_transform()(beta_temp_plus(Eigen::last))}};
-            double f_plus = -Mvn::logpdf(mu_y.second, mu_y.first, scale_plus).sum();
+            Eigen::VectorXd
+        scale_plus{{_latent_variables.get_z_priors().back()->get_transform()(beta_temp_plus(Eigen::last))}}; double
+        f_plus = -Mvn::logpdf(mu_y.second, mu_y.first, scale_plus).sum();
 
             mu_y = normal_model(beta_temp_minus);
-            Eigen::VectorXd scale_minus{{_latent_variables.get_z_priors().back()->get_transform()(beta_temp_minus(Eigen::last))}};
-            double f_minus = -Mvn::logpdf(mu_y.second, mu_y.first, scale_minus).sum();
+            Eigen::VectorXd
+        scale_minus{{_latent_variables.get_z_priors().back()->get_transform()(beta_temp_minus(Eigen::last))}}; double
+        f_minus = -Mvn::logpdf(mu_y.second, mu_y.first, scale_minus).sum();
 
             // Compute gradient
             grad[i] = (f_plus - f_minus)/(2*h);
@@ -438,7 +440,7 @@ public:
         }
          */
 
-        for(int my_idx = 0; my_idx < beta.size(); my_idx++){
+        for (int my_idx = 0; my_idx < beta.size(); my_idx++) {
             double h = beta[my_idx];
             if (h == 0.0)
                 h = 1e-1;
@@ -464,44 +466,42 @@ public:
         double errt, fac, hh, ans;
         Eigen::MatrixXd a(NTAB, NTAB);
 
-        Eigen::VectorXd btp{beta};    //beta_temp_plus
-        Eigen::VectorXd btm{beta};     //beta_temp_minus
+        Eigen::VectorXd btp{beta}; // beta_temp_plus
+        Eigen::VectorXd btm{beta}; // beta_temp_minus
 
-        hh = h;
+        hh                   = h;
         double volatile temp = beta[my_idx] + hh;
-        hh                    = temp - beta[my_idx];
-        btp[my_idx]  = beta[my_idx] + hh;
-        btm[my_idx]  = beta[my_idx] - hh;
+        hh                   = temp - beta[my_idx];
+        btp[my_idx]          = beta[my_idx] + hh;
+        btm[my_idx]          = beta[my_idx] - hh;
 
-        a(0,0) = (normal_neg_loglik(btp) - normal_neg_loglik(btm)) / 2.0*hh;
-        err = std::numeric_limits<double>::infinity();
+        a(0, 0) = (normal_neg_loglik(btp) - normal_neg_loglik(btm)) / 2.0 * hh;
+        err     = std::numeric_limits<double>::infinity();
 
-        for(i = 1; i < NTAB; i++) {
+        for (i = 1; i < NTAB; i++) {
             hh /= CON;
             double volatile temp = beta[my_idx] + hh;
-            hh                    = temp - beta[my_idx];
+            hh                   = temp - beta[my_idx];
 
-            btp[my_idx]  = beta[my_idx] + hh;
-            btm[my_idx]  = beta[my_idx] - hh;
+            btp[my_idx] = beta[my_idx] + hh;
+            btm[my_idx] = beta[my_idx] - hh;
 
-            a(0,i) = (normal_neg_loglik(btp) - normal_neg_loglik(btm)) / 2.0*hh;
-            fac = CON2;
+            a(0, i) = (normal_neg_loglik(btp) - normal_neg_loglik(btm)) / 2.0 * hh;
+            fac     = CON2;
             for (j = 1; j <= i; j++) {
-                a(j, i) = a(j-1, i)*fac - a(j-1, i-1)/(fac-1.0);
-                fac = CON2 * fac;
-                errt = std::max(fabs(a(j,i)-a(j-1,i)), fabs(a(j,i)-a(j-1,i-1)));
+                a(j, i) = a(j - 1, i) * fac - a(j - 1, i - 1) / (fac - 1.0);
+                fac     = CON2 * fac;
+                errt    = std::max(fabs(a(j, i) - a(j - 1, i)), fabs(a(j, i) - a(j - 1, i - 1)));
 
                 if (errt <= err) {
                     err = errt;
-                    ans = a(j,i);
+                    ans = a(j, i);
                 }
             }
-            if (fabs(a(i,i)-a(i-1,i-1)) >= SAFE*err)
+            if (fabs(a(i, i) - a(i - 1, i - 1)) >= SAFE * err)
                 break;
         }
 
         return ans;
     }
-
 };
-

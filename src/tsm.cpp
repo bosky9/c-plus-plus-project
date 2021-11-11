@@ -1,62 +1,53 @@
 #include "tsm.hpp"
 
-Posterior::Posterior(const std::function<double(const vector_t&)>& posterior) : FunctionXd{}, _posterior{posterior} {}
+#include "utilities.hpp"
 
-FunctionXd::scalar_t Posterior::operator()(const vector_t& x) const {
-    return _posterior(x);
-}
-
-TSM::TSM(const std::string& model_type, py::function minimize) :
-      _model_type{model_type},
-      _latent_variables{model_type},
-      _minimize{minimize}   {
+TSM::TSM(const std::string& model_type, py::function minimize)
+    : _model_type{model_type}, _latent_variables{model_type}, _minimize{std::move(minimize)} {
     _neg_logposterior    = {[this](const Eigen::VectorXd& x) { return neg_logposterior(x); }};
     _mb_neg_logposterior = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_neg_logposterior(x, mb); }};
     //_multivariate_neg_logposterior = {[this](const Eigen::VectorXd& x) { return multivariate_neg_logposterior(x); }};
     //// Only for VAR models
-/*
+    /*
     if(!_is_python_active) {
         py::initialize_interpreter();
         _minimize         = py::module::import("scipy.optimize").attr("minimize");
         _is_python_active = true;
     }
-*/
+    */
 }
 
 TSM::~TSM() {
-/*
+    /*
       if(_is_python_active) {
          py::finalize_interpreter();
           _is_python_active = false;
       }
-*/
+    */
 }
+
 
 BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
                             const std::string& optimizer, size_t iterations, bool map_start, size_t batch_size,
                             std::optional<size_t> mini_batch, double learning_rate, bool record_elbo,
-                            bool quiet_progress, const Eigen::VectorXd& start) {
-    Eigen::VectorXd phi{(start.size() > 0) ? start : _latent_variables.get_z_starting_values()}; // If user supplied
+                            bool quiet_progress, const std::optional<Eigen::VectorXd>& start) {
+    Eigen::VectorXd phi{(start.has_value()) ? start.value()
+                                            : _latent_variables.get_z_starting_values()}; // If user supplied
 
     Eigen::VectorXd start_loc;
     if ((_model_type != "GPNARX" || _model_type != "GPR" || _model_type != "GP" || _model_type != "GASRank") &&
         !mini_batch.has_value()) {
-        Posterior function{[posterior](Eigen::VectorXd x) { return posterior(std::move(x), std::nullopt); }};
-        cppoptlib::solver::Lbfgsb<Posterior> solver{
-                FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::min()),
-                FunctionXd::vector_t::Constant(phi.size(), std::numeric_limits<typename Posterior::scalar_t>::max()),
-                cppoptlib::solver::DefaultStoppingSolverState<FunctionXd::scalar_t>(),
-                cppoptlib::solver::GetEmptyStepCallback<FunctionXd::scalar_t, FunctionXd::vector_t,
-                                                        FunctionXd::hessian_t>()};
-        auto [p, solver_state] = solver.Minimize(function, phi);
-        start_loc              = 0.8 * p.x + 0.2 * phi;
+        py::function posterior_py = py::cast(posterior);
+        py::object p              = _minimize(posterior_py, phi);
+        auto x                    = p.attr("x").cast<Eigen::VectorXd>();
+        start_loc                 = 0.8 * x + 0.2 * phi;
     } else
         start_loc = phi;
     Eigen::VectorXd start_ses{};
 
     for (size_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
         std::unique_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
-        if (static_cast<std::string>(typeid(approx_dist).name()) == "Normal") {
+        if (instanceof <Normal>(approx_dist.get())) {
             _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
                 _latent_variables.get_z_list()[i].get_q()->vi_change_param(1, std::exp(-3.0));
@@ -92,7 +83,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     // LatentVariables latent_variables_store = _latent_variables; // No sense
 
     return new BBVIResults{{_data_frame.data_name},
-                           output.X_names.value(),
+                           output.X_names.value_or(std::vector<std::string>{}),
                            _model_name,
                            _model_type,
                            _latent_variables,
@@ -113,41 +104,40 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
 LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& obj_type) {
     // Get Mode and Inverse Hessian information
-    MLEResults* y{dynamic_cast<MLEResults*>(fit("PML", false))};
+    MLEResults* y{dynamic_cast<MLEResults*>(fit("PML"))};
 
     assert(y->get_ihessian().size() > 0 && "No Hessian information - Laplace approximation cannot be performed");
     _latent_variables.set_estimation_method("Laplace");
     ModelOutput output{categorize_model_output(_latent_variables.get_z_values())};
 
-    return new LaplaceResults({_data_frame.data_name}, output.X_names.value(), _model_name, _model_type,
-                              _latent_variables, output.Y, _data_frame.index, _multivariate_model, obj_type, "Laplace",
-                              _z_hide, _max_lag, y->get_ihessian(), output.theta, output.scores, output.states,
-                              output.states_var);
+    return new LaplaceResults({_data_frame.data_name}, output.X_names.value_or(std::vector<std::string>{}), _model_name,
+                              _model_type, _latent_variables, output.Y, _data_frame.index, _multivariate_model,
+                              obj_type, "Laplace", _z_hide, _max_lag, y->get_ihessian(), output.theta, output.scores,
+                              output.states, output.states_var);
 }
 
-MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool printer, const std::string& method,
-                            std::optional<Eigen::MatrixXd>& cov_matrix, std::optional<bool> map_start,
-                            std::optional<bool> quiet_progress) {
+MCMCResults* TSM::_mcmc_fit(double scale, size_t nsims, const std::string& method,
+                            std::optional<Eigen::MatrixXd>& cov_matrix, bool map_start, bool quiet_progress) {
     scale = 2.38 / std::sqrt(_z_no);
 
     // Get Mode and Inverse Hessian information
     Eigen::VectorXd starting_values;
     if (_model_type == "GPNARX" || _model_type == "GRP" || _model_type == "GP" || map_start) {
-        MLEResults* y{dynamic_cast<MLEResults*>(fit("PML", false))};
+        MLEResults* y{dynamic_cast<MLEResults*>(fit("PML"))};
         starting_values = y->get_z().get_z_values();
 
-        Eigen::VectorXd ses = y->get_ihessian().diagonal().cwiseAbs();
+        Eigen::VectorXd ses{y->get_ihessian().diagonal().cwiseAbs()};
         ses.unaryExpr([](double v) { return std::isnan(v) ? 1.0 : v; });
         cov_matrix.emplace(ses.asDiagonal());
     } else
         starting_values = _latent_variables.get_z_starting_values();
 
     assert(method == "M-H" && "Method not recognized!");
-    MetropolisHastings sampler{MetropolisHastings(_neg_logposterior, scale, nsims.value(), starting_values, cov_matrix,
-                                                  2, true, quiet_progress.value())};
+    MetropolisHastings sampler{MetropolisHastings(_neg_logposterior, scale, nsims, starting_values, cov_matrix.value(),
+                                                  2, true, quiet_progress)};
     Sample sample = sampler.sample();
 
-    _latent_variables.set_z_values(sample.mean_est, "M-H", std::nullopt, sample.chain.row(0));
+    _latent_variables.set_z_values(sample.mean_est, "M-H", std::nullopt, sample.chain);
     if (_latent_variables.get_z_list().size() == 1) {
         auto transform{_latent_variables.get_z_list()[0].get_prior()->get_transform()};
         sample.mean_est[0]     = transform(sample.mean_est[0]);
@@ -155,7 +145,7 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
         sample.upper_95_est[0] = transform(sample.upper_95_est[0]);
         sample.lower_95_est[0] = transform(sample.lower_95_est[0]);
     } else
-        for (Eigen::Index i{0}; i < sample.chain.size(); i++) {
+        for (Eigen::Index i{0}; i < sample.chain.rows(); i++) {
             auto transform{_latent_variables.get_z_list()[i].get_prior()->get_transform()};
             sample.mean_est[i]     = transform(sample.mean_est[i]);
             sample.median_est[i]   = transform(sample.median_est[i]);
@@ -167,10 +157,11 @@ MCMCResults* TSM::_mcmc_fit(double scale, std::optional<size_t> nsims, bool prin
 
     ModelOutput output{categorize_model_output(sample.mean_est)};
 
-    return new MCMCResults({_data_frame.data_name}, output.X_names.value(), _model_name, _model_type, _latent_variables,
-                           output.Y, _data_frame.index, _multivariate_model, _neg_logposterior, "Metropolis Hastings",
-                           _z_hide, _max_lag, sample.chain, sample.mean_est, sample.median_est, sample.upper_95_est,
-                           sample.lower_95_est, output.theta, output.scores, output.states, output.states_var);
+    return new MCMCResults({_data_frame.data_name}, output.X_names.value_or(std::vector<std::string>{}), _model_name,
+                           _model_type, _latent_variables, output.Y, _data_frame.index, _multivariate_model,
+                           _neg_logposterior, "Metropolis Hastings", _z_hide, _max_lag, sample.chain, sample.mean_est,
+                           sample.median_est, sample.upper_95_est, sample.lower_95_est, output.theta, output.scores,
+                           output.states, output.states_var);
 }
 
 MLEResults* TSM::_ols_fit() {
@@ -178,23 +169,6 @@ MLEResults* TSM::_ols_fit() {
 }
 
 MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
-                                   const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
-                                   const std::optional<size_t> nsims, const std::optional<StochOptim>& optimizer,
-                                   const std::optional<uint8_t> batch_size, const std::optional<size_t> mini_batch,
-                                   const std::optional<bool> map_start, const std::optional<double> learning_rate,
-                                   const std::optional<bool> record_elbo, const std::optional<bool> quiet_progress,
-                                   const std::optional<bool> preopt_search, const std::optional<Eigen::VectorXd>& start) {
-    MLEResults* r = true_optimize_fit(method, obj_type, cov_matrix, iterations, nsims, optimizer, batch_size, mini_batch,
-                         map_start, learning_rate, record_elbo, quiet_progress);
-    return r;
-}
-
-MLEResults* TSM::true_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
-                               const std::optional<Eigen::MatrixXd>& cov_matrix, const std::optional<size_t> iterations,
-                               const std::optional<size_t> nsims, const std::optional<StochOptim>& optimizer,
-                               const std::optional<uint8_t> batch_size, const std::optional<size_t> mini_batch,
-                               const std::optional<bool> map_start, const std::optional<double> learning_rate,
-                               const std::optional<bool> record_elbo, const std::optional<bool> quiet_progress,
                                const std::optional<bool> preopt_search, const std::optional<Eigen::VectorXd>& start) {
     // Starting values - Check to see if model has preoptimize method, if not, simply use default starting values
     Eigen::VectorXd phi;
@@ -208,12 +182,12 @@ MLEResults* TSM::true_optimize_fit(const std::string& method, const std::functio
 
     py::function obj_type_py = py::cast(obj_type);
 
-    py::object p             = _minimize(obj_type_py, phi);
-    Eigen::VectorXd x        = p.attr("x").cast<Eigen::VectorXd>();
+    py::object p = _minimize(obj_type_py, phi);
+    auto x       = p.attr("x").cast<Eigen::VectorXd>();
 
     if (preoptimized) {
-        py::object p2      = _minimize(obj_type_py, _latent_variables.get_z_starting_values());
-        Eigen::VectorXd x2 = p2.attr("x").cast<Eigen::VectorXd>();
+        py::object p2 = _minimize(obj_type_py, _latent_variables.get_z_starting_values());
+        auto x2       = p2.attr("x").cast<Eigen::VectorXd>();
         if (_neg_loglik(x2) < _neg_loglik(x))
             p = p2;
     }
@@ -234,10 +208,10 @@ MLEResults* TSM::true_optimize_fit(const std::string& method, const std::functio
                           output.states_var);
 }
 
-Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixXd>& cov_matrix,
+Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd>& cov_matrix,
                   const std::optional<size_t> iterations, const std::optional<size_t> nsims,
-                  const std::optional<StochOptim>& optimizer, const std::optional<uint8_t> batch_size,
-                  const std::optional<size_t> mininbatch, const std::optional<bool> map_start,
+                  const std::optional<std::string>& optimizer, const std::optional<uint8_t> batch_size,
+                  const std::optional<size_t> mini_batch, const std::optional<bool> map_start,
                   const std::optional<double> learning_rate, const std::optional<bool> record_elbo,
                   const std::optional<bool> quiet_progress) {
     if (method.empty())
@@ -246,25 +220,25 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
            "Method not supported!");
 
     if (method == "MLE")
-        return _optimize_fit(method, _neg_loglik, cov_matrix, iterations, nsims, optimizer, batch_size, mininbatch,
-                             map_start, learning_rate, record_elbo, quiet_progress);
+        return _optimize_fit(method, _neg_loglik);
 
     else if (method == "PML")
-        return _optimize_fit(method, _neg_logposterior, cov_matrix, iterations, nsims, optimizer, batch_size,
-                             mininbatch, map_start, learning_rate, record_elbo, quiet_progress);
+        return _optimize_fit(method, _neg_logposterior);
 
     else if (method == "M-H")
-        return _mcmc_fit(1.0, nsims, true, "M-H", cov_matrix, map_start, quiet_progress);
+        return _mcmc_fit(1.0, nsims.value(), "M-H", cov_matrix, map_start.value(), quiet_progress.value());
     else if (method == "Laplace")
         return _laplace_fit(_neg_logposterior);
 
     else if (method == "BBVI") {
         std::function<double(const Eigen::VectorXd&, std::optional<size_t>)> posterior;
-        if (!mininbatch) {
+        if (!mini_batch) {
             posterior = change_function_params(_neg_logposterior);
         } else
             posterior = change_function_params(_mb_neg_logposterior);
-        return _bbvi_fit(posterior);
+        return _bbvi_fit(posterior, optimizer.value(), iterations.value(), map_start.value(), batch_size.value(),
+                         mini_batch.value(), learning_rate.value(), record_elbo.value_or(false),
+                         quiet_progress.value());
     } else if (method == "OLS")
         return _ols_fit();
 }
@@ -277,7 +251,8 @@ Results* TSM::fit(std::string method, bool printer, std::optional<Eigen::MatrixX
 }
 
 [[nodiscard]] double TSM::mb_neg_logposterior(const Eigen::VectorXd& beta, size_t mini_batch) {
-    double post = (_data_frame.data.size() / mini_batch) * _mb_neg_loglik(beta, mini_batch);
+    double post = (static_cast<double>(_data_frame.data.size()) / static_cast<double>(mini_batch)) *
+                  _mb_neg_loglik(beta, mini_batch);
     for (Eigen::Index k{0}; k < _z_no; k++)
         post += -_latent_variables.get_z_list()[k].get_prior()->logpdf(beta[k]);
     return post;
@@ -328,7 +303,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         if (!lvs.empty())
             cols = lvs.at(0).get_sample().value().size();
         Eigen::MatrixXd chain(lvs.size(), cols);
-        for (size_t i{0}; i < lvs.size(); i++) {
+        for (Eigen::Index i{0}; i < lvs.size(); i++) {
             // Check that the samples exists (since they are optional)
             assert(lvs.at(i).get_sample());
             // Check that the samples have the same size

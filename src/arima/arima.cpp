@@ -1,6 +1,9 @@
 #include "arima/arima.hpp"
 
-ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, py::function minimize, size_t integ, Family* family) : TSM{"ARIMA", minimize} {
+#include <utility>
+
+ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, py::function minimize, size_t integ, Family* family)
+    : TSM{"ARIMA", std::move(minimize)} {
     // Latent Variable information
     _ar                 = ar;
     _ma                 = ma;
@@ -70,8 +73,9 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, py::function
     }
 }
 
-ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, py::function minimize, size_t integ, Family* family, const std::string& target)
-    : TSM{"ARIMA", minimize} {
+ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, py::function minimize, size_t integ, Family* family,
+             const std::string& target)
+    : TSM{"ARIMA", std::move(minimize)} {
     // Latent Variable information
     _ar                 = ar;
     _ma                 = ma;
@@ -707,12 +711,12 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
         std::iota(index.begin(), index.end(), 0);
-        ARIMA x{data_original_t, _ar, _ma, _minimize,_integ, _family.get()};
+        ARIMA x{data_original_t, _ar, _ma, _minimize, _integ, _family.get()};
         if (!fit_once)
-            x.fit(fit_method, false);
+            x.fit(fit_method);
         if (t == 0) {
             if (fit_once) {
-                x.fit(fit_method, false);
+                x.fit(fit_method);
                 saved_lvs = x._latent_variables;
             }
         } else {
@@ -951,5 +955,5 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     // plt::show();
 }
 
-bool TSM::_is_python_active = false;
+bool TSM::_is_python_active    = false;
 bool TSM::_is_minimize_defined = false;
