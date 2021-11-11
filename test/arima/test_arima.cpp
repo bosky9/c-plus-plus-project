@@ -88,52 +88,49 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
      * @brief Tests on ARIMA model with no AR or MA terms that the latent variable list length is correct and that
      * the estimated latent variables are not nan
      */
-    SECTION("Test with no AR or MA terms", "[fit]") {
-        ARIMA model{data, 0, 0, minimize};
-        Results* x{model.fit()};
-        REQUIRE(model.get_latent_variables().get_z_list().size() == 2);
+    ARIMA model{data, 0, 0, minimize};
+    Results* x{model.fit()};
+    REQUIRE(model.get_latent_variables().get_z_list().size() == 2);
 
-        std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
-        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
-                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
-        REQUIRE(nan == 0);
+    std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
+    int64_t nan{std::count_if(lvs.begin(), lvs.end(),
+                              [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
+    REQUIRE(nan == 0);
 
-        delete x;
-    }
+    delete x;
 
     /**
      * @brief Tests on ARIMA model with 1 AR and 1 MA term that the latent variable list length is correct and that
      * the estimated latent variables are not nan
      */
-    SECTION("Test an ARIMA model with 1 AR and 1 MA term", "[fit]") {
-        ARIMA model{data, 1, 1, minimize};
-        Results* x{model.fit()};
-        REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
+    ARIMA model1{data, 1, 1, minimize};
+    Results* x1{model1.fit()};
+    REQUIRE(model1.get_latent_variables().get_z_list().size() == 4);
 
-        std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
-        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
-                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
-        REQUIRE(nan == 0);
+    std::vector<LatentVariable> lvs1{model1.get_latent_variables().get_z_list()};
+    int64_t nan1{std::count_if(lvs1.begin(), lvs1.end(),
+                              [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
+    REQUIRE(nan1 == 0);
 
-        delete x;
-    }
+    delete x1;
+
 
     /**
      * @brief Tests on ARIMA model with 1 AR and 1 MA term, integrated once, that the latent variable list length is
      * correct and that the estimated latent variables are not nan
      */
-    SECTION("Test an ARIMA model with 1 AR and 1 MA term", "[fit]") {
-        ARIMA model{data, 1, 1, minimize, 1};
-        Results* x{model.fit()};
-        REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
 
-        std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
-        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
-                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
-        REQUIRE(nan == 0);
+    ARIMA model2{data, 1, 1, minimize, 1};
+    Results* x2{model2.fit()};
+    REQUIRE(model2.get_latent_variables().get_z_list().size() == 4);
 
-        delete x;
-    }
+    std::vector<LatentVariable> lvs2{model2.get_latent_variables().get_z_list()};
+    int64_t nan2{std::count_if(lvs2.begin(), lvs2.end(),
+                              [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
+    REQUIRE(nan2 == 0);
+
+    delete x2;
+
 
     /**
      * @brief Tests that the prediction dataframe length is equal to the number of steps h

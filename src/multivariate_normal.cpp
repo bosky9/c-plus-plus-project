@@ -65,7 +65,7 @@ Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& mea
         double x_val = x.size() == 1 ? x(0) : x(i);
         double mean  = means.size() == 1 ? means(0) : means(i);
         double scale = scales.size() == 1 ? scales(0) : scales(i);
-        result(i)    = log((ONE_OVER_SQRT_2PI / scale) * exp(-0.5 * pow((x_val - mean) / scale, 2.0)));
+        result(i)    = log((ONE_OVER_SQRT_2PI / scale) ) + (-0.5 * pow((x_val - mean) / scale, 2.0));
     }
     return result;
 }
