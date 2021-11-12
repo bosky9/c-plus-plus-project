@@ -140,6 +140,8 @@ public:
     ADAM(const Eigen::VectorXd& starting_parameters, const Eigen::VectorXd& starting_variances, double learning_rate,
          double ewma1, double ewma2);
 
+    ~ADAM();
+
     /**
      * @brief Copy constructor for ADAM
      * @param adam The ADAM object

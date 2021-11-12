@@ -15,6 +15,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
                             const std::string optimizer, size_t iterations, bool map_start, size_t batch_size,
                             std::optional<size_t> mini_batch, double learning_rate, bool record_elbo,
                             bool quiet_progress, const std::optional<Eigen::VectorXd>& start) {
+
     Eigen::VectorXd phi{(start.has_value() && start.value().size() > 0)
                                 ? start.value()
                                 : _latent_variables.get_z_starting_values()}; // If user supplied
@@ -33,12 +34,12 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         OptimizerFunction function(reverse_function_params(posterior));
         Eigen::VectorXd x{phi};
         int niter = solver.minimize(function, x, fx);
-        start_loc = 0.8 * x + 0.2 * phi;
+        start_loc = 0.8 * x.array() + 0.2 * phi.array();
     } else
         start_loc = phi;
     Eigen::VectorXd start_ses{};
 
-    for (size_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
+    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
         std::unique_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
         if (instanceof <Normal>(approx_dist.get())) {
             _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
@@ -50,7 +51,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     }
 
     std::vector<Normal*> q_list;
-    for (size_t i{0}; i < _latent_variables.get_z_list().size(); i++)
+    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++)
         q_list.push_back(dynamic_cast<Normal*>(_latent_variables.get_z_list()[i].get_q()));
 
     BBVI* bbvi_obj; // TODO: Trovare un modo per eliminare il puntatore senza che crei segmentation fault!
@@ -62,11 +63,16 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
                              learning_rate, mini_batch.value(), record_elbo, quiet_progress);
 
     BBVIReturnData data{bbvi_obj->run(false)};
+    delete bbvi_obj;
+    for (auto &i : q_list )
+        delete i;
+
+    // Apply exp() to q_ses, in python this is done in a single line
     std::transform(data.final_ses.begin(), data.final_ses.end(), data.final_ses.begin(),
                    [](double x) { return exp(x); });
     _latent_variables.set_z_values(data.final_means, "BBVI", data.final_ses);
 
-    for (size_t i{0}; i < _latent_variables.get_z_list().size(); i++)
+    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++)
         _latent_variables.get_z_list()[i].set_q(data.q[i]->clone());
 
     _latent_variables.set_estimation_method("BBVI");

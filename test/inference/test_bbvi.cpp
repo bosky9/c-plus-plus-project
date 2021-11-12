@@ -459,10 +459,11 @@ TEST_CASE("Print progress (for BBVIM)", "[print_progress]") {
                                           bbvim.get_learning_rate(), 0.9, 0.999);
 
     Eigen::VectorXd current_params = Eigen::Vector2d::Ones();
-    bbvim.print_progress(2, current_params);
+    //bbvim.print_progress(2, current_params);
 
-    delete q[0];
-    delete q[1];
+    for (auto &i : q)
+        delete i;
+    q.clear();
 }
 
 TEST_CASE("Run (for BBVIM)", "[run, run_with]") {

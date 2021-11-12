@@ -26,6 +26,12 @@ struct SingleDataFrame final {
 
 /**
  * @brief Struct that represents the model output
+ *
+ * @details This is used to translate the returning results of the
+ *          python _categorize_model_output(self, z) function.
+ *
+ *          This structure will then be used inside each of the
+ *          ...fit() methods.
  */
 struct ModelOutput final {
     Eigen::VectorXd theta;
@@ -46,13 +52,40 @@ protected:
     std::string _model_name2; ///< The self.model_name2 variable in python
     std::string _model_type;  ///< The type of model (e.g. 'ARIMA', 'GARCH')
     bool _multivariate_model;
-    std::function<double(const Eigen::VectorXd&)> _neg_logposterior;
-    std::function<double(const Eigen::VectorXd&, size_t)> _mb_neg_logposterior;
+    std::function<double(const Eigen::VectorXd&)> _neg_logposterior; /**<
+ *  This function is the equivalent of the neg_loposterior(self, beta) function in python.
+ *
+ *  This function is initialized with a lamba expression, which calls the
+ *  double neg_logposterior(Eigen::VectorXd beta) c++ function.
+ *
+ *  This function is necessary for the following methods:
+ *   - _bbvi_fit( ... ), used internally and passed as the first argument
+ *   - _mcmc_fit( ... ), used internally
+ *   - _optimize_fit( ... ), passed as the first argument
+ *   - _laplace_fit( ... ), passed as the first argument
+ *
+ *   This function utilizes the _neg_loglik function.
+ */
+    std::function<double(const Eigen::VectorXd&, size_t)> _mb_neg_logposterior; ///< Similar to _neg_logposterior
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior; // Only for VAR models
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&)> _model;
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&, size_t mb)> _mb_model;
-    std::function<double(const Eigen::VectorXd&)> _neg_loglik;
-    std::function<double(const Eigen::VectorXd&, size_t mb)> _mb_neg_loglik;
+    std::function<double(const Eigen::VectorXd&)> _neg_loglik; /**<
+ *  This function is the equivalent of the python neg_loglik( ... ) function,
+ *  which is initialized in the ARIMA class.
+ *
+ *  This function is not initialized in the TSM constructor,
+ *  following the python implementation.
+ *
+ *  This function is necessary for the following methods:
+ *   - _optimize_fit( ... ), passed as parameter and used internally
+ *   - neg_logposterior(beta), used internally
+ *
+ *  It would also be used in the multivariate_neg_logposterior(beta) method,
+ *  and the _ols_fit(...) one,
+ *  but we did not implement VAR models.
+ */
+    std::function<double(const Eigen::VectorXd&, size_t mb)> _mb_neg_loglik; ///< Similar to _neg_loglik
     bool _z_hide;
     int _max_lag;
     LatentVariables _latent_variables; ///< Holding variables for model output
@@ -139,30 +172,6 @@ protected:
                               std::optional<bool> preopt_search           = true,
                               const std::optional<Eigen::VectorXd>& start = std::nullopt);
 
-public:
-    //@TODO: consider using only optional on None parameters
-    /**
-     * @brief Fits a model
-     * @param method A fitting method (e.g. 'MLE')
-     * @return Results of the fit
-     * @detail  Since the python function receives a list of kwargs,
-     *          we decided to translate it explicitly as parameters,
-     *          some of them tagged as "optional" because by default
-     *          the python version inits them as None.
-     *
-     *          Since the return type is "Results*",
-     *          in order to return pointer to Results (an abstract class) subclasses
-     *          it is necessary to declare their extension as public.
-     *          es. "class MLEResults : public Results {...}".
-     */
-    Results* fit(std::string method                         = "",
-                 std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
-                 std::optional<size_t> iterations = 1000, std::optional<size_t> nsims = 1000,
-                 const std::optional<std::string>& optimizer = "RMSProp", std::optional<size_t> batch_size = 12,
-                 std::optional<size_t> mini_batch = std::nullopt, std::optional<bool> map_start = true,
-                 std::optional<double> learning_rate = 0.001, std::optional<bool> record_elbo = std::nullopt,
-                 std::optional<bool> quiet_progress = false);
-
     /**
      * @brief Returns negative log posterior
      * @param beta Contains untransformed starting values for latent variables
@@ -180,6 +189,33 @@ public:
 
     // Used only in VAR models
     //[[nodiscard]] double multivariate_neg_logposterior(const Eigen::VectorXd& beta);
+
+public:
+    //@TODO: consider using only optional on None parameters
+    /**
+     * @brief Fits a model
+     * @param method A fitting method (e.g. 'MLE')
+     * @return Results of the fit
+     *
+     * @detail  Since the python function receives a list of kwargs,
+     *          we decided to translate it explicitly as parameters,
+     *          some of them tagged as "optional" because by default
+     *          the python version inits them as None.
+     *
+     *          This function calls all other _..._fit(...) functions.
+     *
+     *          Since the return type is "Results*",
+     *          in order to return pointer to Results (an abstract class) subclasses
+     *          it is necessary to declare their extension as public.
+     *          es. "class MLEResults : public Results {...}".
+     */
+    Results* fit(std::string method                         = "",
+                 std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
+                 std::optional<size_t> iterations = 1000, std::optional<size_t> nsims = 1000,
+                 const std::optional<std::string>& optimizer = "RMSProp", std::optional<size_t> batch_size = 12,
+                 std::optional<size_t> mini_batch = std::nullopt, std::optional<bool> map_start = true,
+                 std::optional<double> learning_rate = 0.001, std::optional<bool> record_elbo = std::nullopt,
+                 std::optional<bool> quiet_progress = false);
 
     /**
      * @brief Auxiliary function for creating dates for forecasts
@@ -222,7 +258,7 @@ public:
      * @param nsims How many draws to take
      * @return Matrix of draws
      */
-    [[nodiscard]] virtual Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000) const;
+    [[nodiscard]] Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000) const;
 
     /**
      * @brief Returns the latent variables

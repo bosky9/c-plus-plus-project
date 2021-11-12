@@ -160,3 +160,5 @@ Eigen::VectorXd ADAM::update(Eigen::VectorXd& gradient) {
 std::string ADAM::get_name() const {
     return "ADAM";
 }
+
+ADAM::~ADAM(){}
