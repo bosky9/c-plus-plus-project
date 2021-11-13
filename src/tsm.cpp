@@ -317,6 +317,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
             assert(lvs.at(i).get_sample().value().size() == cols);
             chain.row(i) = lvs.at(i).get_sample().value();
         }
+        // Equivalent of np.random.choice()
         std::vector<size_t> ind;
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine generator(seed);

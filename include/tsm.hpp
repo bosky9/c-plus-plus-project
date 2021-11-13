@@ -154,15 +154,15 @@ protected:
      * @return A MCMCResults object
      *
      * @details The sampler.sample() returns a Sample structure
-     *          which contains the chain, mean_est, median_est,
-     *          upper_95_est, lower_95_est python data.
+     *          which contains the equivalent of {chain, mean_est, median_est,
+     *          upper_95_est, lower_95_est} python data.
      */
     MCMCResults* _mcmc_fit(double scale = 1.0, size_t nsims = 10000, const std::string& method = "M-H",
                            std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
                            bool map_start = true, bool quiet_progress = false);
 
     /**
-     * @brief Performs OLS
+     * @brief Performs OLS (not actually implemented)
      * @return A MLEResults object
      */
     virtual MLEResults* _ols_fit(); // Defined in VAR
@@ -214,8 +214,8 @@ public:
      *
      *          This function calls all other _..._fit(...) functions.
      *
-     *          Since the return type is "Results*",
-     *          in order to return pointer to Results (an abstract class) subclasses
+     *          Since the return type is "Results*" (Results being an abstract class),
+     *          in order to return pointer to Results subclasses
      *          it is necessary to declare their extension as public.
      *          es. "class MLEResults : public Results {...}".
      */
