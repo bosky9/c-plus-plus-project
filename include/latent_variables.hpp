@@ -85,7 +85,7 @@ public:
      * @param height The height of the figure to plot
      *
      * @detail  This one uses the "matplotlibcpp.hpp" library,
-     *          which calls python to print a matplot.
+     *          which calls Python to print a matplot.
      */
     void plot_z(size_t width = 15, size_t height = 5);
 
@@ -224,7 +224,7 @@ public:
      * @param prior Which prior distribution? E.g. Normal(0,1)
      * @param q Which distribution to use for variational approximation
      *
-     * @detail  In python, there is a recursive function which,
+     * @detail  In Python, there is a recursive function which,
      *          given a list [x,y,...,z] e.g. [3,2],
      *          it returns  "(1,1)" "(1,2)" , "(2,1)" , "(2,2)",
      *                      "(3,1)", "(3,2)"

@@ -1,18 +1,16 @@
-#include <catch2/catch_test_macros.hpp>
+/**
+ * @file test_family.cpp
+ * @author Bodini Alessia, Boschi Federico e Cinquetti Ettore
+ * @date November, 2021
+ */
 
 #include "families/family.hpp"
+
+#include "catch2/catch_test_macros.hpp"
 
 TEST_CASE("Use an empty Family", "[Family]") {
     Family f{};
     REQUIRE(f.get_transform_name().empty());
-    REQUIRE(f.get_itransform_name().empty());
-    REQUIRE(f.get_transform()(3.0) == 3.0);
-    REQUIRE(f.get_itransform()(3.0) == 3.0);
-}
-
-TEST_CASE("Use a wrong Family", "[Family]") {
-    Family f{"wrong_name"};
-    REQUIRE(f.get_transform_name() == "wrong_name");
     REQUIRE(f.get_itransform_name().empty());
     REQUIRE(f.get_transform()(3.0) == 3.0);
     REQUIRE(f.get_itransform()(3.0) == 3.0);

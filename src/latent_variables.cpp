@@ -1,5 +1,8 @@
 #include "latent_variables.hpp"
 
+#include "families/normal.hpp"
+#include "utilities.hpp"
+
 LatentVariable::LatentVariable(std::string name, const Family& prior, const Family& q)
     : _name{std::move(name)}, _prior{prior.clone()}, _index{0},
       _transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
@@ -204,7 +207,7 @@ void LatentVariables::add_z(const std::string& name, Family* prior, Family* q, b
 
 void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, Family& q, Family& prior) {
     // Initialize indices vector
-    // tot size of elements (it's a tree in python)
+    // tot size of elements (it's a tree in Python)
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "("); // Creates a vector of indices_dim (
 
@@ -316,8 +319,8 @@ std::vector<Family*> LatentVariables::get_z_approx_dist() const {
 std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
     std::vector<Family*> approx_dists = get_z_approx_dist();
     std::vector<std::string> q_list(approx_dists.size());
-    for (const Family* approx : approx_dists)
-        q_list.emplace_back((approx->get_name() == "Normal") ? "Normal" : "Approximate distribution not detected");
+    for (Family* approx : approx_dists)
+        q_list.emplace_back((isinstance<Normal>(approx)) ? "Normal" : "Approximate distribution not detected");
     return q_list;
 }
 

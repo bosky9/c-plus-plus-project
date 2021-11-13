@@ -1,19 +1,23 @@
+/**
+ * @file flat.hpp
+ * @author Bodini Alessia, Boschi Federico e Cinquetti Ettore
+ * @date November, 2021
+ */
+
 #pragma once
 
+#include "Eigen/Core"
 #include "families/family.hpp"
-#include "headers.hpp"
 
 /**
+ * @class Flat flat.hpp
  * @brief This class contains methods relating to the flat prior distribution for time series
  */
 class Flat final : public Family {
-private:
-    bool _covariance_prior;
-
 public:
     /**
      * @brief Constructor for Flat
-     * @param transform Whether to apply a transformation - e.g. 'exp' or 'logit'
+     * @param transform Whether to apply a transformation - e.g. 'exp' or '_logit'
      */
     explicit Flat(const std::string& transform = "");
 
@@ -54,17 +58,33 @@ public:
      * @param mu Latent variable for which the prior is being formed over
      * @return log(p(mu))
      */
-    double logpdf(double mu);
+    double logpdf([[maybe_unused]] double mu);
+
+    // Get methods -----------------------------------------------------------------------------------------------------
 
     /**
-     * @brief Return the covariance prior
-     * @return The covariance prior
+     * @brief Get the name of the distribution family for the get_z_priors_names() method of LatentVariables
+     * @return Name of the distribution family
      */
-    [[nodiscard]] bool get_covariance_prior() const;
-
     [[nodiscard]] std::string get_name() const override;
 
+    /**
+     * @brief Get the description of the parameters of the distribution family for the get_z_priors_names() method of
+     * LatentVariables
+     * @return Description of the parameters of the distribution family
+     */
     [[nodiscard]] std::string get_z_name() const override;
 
+    // Clone function --------------------------------------------------------------------------------------------------
+
+    /**
+     * @brief Returns a clone of the current object
+     * @return A copy of the family object which calls this function
+     *
+     * @details Overrides the family one, returns a new Flat object by deep copy of the current one.
+     */
     [[nodiscard]] Family* clone() const override;
+
+private:
+    bool _covariance_prior; ///< Covariance's prior
 };

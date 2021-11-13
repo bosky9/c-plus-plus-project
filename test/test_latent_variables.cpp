@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "families/flat.hpp"
 #include "families/normal.hpp"
 #include "latent_variables.hpp"
 

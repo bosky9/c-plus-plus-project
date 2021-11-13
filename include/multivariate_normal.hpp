@@ -116,6 +116,15 @@ public:
 
     /**
      * @brief Generate random values from a normal distribution
+     * @param mean Means of the normal distribution
+     * @param scale Scale of the normal distribution
+     * @param n Number of values to generate
+     * @return Vector of random values
+     */
+    [[nodiscard]] static Eigen::VectorXd random(Eigen::VectorXd mean, double scale, size_t n);
+
+    /**
+     * @brief Generate random values from a normal distribution
      * @param mean Means of the normal distributions
      * @param scale Scales of the normal distributions
      * @param n Number of values to generate

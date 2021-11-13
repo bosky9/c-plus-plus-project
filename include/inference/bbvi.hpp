@@ -133,7 +133,7 @@ public:
      * @param initial cv_gradient or cv_gradient_initial.
      * @return
      *
-     * @details In python, there are two identical functions,
+     * @details In Python, there are two identical functions,
      *          differing only on the log_q initializations.
      *          Using the "initial" parameter allows to write a single function.
      */

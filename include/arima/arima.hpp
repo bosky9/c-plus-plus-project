@@ -55,11 +55,6 @@ inline double percentile(Eigen::VectorXd v, uint8_t p) {
     return v(index - 1);
 }
 
-template<typename T>
-inline bool instanceof (Family * obj) {
-    return obj == dynamic_cast<T*>(obj);
-}
-
 /**
  * @brief AutoRegressive Integrated Moving Average (ARIMA) models
  * (inherits time series methods from the TSM parent class)
@@ -78,7 +73,6 @@ private:
     bool _shape;
     bool _skewness;
     std::function<double(double)> _mean_transform; ///< A function which transforms the location parameter
-    bool _cythonized;
     std::string _model_name2;
     size_t _family_z_no;
 

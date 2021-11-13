@@ -1,10 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <string>
-#include <iostream>
-#include <fstream>
+#include "families/family.hpp"
+
 #include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
 
 /**
  * @brief Struct that represents the input data for a time-series model
@@ -21,3 +23,8 @@ struct DataFrame final {
 DataFrame parse_csv(const std::string& path);
 
 DataFrame parse_csv(std::ifstream& path);
+
+template<typename T>
+bool isinstance(Family* obj) {
+    return obj == dynamic_cast<T*>(obj);
+}

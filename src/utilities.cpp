@@ -1,7 +1,6 @@
 #include "utilities.hpp"
 
 #include <sstream>
-#include <type_traits>
 
 DataFrame csvToDataFrame(std::ifstream& file) {
     DataFrame df;
@@ -11,14 +10,14 @@ DataFrame csvToDataFrame(std::ifstream& file) {
         bool found_index_col{false};
         size_t index_col{0};
         std::vector<size_t> data_cols;
-        if (std::getline(file,line)) {
+        if (std::getline(file, line)) {
             std::stringstream lineStream(line);
             std::string cell;
             size_t i{0};
             while (std::getline(lineStream, cell, ',')) {
                 // Find the times column
                 if (cell == "time" || cell == "\"time\"") {
-                    index_col = i;
+                    index_col       = i;
                     found_index_col = true;
                 } else {
                     // The columns without name are ignored
@@ -32,12 +31,12 @@ DataFrame csvToDataFrame(std::ifstream& file) {
         }
         df.data.resize(data_cols.size());
         // Other lines
-        while (std::getline(file,line)) {
+        while (std::getline(file, line)) {
             std::stringstream lineStream(line);
             std::string cell;
             bool added_index_val{false};
             size_t i = 0;
-            while(std::getline(lineStream,cell, ',')) {
+            while (std::getline(lineStream, cell, ',')) {
                 auto data_col = std::find(data_cols.begin(), data_cols.end(), i);
                 if (found_index_col && i == index_col)
                     df.index.push_back(std::stod(cell));
@@ -70,4 +69,3 @@ DataFrame parse_csv(const std::string& file) {
 DataFrame parse_csv(std::ifstream& file) {
     return std::move(csvToDataFrame(file));
 }
-

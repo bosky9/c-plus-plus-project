@@ -121,7 +121,7 @@ Eigen::VectorXd BBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
     log_q_res = log_q_res.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
     // Create gradient matrix
     Eigen::MatrixXd gradient(grad_log_q_res.rows(), _sims);
-    // In python this is an element product between a matrix and a vector
+    // In Python this is an element product between a matrix and a vector
     for (Eigen::Index i = 0; i < gradient.rows(); i++)
         gradient.row(i) = grad_log_q_res.row(i).array() * (log_p_res - log_q_res).transpose().array();
 

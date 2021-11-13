@@ -100,7 +100,19 @@ Eigen::VectorXd Mvn::random(double mean, double scale, size_t n) {
     return rands;
 }
 
+Eigen::VectorXd Mvn::random(Eigen::VectorXd mean, double scale, size_t n) {
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator(seed);
+    Eigen::VectorXd rands(n);
+    for (Eigen::Index i{0}; i < n; i++) {
+        std::normal_distribution<double> distribution{mean(i), scale};
+        rands(i) = distribution(generator);
+    }
+    return rands;
+}
+
 Eigen::MatrixXd Mvn::random(Eigen::VectorXd mean, Eigen::VectorXd scale, size_t n) {
+    assert(mean.size() == scale.size());
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine generator(seed);
     Eigen::MatrixXd rands(n, mean.size());

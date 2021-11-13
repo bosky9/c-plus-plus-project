@@ -49,42 +49,45 @@ class TSM {
 protected:
     SingleDataFrame _data_frame;
     std::string _model_name;
-    std::string _model_name2; ///< The self.model_name2 variable in python
+    std::string _model_name2; ///< The self.model_name2 variable in Python
     std::string _model_type;  ///< The type of model (e.g. 'ARIMA', 'GARCH')
     bool _multivariate_model;
-    std::function<double(const Eigen::VectorXd&)> _neg_logposterior; /**<
- *  This function is the equivalent of the neg_loposterior(self, beta) function in python.
- *
- *  This function is initialized with a lamba expression, which calls the
- *  double neg_logposterior(Eigen::VectorXd beta) c++ function.
- *
- *  This function is necessary for the following methods:
- *   - _bbvi_fit( ... ), used internally and passed as the first argument
- *   - _mcmc_fit( ... ), used internally
- *   - _optimize_fit( ... ), passed as the first argument
- *   - _laplace_fit( ... ), passed as the first argument
- *
- *   This function utilizes the _neg_loglik function.
- */
+    std::function<double(const Eigen::VectorXd&)>
+            _neg_logposterior;                                                  /**<
+                                                                                 *  This function is the equivalent of the neg_loposterior(self, beta) function in
+                                                                                 * python.
+                                                                                 *
+                                                                                 *  This function is initialized with a lamba expression, which calls the
+                                                                                 *  double neg_logposterior(Eigen::VectorXd beta) c++ function.
+                                                                                 *
+                                                                                 *  This function is necessary for the following methods:
+                                                                                 *   - _bbvi_fit( ... ), used internally and passed as the first argument
+                                                                                 *   - _mcmc_fit( ... ), used internally
+                                                                                 *   - _optimize_fit( ... ), passed as the first argument
+                                                                                 *   - _laplace_fit( ... ), passed as the first argument
+                                                                                 *
+                                                                                 *   This function utilizes the _neg_loglik function.
+                                                                                 */
     std::function<double(const Eigen::VectorXd&, size_t)> _mb_neg_logposterior; ///< Similar to _neg_logposterior
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior; // Only for VAR models
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&)> _model;
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&, size_t mb)> _mb_model;
-    std::function<double(const Eigen::VectorXd&)> _neg_loglik; /**<
- *  This function is the equivalent of the python neg_loglik( ... ) function,
- *  which is initialized in the ARIMA class.
- *
- *  This function is not initialized in the TSM constructor,
- *  following the python implementation. It will be instead initialized in ARIMA.
- *
- *  This function is necessary for the following methods:
- *   - _optimize_fit( ... ), passed as parameter and used internally
- *   - neg_logposterior(beta), used internally
- *
- *  It would also be used in the multivariate_neg_logposterior(beta) method,
- *  and the _ols_fit(...) one,
- *  but we did not implement VAR models.
- */
+    std::function<double(const Eigen::VectorXd&)>
+            _neg_loglik;                                                     /**<
+                                                                              *  This function is the equivalent of the python neg_loglik( ... ) function,
+                                                                              *  which is initialized in the ARIMA class.
+                                                                              *
+                                                                              *  This function is not initialized in the TSM constructor,
+                                                                              *  following the python implementation. It will be instead initialized in ARIMA.
+                                                                              *
+                                                                              *  This function is necessary for the following methods:
+                                                                              *   - _optimize_fit( ... ), passed as parameter and used internally
+                                                                              *   - neg_logposterior(beta), used internally
+                                                                              *
+                                                                              *  It would also be used in the multivariate_neg_logposterior(beta) method,
+                                                                              *  and the _ols_fit(...) one,
+                                                                              *  but we did not implement VAR models.
+                                                                              */
     std::function<double(const Eigen::VectorXd&, size_t mb)> _mb_neg_loglik; ///< Similar to _neg_loglik
     bool _z_hide;
     int _max_lag;
@@ -207,10 +210,10 @@ public:
      * @param method A fitting method (e.g. 'MLE')
      * @return Results of the fit
      *
-     * @detail  Since the python function receives a list of kwargs,
+     * @detail  Since the Python function receives a list of kwargs,
      *          we decided to translate it explicitly as parameters,
      *          some of them tagged as "optional" because by default
-     *          the python version inits them as None.
+     *          the Python version inits them as None.
      *
      *          This function calls all other _..._fit(...) functions.
      *

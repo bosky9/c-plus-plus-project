@@ -46,7 +46,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
     for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
         std::unique_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
-        if (instanceof <Normal>(approx_dist.get())) {
+        if (isinstance<Normal>(approx_dist.get())) {
             _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
                 _latent_variables.get_z_list()[i].get_q()->vi_change_param(1, std::exp(-3.0));
