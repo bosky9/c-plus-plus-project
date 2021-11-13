@@ -4,6 +4,11 @@
 
 #include <lbfgspp/LBFGS.h>
 
+constexpr unsigned int str2int(const char* str, int h = 0)
+{
+    return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
+}
+
 TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_variables{model_type} {
     _neg_logposterior    = {[this](const Eigen::VectorXd& x) { return neg_logposterior(x); }};
     _mb_neg_logposterior = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_neg_logposterior(x, mb); }};
@@ -227,27 +232,32 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd>& cov_matrix
     assert(std::find(_supported_methods.begin(), _supported_methods.end(), method) != _supported_methods.end() &&
            "Method not supported!");
 
-    if (method == "MLE")
-        return _optimize_fit(method, _neg_loglik);
+    switch(str2int(method.c_str())) {
 
-    else if (method == "PML")
-        return _optimize_fit(method, _neg_logposterior);
+        case str2int("MLE"):
+            return _optimize_fit(method, _neg_loglik);
 
-    else if (method == "M-H")
-        return _mcmc_fit(1.0, nsims.value(), "M-H", cov_matrix, map_start.value(), quiet_progress.value());
-    else if (method == "Laplace")
-        return _laplace_fit(_neg_logposterior);
+        case str2int("PML"):
+            return _optimize_fit(method, _neg_logposterior);
 
-    else if (method == "BBVI") {
-        std::function<double(const Eigen::VectorXd&, std::optional<size_t>)> posterior;
-        if (!mini_batch.has_value()) {
-            posterior = change_function_params(_neg_logposterior);
-        } else
-            posterior = change_function_params(_mb_neg_logposterior);
-        return _bbvi_fit(posterior, optimizer.value(), iterations.value(), map_start.value(), batch_size.value(),
-                         mini_batch, learning_rate.value(), record_elbo.value_or(false), quiet_progress.value());
-    } else if (method == "OLS")
-        return _ols_fit();
+        case str2int("M-H"):
+            return _mcmc_fit(1.0, nsims.value(), "M-H", cov_matrix, map_start.value(), quiet_progress.value());
+
+        case str2int("Laplace"):
+            return _laplace_fit(_neg_logposterior);
+
+        case str2int("OLS"):
+            return _ols_fit();
+
+        case str2int("BBVI"):
+            std::function<double(const Eigen::VectorXd&, std::optional<size_t>)> posterior;
+            if (!mini_batch.has_value()) {
+                posterior = change_function_params(_neg_logposterior);
+            } else
+                posterior = change_function_params(_mb_neg_logposterior);
+            return _bbvi_fit(posterior, optimizer.value(), iterations.value(), map_start.value(), batch_size.value(),
+                             mini_batch, learning_rate.value(), record_elbo.value_or(false), quiet_progress.value());
+    }
 }
 
 [[nodiscard]] double TSM::neg_logposterior(const Eigen::VectorXd& beta) {
