@@ -103,6 +103,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
 LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& obj_type) {
     // Get Mode and Inverse Hessian information
+    // unique_ptr because there is no room for delete
     std::unique_ptr<MLEResults> y{dynamic_cast<MLEResults*>(fit("PML"))};
 
     assert(y->get_ihessian().size() > 0 && "No Hessian information - Laplace approximation cannot be performed");
@@ -269,10 +270,10 @@ std::vector<double> TSM::shift_dates(size_t n) const {
     assert(_data_frame.index.size() > _max_lag);
     std::vector<double> date_index(_data_frame.index.begin() + _max_lag, _data_frame.index.end());
     if (date_index.size() > 1) {
-        for (size_t i{0}; i < n; i++)
+        for (int64_t i{0}; i < n; i++)
             date_index.push_back(date_index.back() + (date_index.back() - date_index.at(date_index.size() - 2)));
     } else {
-        for (size_t i{0}; i < n; i++)
+        for (int64_t i{0}; i < n; i++)
             date_index.push_back(date_index.back() + 1);
     }
     return std::move(date_index);
@@ -322,7 +323,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine generator(seed);
         std::uniform_int_distribution<size_t> distribution{0, cols};
-        for (size_t n{0}; n < nsims; n++)
+        for (int64_t n{0}; n < nsims; n++)
             ind.push_back(distribution(generator));
         // Copy elision should work just fine
         return chain(Eigen::all, ind);
