@@ -12,7 +12,7 @@ TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_varia
 }
 
 BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
-                            const std::string optimizer, size_t iterations, bool map_start, size_t batch_size,
+                            const std::string& optimizer, size_t iterations, bool map_start, size_t batch_size,
                             std::optional<size_t> mini_batch, double learning_rate, bool record_elbo,
                             bool quiet_progress, const std::optional<Eigen::VectorXd>& start) {
 
@@ -103,9 +103,10 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
 LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& obj_type) {
     // Get Mode and Inverse Hessian information
-    MLEResults* y{dynamic_cast<MLEResults*>(fit("PML"))};
+    std::unique_ptr<MLEResults> y{dynamic_cast<MLEResults*>(fit("PML"))};
 
     assert(y->get_ihessian().size() > 0 && "No Hessian information - Laplace approximation cannot be performed");
+    Eigen::MatrixXd ihessian = y->get_ihessian();
     _latent_variables.set_estimation_method("Laplace");
     ModelOutput output{categorize_model_output(_latent_variables.get_z_values())};
 
@@ -125,9 +126,10 @@ MCMCResults* TSM::_mcmc_fit(double scale, size_t nsims, const std::string& metho
         MLEResults* y{dynamic_cast<MLEResults*>(fit("PML"))};
         starting_values = y->get_z().get_z_values();
 
-        Eigen::VectorXd ses{y->get_ihessian().diagonal().cwiseAbs()};
+        Eigen::VectorXd ses{y->get_ihessian().diagonal().cwiseAbs()}; // equivalent of np.abs(np.diag(y.ihessian))
         ses.unaryExpr([](double v) { return std::isnan(v) ? 1.0 : v; });
-        cov_matrix.emplace(ses.asDiagonal());
+        cov_matrix.emplace(ses.asDiagonal()); // equivalent of np.fill_diagonal(cov_matrix, ses)
+        delete y;
     } else
         starting_values = _latent_variables.get_z_starting_values();
 
@@ -137,15 +139,17 @@ MCMCResults* TSM::_mcmc_fit(double scale, size_t nsims, const std::string& metho
     Sample sample = sampler.sample();
 
     _latent_variables.set_z_values(sample.mean_est, "M-H", std::nullopt, sample.chain);
+    std::function<double(double)> transform;
     if (_latent_variables.get_z_list().size() == 1) {
-        auto transform{_latent_variables.get_z_list()[0].get_prior()->get_transform()};
+        transform = _latent_variables.get_z_list()[0].get_prior()->get_transform();
         sample.mean_est[0]     = transform(sample.mean_est[0]);
         sample.median_est[0]   = transform(sample.median_est[0]);
         sample.upper_95_est[0] = transform(sample.upper_95_est[0]);
         sample.lower_95_est[0] = transform(sample.lower_95_est[0]);
-    } else
+    }
+    else
         for (Eigen::Index i{0}; i < sample.chain.rows(); i++) {
-            auto transform{_latent_variables.get_z_list()[i].get_prior()->get_transform()};
+            transform = _latent_variables.get_z_list()[i].get_prior()->get_transform();
             sample.mean_est[i]     = transform(sample.mean_est[i]);
             sample.median_est[i]   = transform(sample.median_est[i]);
             sample.upper_95_est[i] = transform(sample.upper_95_est[i]);
@@ -294,9 +298,10 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         std::vector<Family*> q_vec = _latent_variables.get_z_approx_dist();
         Eigen::MatrixXd output(q_vec.size(), nsims);
         Eigen::Index r = 0;
-        for (Family* f : q_vec) {
+        for (Family* &f : q_vec) {
             output.row(r) = f->draw_variable_local(nsims);
             r++;
+            delete f;
         }
         return output;
     } else {
@@ -318,6 +323,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         std::uniform_int_distribution<size_t> distribution{0, cols};
         for (size_t n{0}; n < nsims; n++)
             ind.push_back(distribution(generator));
+        // Copy elision should work just fine
         return chain(Eigen::all, ind);
     }
 }

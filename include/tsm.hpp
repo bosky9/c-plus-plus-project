@@ -75,7 +75,7 @@ protected:
  *  which is initialized in the ARIMA class.
  *
  *  This function is not initialized in the TSM constructor,
- *  following the python implementation.
+ *  following the python implementation. It will be instead initialized in ARIMA.
  *
  *  This function is necessary for the following methods:
  *   - _optimize_fit( ... ), passed as parameter and used internally
@@ -130,7 +130,7 @@ protected:
      * @return A BBVIResults object
      */
     BBVIResults* _bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
-                           const std::string optimizer = "RMSProp", size_t iterations = 1000, bool map_start = true,
+                           const std::string& optimizer = "RMSProp", size_t iterations = 1000, bool map_start = true,
                            size_t batch_size = 12, std::optional<size_t> mini_batch = 12, double learning_rate = 0.001,
                            bool record_elbo = false, bool quiet_progress = false,
                            const std::optional<Eigen::VectorXd>& start = std::nullopt);
@@ -152,6 +152,10 @@ protected:
      * @param map_start
      * @param quiet_progress
      * @return A MCMCResults object
+     *
+     * @details The sampler.sample() returns a Sample structure
+     *          which contains the chain, mean_est, median_est,
+     *          upper_95_est, lower_95_est python data.
      */
     MCMCResults* _mcmc_fit(double scale = 1.0, size_t nsims = 10000, const std::string& method = "M-H",
                            std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
@@ -176,6 +180,10 @@ protected:
      * @brief Returns negative log posterior
      * @param beta Contains untransformed starting values for latent variables
      * @return Negative log posterior
+     *
+     * @details This is the function called by _neg_logposterior.
+     *          It sums the logpdf of the prior of the latent_variables.
+     *          It also employs _neg_loglik, to initialize the sum.
      */
     [[nodiscard]] double neg_logposterior(const Eigen::VectorXd& beta);
 
@@ -184,6 +192,8 @@ protected:
      * @param beta Contains untransformed starting values for latent variables
      * @param mini_batch Batch size for the data
      * @return Negative log posterior
+     *
+     * @details This is the function called by _mb_neg_logposterior.
      */
     [[nodiscard]] double mb_neg_logposterior(const Eigen::VectorXd& beta, size_t mini_batch);
 
