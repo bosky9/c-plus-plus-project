@@ -20,7 +20,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _data_original               = data;
 
     // Difference data
-    for (size_t order{0}; order < _integ; order++)
+    for (int64_t order{0}; order < _integ; order++)
         _data_frame.data = diff(_data_frame.data);
     _data_frame.data_name = "Differenced " + _data_frame.data_name;
     _data_length          = _data_frame.data.size();
@@ -41,7 +41,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
 
     // Build any remaining latent variables that are specific to the family chosen
     std::vector<lv_to_build> lvs = _family->build_latent_variables();
-    for (size_t no{0}; no < lvs.size(); no++) {
+    for (int64_t no{0}; no < lvs.size(); no++) {
         lv_to_build lv = lvs.at(no);
         _latent_variables.add_z(std::get<0>(lv), std::get<1>(lv), std::get<2>(lv));
         _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
@@ -93,7 +93,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ,
     _data_original               = _data_frame.data;
 
     // Difference data
-    for (size_t order{0}; order < _integ; order++)
+    for (int64_t order{0}; order < _integ; order++)
         _data_frame.data = diff(_data_frame.data);
     _data_frame.data_name = "Differenced " + _data_frame.data_name;
     _data_length          = _data_frame.data.size();
@@ -114,7 +114,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ,
 
     // Build any remaining latent variables that are specific to the family chosen
     std::vector<lv_to_build> lvs = _family->build_latent_variables();
-    for (size_t no{0}; no < lvs.size(); no++) {
+    for (int64_t no{0}; no < lvs.size(); no++) {
         lv_to_build lv = lvs[no];
         _latent_variables.add_z(std::get<0>(lv), std::get<1>(lv), std::get<2>(lv));
         _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
@@ -168,11 +168,11 @@ void ARIMA::create_latent_variables() {
 
     n1 = Normal(0, 0.5);
     Normal n2{Normal(0.3)};
-    for (size_t ar_terms{0}; ar_terms < _ar; ar_terms++)
+    for (int64_t ar_terms{0}; ar_terms < _ar; ar_terms++)
         _latent_variables.add_z("AR(" + std::to_string(ar_terms + 1) + ")", reinterpret_cast<Family*>(&n1),
                                 reinterpret_cast<Family*>(&n2));
 
-    for (size_t ma_terms{0}; ma_terms < _ma; ma_terms++)
+    for (int64_t ma_terms{0}; ma_terms < _ma; ma_terms++)
         _latent_variables.add_z("MA(" + std::to_string(ma_terms + 1) + ")", reinterpret_cast<Family*>(&n1),
                                 reinterpret_cast<Family*>(&n2));
 }
@@ -393,7 +393,7 @@ Eigen::VectorXd ARIMA::mean_prediction(const Eigen::VectorXd& mu, const Eigen::V
     Eigen::VectorXd mu_exp{mu};
 
     // Loop over h time periods
-    for (size_t t{0}; t < h; t++) {
+    for (int64_t t{0}; t < h; t++) {
         double new_value = t_z[0];
 
         if (_ar != 0) {
@@ -544,7 +544,7 @@ std::tuple<std::vector<double>, std::vector<double>, std::vector<double>, std::v
 ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::MatrixXd& sim_vector,
                              const std::vector<double>& date_index, size_t h, size_t past_values) const {
     std::vector<double> error_bars;
-    for (size_t pre{5}; pre < 100; pre += 5) {
+    for (int64_t pre{5}; pre < 100; pre += 5) {
         error_bars.push_back(mean_values[static_cast<Eigen::Index>(-h - 1)]);
         for (Eigen::Index i{0}; i < sim_vector.rows(); i++)
             error_bars.push_back(percentile(sim_vector.row(i), pre));
@@ -583,8 +583,8 @@ void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) 
         Eigen::VectorXd t_params{transform_z()};
         auto scale_shape_skew{get_scale_and_shape(t_params)};
         double m1{
-                (std::sqrt(std::get<1>(scale_shape_skew)) * std::tgamma((std::get<1>(scale_shape_skew) - 1.0) / 2.0)) /
-                (std::sqrt(M_PI) * std::tgamma(std::get<1>(scale_shape_skew) / 2.0))};
+                (std::sqrt(std::get<1>(scale_shape_skew)) * std::tgamma((std::get<1>(scale_shape_skew) - 1.0) * 0.5)) /
+                (std::sqrt(M_PI) * std::tgamma(std::get<1>(scale_shape_skew) * 0.5))};
         double additional_loc{(std::get<2>(scale_shape_skew) - (1.0 / std::get<2>(scale_shape_skew))) *
                               std::get<0>(scale_shape_skew) * m1};
         std::transform(mu_Y.first.begin(), mu_Y.first.end(), values_to_plot.begin(),
@@ -617,7 +617,7 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
         Eigen::MatrixXd sim_vector{sim_prediction_bayes(static_cast<Eigen::Index>(h), 1500)};
         std::vector<double> Y(&mu_Y.second[0], mu_Y.second.data() + mu_Y.second.size());
 
-        for (size_t pre{5}; pre < 100; pre += 5) {
+        for (int64_t pre{5}; pre < 100; pre += 5) {
             error_bars.push_back(Y.back());
             for (Eigen::Index i{0}; i < sim_vector.rows(); i++)
                 error_bars.push_back(percentile(sim_vector.row(i), pre));
@@ -640,8 +640,8 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
         if (_model_name2 == "Skewt") {
             auto scale_shape_skew{get_scale_and_shape(t_z)};
             double m1{(std::sqrt(std::get<1>(scale_shape_skew)) *
-                       std::tgamma((std::get<1>(scale_shape_skew) - 1.0) / 2.0)) /
-                      (std::sqrt(M_PI) * std::tgamma(std::get<1>(scale_shape_skew) / 2.0))};
+                       std::tgamma((std::get<1>(scale_shape_skew) - 1.0) * 0.5)) /
+                      (std::sqrt(M_PI) * std::tgamma(std::get<1>(scale_shape_skew) * 0.5))};
             std::transform(forecasted_values.begin(), forecasted_values.end(), forecasted_values.begin(),
                            [scale_shape_skew, m1](double x) {
                                return (std::get<2>(scale_shape_skew) - 1.0 / std::get<2>(scale_shape_skew)) *
@@ -666,9 +666,9 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
     plt::figure_size(width.value(), height.value());
     if (intervals) {
         std::vector<double> alpha;
-        for (size_t i{50}; i > 12; i -= 2)
-            alpha.push_back(0.15 * static_cast<double>(i) / 100.0);
-        for (size_t i{0}; i < error_bars.size(); i++) {
+        for (int64_t i{50}; i > 12; i -= 2)
+            alpha.push_back(0.15 * static_cast<double>(i) * 0.01);
+        for (int64_t i{0}; i < error_bars.size(); i++) {
             std::vector<double> date_index_h;
             std::copy(date_index.end() - static_cast<long>(h) - 1, date_index.end(), std::back_inserter(date_index_h));
             plt::fill_between(date_index_h, std::vector<double>{error_bars[i]}, std::vector<double>{error_bars[-i - 1]},
@@ -700,7 +700,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
         std::iota(index.begin(), index.end(), 0);
-        ARIMA x{data_original_t, _ar, _ma, _integ, *_family.get()};
+        ARIMA x{data_original_t, _ar, _ma, _integ, *_family};
         if (!fit_once)
             x.fit(fit_method);
         if (t == 0) {
@@ -713,7 +713,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
                 x._latent_variables = saved_lvs;
         }
         new_prediction = x.predict(1, intervals);
-        for (size_t i{0}; i < new_prediction.data_name.size(); i++) {
+        for (int64_t i{0}; i < new_prediction.data_name.size(); i++) {
             if (predictions.data.size() == i)
                 predictions.data.push_back(new_prediction.data[i]);
             else
@@ -735,7 +735,7 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     std::vector<double> data;
     std::copy(_data_frame.data.end() - static_cast<long>(h), _data_frame.data.end(), std::back_inserter(data));
     plt::named_plot("Data", predictions.index, data);
-    for (size_t i{0}; i < predictions.data_name.size(); i++)
+    for (int64_t i{0}; i < predictions.data_name.size(); i++)
         plt::named_plot("Predictions", predictions.index, predictions.data[i], "k");
     plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
     plt::legend({{"loc", "2"}});
@@ -774,8 +774,8 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
         if (_model_name2 == "Skewt") {
             auto scale_shape_skew{get_scale_and_shape(t_z)};
             double m1{(std::sqrt(std::get<1>(scale_shape_skew)) *
-                       std::tgamma((std::get<1>(scale_shape_skew) - 1.0) / 2.0)) /
-                      (std::sqrt(M_PI) * std::tgamma(std::get<1>(scale_shape_skew) / 2.0))};
+                       std::tgamma((std::get<1>(scale_shape_skew) - 1.0) * 0.5)) /
+                      (std::sqrt(M_PI) * std::tgamma(std::get<1>(scale_shape_skew) * 0.5))};
             double additional_loc{(std::get<2>(scale_shape_skew) - (1.0 / std::get<2>(scale_shape_skew))) *
                                   std::get<0>(scale_shape_skew) * m1};
             std::transform(mean_values.end() - static_cast<long>(h), mean_values.end(), forecasted_values.begin(),
@@ -887,7 +887,7 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
     double T_actual{T(Eigen::VectorXd::Map(_data_frame.data.data(), _data_frame.data.size()))};
 
     std::vector<double> T_sims_greater;
-    for (size_t i{0}; i < T_sims.size(); i++) {
+    for (int64_t i{0}; i < T_sims.size(); i++) {
         if (T_sims.at(i) > T_actual)
             T_sims_greater.push_back(T_sims.at(i));
     }
