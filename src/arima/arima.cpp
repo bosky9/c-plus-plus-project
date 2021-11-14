@@ -43,7 +43,9 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     std::vector<lv_to_build> lvs = _family->build_latent_variables();
     for (int64_t no{0}; no < lvs.size(); no++) {
         lv_to_build lv = lvs.at(no);
-        _latent_variables.add_z(std::get<0>(lv), std::get<1>(lv), std::get<2>(lv));
+        Family* prior = std::get<1>(lv);
+        Family* q = std::get<2>(lv);
+        _latent_variables.add_z(std::get<0>(lv), *prior, *q);
         _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
         delete std::get<1>(lv);
         delete std::get<2>(lv);
@@ -116,7 +118,9 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ,
     std::vector<lv_to_build> lvs = _family->build_latent_variables();
     for (int64_t no{0}; no < lvs.size(); no++) {
         lv_to_build lv = lvs[no];
-        _latent_variables.add_z(std::get<0>(lv), std::get<1>(lv), std::get<2>(lv));
+        Family* prior = std::get<1>(lv);
+        Family* q = std::get<2>(lv);
+        _latent_variables.add_z(std::get<0>(lv), *prior, *q);
         _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
         delete std::get<1>(lv);
         delete std::get<2>(lv);
@@ -164,17 +168,15 @@ ModelOutput ARIMA::categorize_model_output(const Eigen::VectorXd& z) const {
 
 void ARIMA::create_latent_variables() {
     Normal n1{Normal(0, 3)};
-    _latent_variables.add_z("Constant", reinterpret_cast<Family*>(&n1), reinterpret_cast<Family*>(&n1));
+    _latent_variables.add_z("Constant", n1, n1);
 
     n1 = Normal(0, 0.5);
     Normal n2{Normal(0.3)};
     for (int64_t ar_terms{0}; ar_terms < _ar; ar_terms++)
-        _latent_variables.add_z("AR(" + std::to_string(ar_terms + 1) + ")", reinterpret_cast<Family*>(&n1),
-                                reinterpret_cast<Family*>(&n2));
+        _latent_variables.add_z("AR(" + std::to_string(ar_terms + 1) + ")", n1, n2);
 
     for (int64_t ma_terms{0}; ma_terms < _ma; ma_terms++)
-        _latent_variables.add_z("MA(" + std::to_string(ma_terms + 1) + ")", reinterpret_cast<Family*>(&n1),
-                                reinterpret_cast<Family*>(&n2));
+        _latent_variables.add_z("MA(" + std::to_string(ma_terms + 1) + ")", n1, n2);
 }
 
 std::tuple<double, double, double> ARIMA::get_scale_and_shape(const Eigen::VectorXd& transformed_lvs) const {

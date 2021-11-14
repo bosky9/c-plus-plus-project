@@ -77,8 +77,10 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
                    [](double x) { return exp(x); });
     _latent_variables.set_z_values(data.final_means, "BBVI", data.final_ses);
 
-    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++)
-        _latent_variables.get_z_list()[i].set_q(data.q[i]->clone());
+    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
+        Family* f = data.q[i]->clone();
+        _latent_variables.get_z_list()[i].set_q(*f);
+    }
 
     _latent_variables.set_estimation_method("BBVI");
 
@@ -297,7 +299,7 @@ void TSM::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width
     _latent_variables.plot_z(indices, width, height);
 }
 
-void TSM::adjust_prior(const std::vector<size_t>& index, const Family& prior) {
+void TSM::adjust_prior(const std::vector<int64_t>& index, const Family& prior) {
     _latent_variables.adjust_prior(index, prior);
 }
 

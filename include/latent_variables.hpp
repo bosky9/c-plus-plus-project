@@ -1,5 +1,12 @@
 #pragma once
 
+#include "covariances.hpp"
+#include "families/family.hpp"
+#include "headers.hpp"
+#include "matplotlibcpp.hpp"
+#include "multivariate_normal.hpp"
+#include "output/tableprinter.hpp"
+
 #include <list>
 #include <map>
 #include <numeric>
@@ -8,16 +15,10 @@
 #include <utility>
 #include <vector>
 
-#include "covariances.hpp"
-#include "families/family.hpp"
-#include "headers.hpp"
-#include "matplotlibcpp.hpp"
-#include "multivariate_normal.hpp"
-#include "output/tableprinter.hpp"
-
 namespace plt = matplotlibcpp;
 
 /**
+ * @class LatentVariable latent_variables.hpp
  * @brief Class that represents a latent variable
  *
  * @details Using a unique_pointer for _prior and _q
@@ -25,28 +26,15 @@ namespace plt = matplotlibcpp;
  *          the passage of every subclass of Family.
  */
 class LatentVariable final {
-private:
-    std::string _name;                        ///< Name of the latent variable
-    size_t _index;                            ///< Index of the latent variable
-    std::unique_ptr<Family> _prior;           ///< The prior for the latent variable, e.g. Normal(0,1)
-    std::function<double(double)> _transform; ///< The transform function of the prior
-    double _start;                            ///< Starting value
-    std::unique_ptr<Family> _q; ///< The variational distribution for the latent variable, e.g. Normal(0,1)
-    // TODO: I seguenti attributi non sono dichiarati nella classe Python ma usati in LatentVariables
-    std::string _method;
-    std::optional<double> _value           = std::nullopt;
-    std::optional<double> _std             = std::nullopt;
-    std::optional<Eigen::VectorXd> _sample = std::nullopt;
 
 public:
     /**
      * @brief Constructor for LatentVariable
      * @param name Name of the latent variable
-     * @param index Index of the latent variable
      * @param prior The prior for the latent variable, e.g. Normal(0,1)
      * @param q The variational distribution for the latent variable, e.g. Normal(0,1)
      */
-    LatentVariable(std::string name, const Family& prior, const Family& q);
+    LatentVariable(const std::string& name, const Family& prior, const Family& q);
 
     /**
      * @brief Copy constructor
@@ -84,10 +72,9 @@ public:
      * @param width The width of the figure to plot
      * @param height The height of the figure to plot
      *
-     * @detail  This one uses the "matplotlibcpp.hpp" library,
-     *          which calls Python to print a matplot.
+     * @detail This one uses the "matplotlibcpp.hpp" library, which calls Python to print a matplot.
      */
-    void plot_z(size_t width = 15, size_t height = 5);
+    void plot_z(size_t width = 15, size_t height = 5) const;
 
     /**
      * @brief Returns the method's name
@@ -177,28 +164,36 @@ public:
      * @brief Sets a new family object in q
      * @param family Family object
      */
-    void set_q(Family* q);
+    void set_q(const Family& q);
+
+private:
+    std::string _name;                                     ///< Name of the latent variable
+    size_t _index;                                         ///< Index of the latent variable
+    std::unique_ptr<Family> _prior;                        ///< The prior for the latent variable, e.g. Normal(0,1)
+    std::function<double(double)> _transform;              ///< The transform function of the prior
+    double _start;                                         ///< Starting value
+    std::unique_ptr<Family> _q;                            ///< The variational distribution for the latent variable, e.g. Normal(0,1)
+    // The following attributes aren't declared in Python code but used in LatentVariables class
+    std::string _method;                                   ///< The estimation method
+    std::optional<double> _value           = std::nullopt; ///< The value of the latent variable
+    std::optional<double> _std             = std::nullopt; ///< The standard deviation of the latent variable
+    std::optional<Eigen::VectorXd> _sample = std::nullopt; ///< The sample values of the latent variables
 };
 
 /**
+ * @class LatentVariables latent_variables.hpp
  * @brief Class that represents a list of latent variables.
  * Holds latent variable objects and contains method for latent variable manipulation. Latent variables are
  * referred to as z as shorthand. This is convention in much of the literature.
  */
 class LatentVariables final {
-private:
-    std::string _model_name;                                         ///< Model's name
-    std::vector<LatentVariable> _z_list;                             ///< List of latent variables, as a std::vector
-    std::map<std::string, std::map<std::string, size_t>> _z_indices; ///< Info about latent variables
-    bool _estimated                               = false;           ///<
-    std::optional<std::string> _estimation_method = std::nullopt;    ///<
 
 public:
     /**
      * Constructor for LatentVariables
      * @param model_name The name of the model
      */
-    explicit LatentVariables(std::string model_name);
+    explicit LatentVariables(const std::string& model_name);
 
     /**
      * @brief Overload of the stream operation
@@ -215,7 +210,7 @@ public:
      * @param q Which distribution to use for variational approximation
      * @param index Whether to index the variable in the z_indices dictionary
      */
-    void add_z(const std::string& name, Family* prior, Family* q, bool index = true);
+    void add_z(const std::string& name, const Family& prior, const Family& q, bool index = true);
 
     /**
      * @brief Creates multiple latent variables
@@ -266,14 +261,14 @@ public:
      *          At position 0 -> [6 (total) / 1] = 6, init
      *          At position 1 -> [6 (previous value)/ 3  (previous num of dims)] = 2
      */
-    void create(const std::string& name, const std::vector<size_t>& dim, Family& q, Family& prior);
+    void create(const std::string& name, const std::vector<size_t>& dim, const Family& q, const Family& prior);
 
     /**
      * @brief Adjusts priors for the latent variables in _z_list
      * @param index Which latent variable index/indices to be altered
      * @param prior Which prior distribution? E.g. Normal(0,1)
      */
-    void adjust_prior(const std::vector<size_t>& index, const Family& prior);
+    void adjust_prior(const std::vector<int64_t>& index, const Family& prior);
 
     /**
      * @brief Returns list of LatentVariable objects
@@ -387,7 +382,7 @@ public:
      * @param loc Location of the legend
      */
     void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5,
-                std::string loc = "upper right") const;
+                const std::string& loc = "upper right") const;
 
     /**
      * @brief Plot samples
@@ -395,4 +390,11 @@ public:
      * @param height Height of the figure
      */
     void trace_plot(size_t width = 15, size_t height = 15);
+
+private:
+    std::string _model_name;                                         ///< Model's name
+    std::vector<LatentVariable> _z_list;                             ///< List of latent variables, as a std::vector
+    std::map<std::string, std::map<std::string, size_t>> _z_indices; ///< Info about latent variables
+    bool _estimated                               = false;           ///< Status of the latent variables estimation
+    std::optional<std::string> _estimation_method = std::nullopt;    ///< Method of the latent variables estimation
 };

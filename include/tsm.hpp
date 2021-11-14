@@ -265,7 +265,7 @@ public:
      * @param index Which latent variable index/indices to be altered
      * @param prior Which prior distribution? E.g. Normal(0,1)
      */
-    void adjust_prior(const std::vector<size_t>& index, const Family& prior);
+    void adjust_prior(const std::vector<int64_t>& index, const Family& prior);
 
     /**
      * @brief Draws latent variables from the model (for Bayesian inference)
