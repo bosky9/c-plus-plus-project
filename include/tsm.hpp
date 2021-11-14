@@ -71,8 +71,8 @@ protected:
                                                                                  */
     std::function<double(const Eigen::VectorXd&, size_t)> _mb_neg_logposterior; ///< Similar to _neg_logposterior
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior; // Only for VAR models
-    std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&)> _model;
-    std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&, size_t mb)> _mb_model;
+    std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&)> _model; //< Init in ARIMA
+    std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&, size_t mb)> _mb_model; // Init in ARIMA
     std::function<double(const Eigen::VectorXd&)>
             _neg_loglik;                                                     /**<
                                                                               *  This function is the equivalent of the python neg_loglik( ... ) function,

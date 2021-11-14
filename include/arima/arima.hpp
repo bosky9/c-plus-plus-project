@@ -269,11 +269,16 @@ public:
      *              python variables.
      *
      *              In order to assign a subclass to the unique pointer to Family (which is abstract),
-     *              the method clone creates a deep copy of the passed family; the unique ptr is then
+     *              the method clone creates a deep copy of the passed family (which is a const reference); the unique ptr is then
      *              reset to the new one.
-     *              Please notice that the passed family is a unique_ptr, as to avoid possible memory leaks.
-     *              This means that it must be moved from the caller, by using std::move().
-     *              The caller then loses the ownership of the pointer.
+     *
+     *              The _neg_loglik and _mb_neg_loglik functions are defined here,
+     *              returning the results of (non_)normal_neg_loglik() and (non_)normal_mb_neg_loglik(),
+     *              [which are defined in ARIMA].
+     *
+     *              The same applies to _model, _mb_model,
+     *              returning (non_)normal_model(), (non_)mb_normal_model(),
+     *              [which are defined in ARIMA].
      */
     ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0,
           const Family& family = Normal());
@@ -295,6 +300,10 @@ public:
      * @param integ How many times to difference the time series (default 0)
      * @param family E.g. Normal() (default)
      * @param target Which array index to use
+     *
+     * @details The same as the other constructor,
+     *          but multiple columns of data are passed as a DataFrame.
+     *          Only one columns is selected; which one? Decided by @param target.
      */
     ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0,
           const Family& family = Normal(),

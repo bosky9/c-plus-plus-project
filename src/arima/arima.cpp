@@ -158,7 +158,7 @@ Eigen::MatrixXd ARIMA::ar_matrix() {
 }
 
 ModelOutput ARIMA::categorize_model_output(const Eigen::VectorXd& z) const {
-    auto mu_Y{normal_model(z)};
+    auto mu_Y{_model(z)};
     return {mu_Y.first, mu_Y.second};
 }
 
@@ -353,19 +353,19 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eig
 }
 
 double ARIMA::normal_neg_loglik(const Eigen::VectorXd& beta) const {
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = normal_model(beta);
+    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = _model(beta);
     Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
     return -Mvn::logpdf(mu_y.second, mu_y.first, scale).sum();
 }
 
 double ARIMA::normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const {
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = mb_normal_model(beta, mini_batch);
+    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = _mb_model(beta, mini_batch);
     Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
     return -Mvn::logpdf(mu_Y.second, mu_Y.first, scale).sum();
 }
 
 double ARIMA::non_normal_neg_loglik(const Eigen::VectorXd& beta) const {
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = non_normal_model(beta);
+    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = _model(beta);
     Eigen::VectorXd transformed_parameters(beta.size());
     for (Eigen::Index k{0}; k < beta.size(); k++)
         transformed_parameters(k) = _latent_variables.get_z_priors().at(k)->get_transform()(beta(k));
@@ -376,7 +376,7 @@ double ARIMA::non_normal_neg_loglik(const Eigen::VectorXd& beta) const {
 }
 
 double ARIMA::non_normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const {
-    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = mb_non_normal_model(beta, mini_batch);
+    std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = _mb_model(beta, mini_batch);
     Eigen::VectorXd transformed_parameters(beta.size());
     for (Eigen::Index k{0}; k < beta.size(); k++)
         transformed_parameters(k) = _latent_variables.get_z_priors().at(k)->get_transform()(beta(k));
@@ -488,7 +488,7 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
 
     for (Eigen::Index n{0}; n < simulations; n++) {
         Eigen::VectorXd t_z{draw_latent_variables(1).transpose().row(0)};
-        auto mu_Y{normal_model(t_z)};
+        auto mu_Y{_model(t_z)};
         for (Eigen::Index i{0}; i < t_z.size(); i++)
             t_z[i] = _latent_variables.get_z_list()[i].get_prior()->get_transform()(t_z[i]);
 
@@ -572,7 +572,7 @@ void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) 
     std::vector<double> date_index;
     std::copy(_data_frame.index.begin() + static_cast<long>(std::max(_ar, _ma)),
               _data_frame.index.begin() + static_cast<long>(_data_length), std::back_inserter(date_index));
-    auto mu_Y = normal_model(_latent_variables.get_z_values());
+    auto mu_Y = _model(_latent_variables.get_z_values());
 
     // Catch specific family properties (imply different link functions/moments)
     std::vector<double> values_to_plot(mu_Y.first.size());
@@ -606,7 +606,7 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
                          std::optional<size_t> height) const {
     assert(_latent_variables.is_estimated() && "No latent variables estimated!");
 
-    auto mu_Y{normal_model(_latent_variables.get_z_values())};
+    auto mu_Y{_model(_latent_variables.get_z_values())};
     std::vector<double> date_index{shift_dates(h)};
     std::vector<double> error_bars;
     std::vector<double> forecasted_values;
@@ -746,7 +746,7 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
 DataFrame ARIMA::predict(size_t h, bool intervals) const {
     assert(_latent_variables.is_estimated() && "No latent variables estimated!");
 
-    auto mu_Y{normal_model(_latent_variables.get_z_values())};
+    auto mu_Y{_model(_latent_variables.get_z_values())};
     std::vector<double> date_index{shift_dates(h)};
 
     Eigen::MatrixXd sim_values;
@@ -821,7 +821,7 @@ Eigen::MatrixXd ARIMA::sample(size_t nsims) const {
     Eigen::MatrixXd lv_draws{draw_latent_variables(nsims)};
     std::vector<Eigen::VectorXd> mus;
     for (Eigen::Index i{0}; i < nsims; i++)
-        mus.push_back(normal_model(lv_draws.col(i)).first);
+        mus.push_back(_model(lv_draws.col(i)).first);
 
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
@@ -844,7 +844,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
     std::vector<double> date_index;
     std::copy(_data_frame.index.begin() + static_cast<long>(std::max(_ar, _ma)),
               _data_frame.index.begin() + static_cast<long>(_data_length), std::back_inserter(date_index));
-    auto mu_Y = normal_model(_latent_variables.get_z_values());
+    auto mu_Y = _model(_latent_variables.get_z_values());
     Eigen::MatrixXd draws{sample(nsims).transpose()};
     for (Eigen::Index i{0}; i < draws.rows(); i++)
         plt::named_plot(
@@ -869,7 +869,7 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
     Eigen::MatrixXd lv_draws{draw_latent_variables(nsims)};
     std::vector<Eigen::VectorXd> mus;
     for (Eigen::Index i{0}; i < nsims; i++)
-        mus.push_back(normal_model(lv_draws.col(i)).first);
+        mus.push_back(_model(lv_draws.col(i)).first);
 
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
@@ -904,7 +904,7 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     Eigen::MatrixXd lv_draws{draw_latent_variables(nsims)};
     std::vector<Eigen::VectorXd> mus;
     for (Eigen::Index i{0}; i < nsims; i++)
-        mus.push_back(normal_model(lv_draws.col(i)).first);
+        mus.push_back(_model(lv_draws.col(i)).first);
 
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
