@@ -291,7 +291,7 @@ public:
 private:
     double _mu0;                  ///< The mean of the Gaussian
     double _sigma0;               ///< The variance of the Gaussian
-    short unsigned int _param_no; ///< Number of parameters
+    uint8_t _param_no;            ///< Number of parameters
     bool _covariance_prior;       ///< Covariance's prior
     // gradient_only won't be used (no GAS models)
 };

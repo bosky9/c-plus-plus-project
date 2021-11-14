@@ -80,6 +80,15 @@ private:
     /**
      * @brief Creates the Autoregressive Matrix for the model
      * @return Autoregressive Matrix
+     *
+     * @details In python, this would be a np.stack of rows,
+     *          which means that rows are put one below the other.
+     *          The rows are a portion of data, selected between
+     *          [max_lag - i - 1] and [-i - 1], where i is an iterator
+     *          over the range (0, _ar).
+     *
+     *          Creating the matrix before starting the iterations
+     *          simplifies greatly the translation.
      */
     Eigen::MatrixXd ar_matrix();
 
