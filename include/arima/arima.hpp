@@ -276,7 +276,7 @@ public:
      *              The caller then loses the ownership of the pointer.
      */
     ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0,
-          std::unique_ptr<Family> family = std::make_unique<Normal>(0, 1));
+          const Family& family = Normal());
 
     /**
      * @brief Calculates the negative log-likelihood of the model for non-Normal family
@@ -297,7 +297,7 @@ public:
      * @param target Which array index to use
      */
     ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0,
-          std::unique_ptr<Family> family = std::make_unique<Normal>(0,1),
+          const Family& family = Normal(),
           const std::string& target = "");
 
     /**
