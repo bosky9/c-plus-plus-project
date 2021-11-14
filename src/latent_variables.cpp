@@ -15,10 +15,10 @@ LatentVariable::LatentVariable(const LatentVariable& lv)
 LatentVariable::LatentVariable(LatentVariable&& lv) noexcept {
     _name  = lv.get_name();
     _index = lv._index;
-    _prior.reset(lv.get_prior());
+    _prior = (lv.get_prior());
     _transform = lv._transform;
     _start     = lv.get_start();
-    _q.reset(lv.get_q());
+    _q = (lv.get_q());
     _method       = lv.get_method();
     _value        = lv.get_value();
     _std          = lv.get_std();
@@ -40,10 +40,10 @@ LatentVariable& LatentVariable::operator=(const LatentVariable& lv) {
         return *this;
     _name  = lv.get_name();
     _index = lv._index;
-    _prior.reset(lv.get_prior());
+    _prior = (lv.get_prior());
     _transform = lv._transform;
     _start     = lv.get_start();
-    _q.reset(lv.get_q());
+    _q = (lv.get_q());
     _method = lv.get_method();
     _value  = lv.get_value();
     _std    = lv.get_std();
@@ -54,10 +54,10 @@ LatentVariable& LatentVariable::operator=(const LatentVariable& lv) {
 LatentVariable& LatentVariable::operator=(LatentVariable&& lv) noexcept {
     _name  = lv.get_name();
     _index = lv._index;
-    _prior.reset(lv.get_prior());
+    _prior = (lv.get_prior());
     _transform = lv._transform;
     _start     = lv.get_start();
-    _q.reset(lv.get_q());
+    _q = (lv.get_q());
     _method       = lv.get_method();
     _value        = lv.get_value();
     _std          = lv.get_std();
@@ -116,7 +116,7 @@ std::string LatentVariable::get_name() const {
     return _name;
 }
 
-Family* LatentVariable::get_prior() const {
+std::shared_ptr<Family> LatentVariable::get_prior() const {
     return _prior->clone();
 }
 
@@ -136,12 +136,12 @@ std::optional<double> LatentVariable::get_value() const {
     return _value;
 }
 
-Family* LatentVariable::get_q() const {
+std::shared_ptr<Family> LatentVariable::get_q() const {
     return _q->clone();
 }
 
 void LatentVariable::set_prior(const Family& prior) {
-    _prior.reset(prior.clone());
+    _prior = (prior.clone());
 }
 
 void LatentVariable::set_start(double start) {
@@ -164,8 +164,8 @@ void LatentVariable::set_sample(const Eigen::VectorXd& sample) {
     _sample = sample;
 }
 
-void LatentVariable::set_q(Family* q) {
-    _q.reset(q);
+void LatentVariable::set_q(std::shared_ptr<Family> q) {
+    _q = (q->clone());
 }
 
 LatentVariables::LatentVariables(std::string model_name)
@@ -257,18 +257,18 @@ std::vector<std::string> LatentVariables::get_z_names() const {
     return names;
 }
 
-std::vector<Family*> LatentVariables::get_z_priors() const {
-    std::vector<Family*> priors;
+std::vector<std::shared_ptr<Family>> LatentVariables::get_z_priors() const {
+    std::vector<std::shared_ptr<Family>> priors;
     for (const LatentVariable& z : _z_list)
         priors.push_back(z.get_prior());
     return priors;
 }
 
 std::pair<std::vector<std::string>, std::vector<std::string>> LatentVariables::get_z_priors_names() const {
-    std::vector<Family*> priors = get_z_priors();
+    std::vector<std::shared_ptr<Family>> priors = get_z_priors();
     std::vector<std::string> prior_names;
     std::vector<std::string> prior_z_names;
-    for (const Family* prior : priors) {
+    for (const auto& prior : priors) {
         prior_names.push_back(prior->get_name());
         prior_z_names.push_back(prior->get_z_name());
     }
@@ -309,18 +309,18 @@ Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
     return values;
 }
 
-std::vector<Family*> LatentVariables::get_z_approx_dist() const {
-    std::vector<Family*> dists;
+std::vector<std::shared_ptr<Family>> LatentVariables::get_z_approx_dist() const {
+    std::vector<std::shared_ptr<Family>> dists;
     for (const LatentVariable& z : _z_list)
         dists.push_back(z.get_q());
     return dists;
 }
 
 std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
-    std::vector<Family*> approx_dists = get_z_approx_dist();
+    std::vector<std::shared_ptr<Family>> approx_dists = get_z_approx_dist();
     std::vector<std::string> q_list(approx_dists.size());
-    for (Family* approx : approx_dists)
-        q_list.emplace_back((isinstance<Normal>(approx)) ? "Normal" : "Approximate distribution not detected");
+    for (auto &approx : approx_dists)
+        q_list.emplace_back((isinstance<Normal>(approx.get())) ? "Normal" : "Approximate distribution not detected");
     return q_list;
 }
 

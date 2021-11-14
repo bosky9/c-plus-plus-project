@@ -151,6 +151,6 @@ std::string Normal::get_z_name() const {
 // Clone function
 // ------------------------------------------------------------------------------------------------------
 
-Family* Normal::clone() const {
-    return new Normal(*this);
+std::shared_ptr<Family>  Normal::clone() const {
+    return std::make_unique<Normal>(*this);
 }

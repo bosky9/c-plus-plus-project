@@ -28,7 +28,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _x = ar_matrix();
     create_latent_variables();
 
-    _family.reset(family.clone());
+    _family = (family.clone());
     FamilyAttributes fa = family.setup();
     _model_name2        = fa.name;
     _link               = fa.link;
@@ -101,7 +101,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ,
     _x = ar_matrix();
     create_latent_variables();
 
-    _family.reset(family.clone());
+    _family = (family.clone());
     FamilyAttributes fa = family.setup();
     _model_name2        = fa.name;
     _link               = fa.link;
@@ -690,7 +690,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
     DataFrame predictions;
     LatentVariables saved_lvs{""};
 
-    std::string names[]{std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}),
+    std::vector<std::string> names{std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}),
                         "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
                         "99% Prediction Interval"};
 
@@ -700,7 +700,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
         std::iota(index.begin(), index.end(), 0);
-        ARIMA x{data_original_t, _ar, _ma, _integ, *_family};
+        ARIMA x{data_original_t, _ar, _ma, _integ, *_family->clone()};
         if (!fit_once)
             x.fit(fit_method);
         if (t == 0) {

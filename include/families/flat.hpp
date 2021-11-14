@@ -8,6 +8,7 @@
 
 #include "Eigen/Core"
 #include "families/family.hpp"
+#include <memory>
 
 /**
  * @class Flat flat.hpp
@@ -83,7 +84,7 @@ public:
      *
      * @details Overrides the family one, returns a new Flat object by deep copy of the current one.
      */
-    [[nodiscard]] Family* clone() const override;
+    [[nodiscard]] std::shared_ptr<Family> clone() const override;
 
 private:
     bool _covariance_prior; ///< Covariance's prior

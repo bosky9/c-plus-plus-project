@@ -62,8 +62,8 @@ std::vector<lv_to_build> Family::build_latent_variables() const {
     return {};
 }
 
-Family* Family::clone() const {
-    return new Family(*this);
+std::shared_ptr<Family> Family::clone() const {
+    return std::make_unique<Family>(*this);
 }
 
 Eigen::VectorXd Family::draw_variable(double loc, double scale, int64_t nsims) const {

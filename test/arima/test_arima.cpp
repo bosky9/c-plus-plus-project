@@ -49,6 +49,69 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
         delete x;
     }
 
+    SECTION("Test an ARIMA model with 1 AR and 1 MA term", "[fit]") {
+        ARIMA model{data, 1, 1, 0, Normal(0,3)};
+        Results* x{model.fit()};
+        REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
+
+        std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
+        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
+                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
+        REQUIRE(nan == 0);
+
+        delete x;
+    }
+
+    /**
+     * @brief Tests on ARIMA model with 1 AR and 1 MA term, integrated once, that the latent variable list length is
+     * correct and that the estimated latent variables are not nan
+     */
+    SECTION("Test an ARIMA model with 1 AR and 1 MA term", "[fit]") {
+        ARIMA model{data, 1, 1, 1};
+        Results* x{model.fit()};
+        REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
+
+        std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
+        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
+                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
+        REQUIRE(nan == 0);
+
+        delete x;
+    }
+
+    /**
+     * @brief Tests that the prediction dataframe length is equal to the number of steps h
+     */
+    SECTION("Test prediction length", "[predict]") {
+        ARIMA model{data, 2, 2};
+        Results* x{model.fit()};
+
+        REQUIRE(model.predict(5).data.at(0).size() == 5);
+
+        delete x;
+    }
+
+    /**
+     * @brief Tests that the in-sample prediction dataframe length is equal to the number of steps h
+     */
+    SECTION("Test prediction IS length", "[predict_is]") {
+        ARIMA model{data, 2, 2};
+        Results* x{model.fit()};
+
+        REQUIRE(model.predict_is(5).data.at(0).size() == 5);
+
+        delete x;
+    }
+}
+
+
+TEST_CASE("Test an ARIMA model with a Normal family, 2", "[ARIMA]") {
+    // std::random_device rnd;
+    std::default_random_engine generator{};
+    std::normal_distribution<double> distribution(0, 1);
+    std::vector<double> data(100, 0);
+    for (size_t i{1}; i < 100; i++)
+        data[i] = 0.9 * data[i - 1] + distribution(generator);
     /**
      * @brief Tests on ARIMA model with 1 AR and 1 MA term that the latent variable list length is correct and that
      * the estimated latent variables are not nan

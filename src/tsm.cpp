@@ -45,7 +45,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     Eigen::VectorXd start_ses{};
 
     for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
-        std::unique_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
+        std::shared_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
         if (isinstance<Normal>(approx_dist.get())) {
             _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
@@ -55,9 +55,10 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         }
     }
 
-    std::vector<Normal*> q_list;
-    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++)
-        q_list.push_back(dynamic_cast<Normal*>(_latent_variables.get_z_list()[i].get_q()));
+    std::vector<std::shared_ptr<Family>> q_list;
+    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
+        q_list.push_back(_latent_variables.get_z_list()[i].get_q()->clone());
+    }
 
     BBVI* bbvi_obj; // TODO: Trovare un modo per eliminare il puntatore senza che crei segmentation fault!
     if (!mini_batch.has_value())
@@ -69,8 +70,6 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
     BBVIReturnData data{bbvi_obj->run(false)};
     delete bbvi_obj;
-    for (auto &i : q_list )
-        delete i;
 
     // Apply exp() to q_ses, in python this is done in a single line
     std::transform(data.final_ses.begin(), data.final_ses.end(), data.final_ses.begin(),
@@ -108,8 +107,8 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
 LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& obj_type) {
     // Get Mode and Inverse Hessian information
-    // unique_ptr because there is no room for delete
-    std::unique_ptr<MLEResults> y{dynamic_cast<MLEResults*>(fit("PML"))};
+    // shared_ptr because there is no room for delete
+    std::shared_ptr<MLEResults> y{dynamic_cast<MLEResults*>(fit("PML"))};
 
     assert(y->get_ihessian().size() > 0 && "No Hessian information - Laplace approximation cannot be performed");
     Eigen::MatrixXd ihessian = y->get_ihessian();
@@ -306,13 +305,12 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
     assert(_latent_variables.get_estimation_method().value() == "BBVI" ||
            _latent_variables.get_estimation_method().value() == "M-H");
     if (_latent_variables.get_estimation_method().value() == "BBVI") {
-        std::vector<Family*> q_vec = _latent_variables.get_z_approx_dist();
+        std::vector<std::shared_ptr<Family>> q_vec = _latent_variables.get_z_approx_dist();
         Eigen::MatrixXd output(q_vec.size(), nsims);
         Eigen::Index r = 0;
-        for (Family* &f : q_vec) {
+        for (auto &f : q_vec) {
             output.row(r) = f->draw_variable_local(nsims);
             r++;
-            delete f;
         }
         return output;
     } else {

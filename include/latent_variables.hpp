@@ -28,10 +28,10 @@ class LatentVariable final {
 private:
     std::string _name;                        ///< Name of the latent variable
     size_t _index;                            ///< Index of the latent variable
-    std::unique_ptr<Family> _prior;           ///< The prior for the latent variable, e.g. Normal(0,1)
+    std::shared_ptr<Family> _prior;           ///< The prior for the latent variable, e.g. Normal(0,1)
     std::function<double(double)> _transform; ///< The transform function of the prior
     double _start;                            ///< Starting value
-    std::unique_ptr<Family> _q; ///< The variational distribution for the latent variable, e.g. Normal(0,1)
+    std::shared_ptr<Family> _q; ///< The variational distribution for the latent variable, e.g. Normal(0,1)
     // TODO: I seguenti attributi non sono dichiarati nella classe Python ma usati in LatentVariables
     std::string _method;
     std::optional<double> _value           = std::nullopt;
@@ -105,7 +105,7 @@ public:
      * @brief Returns the prior for the latent variable
      * @return Prior
      */
-    [[nodiscard]] Family* get_prior() const;
+    [[nodiscard]] std::shared_ptr<Family> get_prior() const;
 
     /**
      * @brief Returns the sample (optional)
@@ -135,7 +135,7 @@ public:
      * @brief Returns the variational distribution for the latent variable
      * @return Variational distribution
      */
-    [[nodiscard]] Family* get_q() const;
+    [[nodiscard]] std::shared_ptr<Family> get_q() const;
 
     /**
      * @brief Set prior for the latent variable
@@ -177,7 +177,7 @@ public:
      * @brief Sets a new family object in q
      * @param family Family object
      */
-    void set_q(Family* q);
+    void set_q(std::shared_ptr<Family> q);
 };
 
 /**
@@ -291,7 +291,7 @@ public:
      * @brief Returns latent variables' priors
      * @return Latent variables' priors
      */
-    [[nodiscard]] std::vector<Family*> get_z_priors() const;
+    [[nodiscard]] std::vector<std::shared_ptr<Family>> get_z_priors() const;
 
     /**
      * @brief Returns latent variables' priors' names
@@ -329,7 +329,7 @@ public:
      * @brief Returns the approximate distributions of the latent variables
      * @return Approximate distributions
      */
-    [[nodiscard]] std::vector<Family*> get_z_approx_dist() const;
+    [[nodiscard]] std::vector<std::shared_ptr<Family>> get_z_approx_dist() const;
 
     /**
      * @brief Returns the approximate distributions' names of the latent variables

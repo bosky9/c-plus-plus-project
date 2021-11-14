@@ -37,6 +37,6 @@ std::string Flat::get_z_name() const {
 
 // Clone function --------------------------------------------------------------------------------------------------
 
-Family* Flat::clone() const {
-    return new Flat(*this);
+std::shared_ptr<Family> Flat::clone() const {
+    return std::make_unique<Flat>(*this);
 }

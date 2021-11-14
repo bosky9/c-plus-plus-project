@@ -286,7 +286,7 @@ public:
      *
      * @details Overrides the family one, returns a new Normal object by deep copy of the current one.
      */
-    [[nodiscard]] Family* clone() const override;
+    [[nodiscard]] std::shared_ptr<Family> clone() const override;
 
 private:
     double _mu0;                  ///< The mean of the Gaussian

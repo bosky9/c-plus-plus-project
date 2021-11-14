@@ -2,7 +2,7 @@
 
 BBVI::BBVI() = default;
 
-BBVI::BBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior, std::vector<Normal*>& q,
+BBVI::BBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior, std::vector<std::shared_ptr<Family>>& q,
            size_t sims, std::string optimizer, size_t iterations, double learning_rate, bool record_elbo,
            bool quiet_progress)
     : _neg_posterior{std::move(neg_posterior)}, _q{q}, _sims{sims}, _printer{true}, _optimizer{std::move(optimizer)},
@@ -185,8 +185,8 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales_from_q() 
     Eigen::VectorXd scale = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_q.size()));
 
     for (Eigen::Index i = 0; i < _q.size(); i++) {
-        means(i) = _q[i]->get_mu0();
-        scale(i) = _q[i]->get_sigma0();
+        means(i) = dynamic_cast<Normal*>(_q[i].get())->get_mu0();
+        scale(i) = dynamic_cast<Normal*>(_q[i].get())->get_sigma0();
     }
 
     return std::move(std::pair{means, scale});
@@ -204,7 +204,7 @@ Eigen::MatrixXd BBVI::grad_log_q(Eigen::MatrixXd& z) {
     for (size_t core_param = 0; core_param < _q.size(); core_param++) {
         for (size_t approx_param = 0; approx_param < _q[core_param]->get_param_no(); approx_param++) {
             Eigen::VectorXd temp_z = z.row(static_cast<Eigen::Index>(core_param));
-            grad.row(param_count)  = _q[core_param]->vi_score(temp_z, approx_param);
+            grad.row(param_count)  = dynamic_cast<Normal*>(_q[core_param].get())->vi_score(temp_z, approx_param);
             param_count++;
         }
     }
@@ -331,7 +331,7 @@ BBVIReturnData BBVI::run(bool store) {
 }
 
 CBBVI::CBBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior,
-             std::function<Eigen::VectorXd(Eigen::VectorXd)> log_p_blanket, std::vector<Normal*>& q, size_t sims,
+             std::function<Eigen::VectorXd(Eigen::VectorXd)> log_p_blanket, std::vector<std::shared_ptr<Family>>& q, size_t sims,
              std::string optimizer, size_t iterations, double learning_rate, bool record_elbo, bool quiet_progress)
     : BBVI{std::move(neg_posterior),
            q,
@@ -456,7 +456,7 @@ Eigen::VectorXd CBBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
 }
 
 BBVIM::BBVIM(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior,
-             std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<Normal*>& q, size_t sims,
+             std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<std::shared_ptr<Family>>& q, size_t sims,
              std::string optimizer, size_t iterations, double learning_rate, size_t mini_batch, bool record_elbo,
              bool quiet_progress)
     : BBVI{std::move(neg_posterior),
