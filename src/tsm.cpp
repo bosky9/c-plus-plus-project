@@ -286,7 +286,7 @@ std::vector<double> TSM::shift_dates(size_t n) const {
         for (int64_t i{0}; i < n; i++)
             date_index.push_back(date_index.back() + 1);
     }
-    return std::move(date_index);
+    return date_index;
 }
 
 Eigen::VectorXd TSM::transform_z() const {

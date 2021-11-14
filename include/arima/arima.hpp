@@ -51,11 +51,12 @@ inline std::vector<double> diff(const std::vector<double>& v) {
 
 inline double percentile(Eigen::VectorXd v, uint8_t p) {
     std::sort(v.begin(), v.end());
-    size_t index{static_cast<size_t>(std::ceil(p / 100.0 * v.size()))};
+    size_t index{static_cast<size_t>(std::ceil(p * 0.01 * v.size()))};
     return v(index - 1);
 }
 
 /**
+ * @class ARIMA arima.hpp
  * @brief AutoRegressive Integrated Moving Average (ARIMA) models
  * (inherits time series methods from the TSM parent class)
  */
@@ -180,7 +181,7 @@ private:
      * - Y: contains the length-adjusted time series (accounting for lags)
      */
     // std::pair<Eigen::VectorXd, Eigen::VectorXd> mb_poisson_model(Eigen::VectorXd beta, size_t mini_batch);
-    //  TODO: Non abbiamo implementato in families Poisson!
+    // No Poisson implementation.
 
     /**
      * @brief Calculates the negative log-likelihood of the model for Normal family for a minibatch
@@ -259,9 +260,23 @@ public:
      * @param ar How many AR lags the model will have
      * @param ma How many MA lags the model will have
      * @param integ How many times to difference the time series (default 0)
-     * @param family E.g. Normal() (default)
+     * @param family E.g. Normal() (default). It must be moved from the caller.
+     *
+     * @details Notes:
+     *
+     *              The info about the data is kept inside a SingleDataFrame struct,
+     *              called _data_frame, which yields the "data", "data_name", "index"
+     *              python variables.
+     *
+     *              In order to assign a subclass to the unique pointer to Family (which is abstract),
+     *              the method clone creates a deep copy of the passed family; the unique ptr is then
+     *              reset to the new one.
+     *              Please notice that the passed family is a unique_ptr, as to avoid possible memory leaks.
+     *              This means that it must be moved from the caller, by using std::move().
+     *              The caller then loses the ownership of the pointer.
      */
-    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal());
+    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0,
+          std::unique_ptr<Family> family = std::make_unique<Normal>(0, 1));
 
     /**
      * @brief Calculates the negative log-likelihood of the model for non-Normal family
@@ -281,7 +296,8 @@ public:
      * @param family E.g. Normal() (default)
      * @param target Which array index to use
      */
-    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, Family* family = new Normal(),
+    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0,
+          std::unique_ptr<Family> family = std::make_unique<Normal>(0,1),
           const std::string& target = "");
 
     /**

@@ -43,6 +43,7 @@ struct ModelOutput final {
 };
 
 /**
+ * @class TSM tsm.hpp
  * @brief Contains general time series methods to be inherited by models
  */
 class TSM {

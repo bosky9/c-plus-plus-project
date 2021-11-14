@@ -1,6 +1,6 @@
 #include "arima/arima.hpp"
 
-ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, Family* family) : TSM{"ARIMA"} {
+ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, std::unique_ptr<Family> family) : TSM{"ARIMA"} {
     // Latent Variable information
     _ar                 = ar;
     _ma                 = ma;
@@ -71,7 +71,8 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     }
 }
 
-ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, Family* family, const std::string& target)
+ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ,
+             std::unique_ptr<Family> family, const std::string& target)
     : TSM{"ARIMA"} {
     // Latent Variable information
     _ar                 = ar;
@@ -699,7 +700,8 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
         std::iota(index.begin(), index.end(), 0);
-        ARIMA x{data_original_t, _ar, _ma, _integ, _family.get()};
+        ARIMA x{data_original_t, _ar, _ma, _integ,
+                std::move(std::unique_ptr<Family>(_family->clone()))};
         if (!fit_once)
             x.fit(fit_method);
         if (t == 0) {
