@@ -701,12 +701,15 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
                   std::back_inserter(data_original_t));
         std::iota(index.begin(), index.end(), 0);
         ARIMA x{data_original_t, _ar, _ma, _integ, *_family->clone()};
-        if (!fit_once)
-            x.fit(fit_method);
+        if (!fit_once) {
+            Results* temp_r = x.fit(fit_method);
+            delete temp_r;
+        }
         if (t == 0) {
             if (fit_once) {
-                x.fit(fit_method);
+                Results* temp_r = x.fit(fit_method);
                 saved_lvs = x._latent_variables;
+                delete temp_r;
             }
         } else {
             if (fit_once)
