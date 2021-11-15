@@ -11,15 +11,15 @@ void check_intervals_order(std::vector<std::vector<double>> predictions) {
     REQUIRE(predictions.at(3).size() == predictions.at(4).size());
 
     // 99% Prediction Interval > 95% Prediction Interval
-    for (size_t i{0}; i < predictions.at(4).size(); i++)
+    for (size_t i{0}; i < predictions.at(4).size(); ++i)
         REQUIRE(predictions.at(4).at(i) >= predictions.at(3).at(i));
 
     // 95% Prediction Interval > 5% Prediction Interval
-    for (size_t i{0}; i < predictions.at(3).size(); i++)
+    for (size_t i{0}; i < predictions.at(3).size(); ++i)
         REQUIRE(predictions.at(3).at(i) >= predictions.at(2).at(i));
 
     // 5% Prediction Interval > 1% Prediction Interval
-    for (size_t i{0}; i < predictions.at(2).size(); i++)
+    for (size_t i{0}; i < predictions.at(2).size(); ++i)
         REQUIRE(predictions.at(2).at(i) >= predictions.at(1).at(i));
 }
 } // namespace catch_utilities
@@ -29,7 +29,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     std::default_random_engine generator{};
     std::normal_distribution<double> distribution(0, 1);
     std::vector<double> data(100, 0);
-    for (size_t i{1}; i < 100; i++)
+    for (size_t i{1}; i < 100; ++i)
         data[i] = 0.9 * data[i - 1] + distribution(generator);
 
     /**
@@ -50,7 +50,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     }
 
     SECTION("Test an ARIMA model with 1 AR and 1 MA term", "[fit]") {
-        ARIMA model{data, 1, 1, 0, Normal(0,3)};
+        ARIMA model{data, 1, 1, 0, Normal(0, 3)};
         Results* x{model.fit()};
         REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
 
@@ -110,14 +110,14 @@ TEST_CASE("Test an ARIMA model with a Normal family, 2", "[ARIMA]") {
     std::default_random_engine generator{};
     std::normal_distribution<double> distribution(0, 1);
     std::vector<double> data(100, 0);
-    for (size_t i{1}; i < 100; i++)
+    for (size_t i{1}; i < 100; ++i)
         data[i] = 0.9 * data[i - 1] + distribution(generator);
     /**
      * @brief Tests on ARIMA model with 1 AR and 1 MA term that the latent variable list length is correct and that
      * the estimated latent variables are not nan
      */
     SECTION("Test an ARIMA model with 1 AR and 1 MA term", "[fit]") {
-        ARIMA model{data, 1, 1, 0, Normal(0,3)};
+        ARIMA model{data, 1, 1, 0, Normal(0, 3)};
         Results* x{model.fit()};
         REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
 

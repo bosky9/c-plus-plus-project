@@ -8,7 +8,7 @@
 
 #include "catch2/catch_test_macros.hpp"
 
-TEST_CASE("Approximating model", "[approximating_model, approximating_model_reg]") {
+TEST_CASE("Approximating model", "[approximating_model][approximating_model_reg]") {
     Eigen::VectorXd v(2);
     v << 1, 2;
     std::pair<Eigen::MatrixXd, Eigen::MatrixXd> H_mu;
@@ -39,7 +39,7 @@ TEST_CASE("Build latent variables", "[build_latent_variables]") {
     delete std::get<2>(result.front());
 }
 
-TEST_CASE("Draw variable", "[draw_variable, draw_variable_local]") {
+TEST_CASE("Draw variable", "[draw_variable][draw_variable_local]") {
     Normal normal{};
     Eigen::VectorXd variable;
 
@@ -57,7 +57,7 @@ TEST_CASE("Log of the PDF", "[logpdf]") {
     REQUIRE(normal.logpdf(2.0) == -1.3862943611198906);
 }
 
-TEST_CASE("Markov blanket", "[markov_blanket") {
+TEST_CASE("Markov blanket", "[markov_blanket]") {
     Eigen::VectorXd v      = Eigen::VectorXd::Ones(3);
     Eigen::VectorXd result = Normal::markov_blanket(v, v, 1.0);
 
@@ -86,7 +86,7 @@ TEST_CASE("PDF", "[pdf]") {
     REQUIRE(normal.pdf(1.0) == 0.6065306597126334);
 }
 
-TEST_CASE("Change parameters", "[vi_change_param, vi_return_param]") {
+TEST_CASE("Change parameters", "[vi_change_param][vi_return_param]") {
     Normal normal{};
     normal.vi_change_param(0, 2.0);
     normal.vi_change_param(1, 5.0);

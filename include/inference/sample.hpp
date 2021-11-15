@@ -1,6 +1,13 @@
+/**
+ * @file sample.hpp
+ * @author Bodini Alessia, Boschi Federico e Cinquetti Ettore
+ * @date November, 2021
+ */
+
 #pragma once
 
 /**
+ * @struct Sample sample.hpp
  * @brief Sample data returned by many functions
  */
 struct Sample final {

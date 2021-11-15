@@ -1,29 +1,21 @@
+/**
+ * @file metropolis_hastings.hpp
+ * @author Bodini Alessia, Boschi Federico e Cinquetti Ettore
+ * @date November, 2021
+ */
+
 #pragma once
 
-#include "headers.hpp"
-#include "inference/metropolis_sampler.hpp"
-#include "multivariate_normal.hpp"
-#include "sample.hpp"
+#include "Eigen/Core"           // Eigen::VectorXd, Eigen::MatrixXd
+#include "inference/sample.hpp" // Sample
 
-#include <optional>
+#include <optional> // std::optional
 
 /**
+ * @class MetropolisHastings metropolis_hastings.hpp
  * @brief Random-walk Metropolis-Hastings MCMC
  */
 class MetropolisHastings final {
-private:
-    std::function<double(Eigen::VectorXd)> _posterior; ///< A posterior function
-    double _scale;                                     ///< The scale for the random walk
-    size_t _nsims;                                     ///< The number of iterations to perform
-    Eigen::VectorXd _initials;                         ///< Where to start the MCMC chain
-    Eigen::Index _param_no;                            ///< Number of paramters
-    int _thinning;               ///< By how much to thin the chains (2 means drop every other point)
-    bool _warm_up_period;        ///< Whether to discard first half of the chain as 'warm-up'
-    bool _quiet_progress;        ///< Whether to print progress to console or stay quiet
-    Eigen::MatrixXd _phi;        ///< Matrix of...
-    Eigen::MatrixXd _cov_matrix; ///< A covariance matrix for the random walk
-    // TODO: TSM model; ///< A model object (for use in SPDK sampling)
-
 public:
     /**
      * @brief Constructor for MetropolisHastings
@@ -34,33 +26,11 @@ public:
      * @param cov_matrix A covariance matrix for the random walk (optional)
      * @param thinning By how much to thin the chains (2 means drop every other point)
      * @param warm_up_period Whether to discard first half of the chain as 'warm-up'
-     * // TODO: TSM model_object A model object (for use in SPDK sampling)
      * @param quiet_progress Whether to print progress to console or stay quiet
      */
-    MetropolisHastings(std::function<double(const Eigen::VectorXd&)>& posterior, double scale, size_t nsims,
+    MetropolisHastings(std::function<double(const Eigen::VectorXd&)>& posterior, double scale, int64_t nsims,
                        const Eigen::VectorXd& initials, const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
-                       int thinning = 2, bool warm_up_period = true, // TODO: TSM model_object = nullptr,
-                       bool quiet_progress = false);
-
-    MetropolisHastings(const MetropolisHastings& mh);
-
-    /**
-     * @brief Move constructor for MetropolisHastings
-     * @param mh A MetropolisHastings object
-     */
-    MetropolisHastings(MetropolisHastings&& mh);
-
-    /**
-     * @brief Assignment operator for MetropolisHastings
-     * @param mh A MetropolisHastings object
-     */
-    MetropolisHastings& operator=(const MetropolisHastings& mh);
-
-    /**
-     * @brief Move assignment operator for MetropolisHastings
-     * @param mh A MetropolisHastings object
-     */
-    MetropolisHastings& operator=(MetropolisHastings&& mh);
+                       int64_t thinning = 2, bool warm_up_period = true, bool quiet_progress = false);
 
     /**
      * @brief Tunes scale for M-H algorithm
@@ -75,4 +45,17 @@ public:
      * @return A Sample object
      */
     Sample sample();
+
+private:
+    std::function<double(Eigen::VectorXd)> _posterior; ///< A posterior function
+    double _scale;                                     ///< The scale for the random walk
+    int64_t _nsims;                                    ///< The number of iterations to perform
+    Eigen::VectorXd _initials;                         ///< Where to start the MCMC chain
+    Eigen::Index _param_no;                            ///< Number of parameters
+    int64_t _thinning;           ///< By how much to thin the chains (2 means drop every other point)
+    bool _warm_up_period;        ///< Whether to discard first half of the chain as 'warm-up'
+    bool _quiet_progress;        ///< Whether to print progress to console or stay quiet
+    Eigen::MatrixXd _phi;        ///< Matrix for the Metropolis-Hastings algorithm
+    Eigen::MatrixXd _cov_matrix; ///< A covariance matrix for the random walk
+                                 // TSM model not actually used
 };

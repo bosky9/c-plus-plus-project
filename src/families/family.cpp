@@ -22,14 +22,6 @@ Family::Family(const std::string& transform) : _transform_name{transform} {
     _itransform      = _itransform_define(transform);
 }
 
-Family::Family(const Family& family) = default;
-
-Family::Family(Family&& family) noexcept = default;
-
-Family& Family::operator=(const Family& family) = default;
-
-Family& Family::operator=(Family&& family) noexcept = default;
-
 bool operator==(const Family& family1, const Family& family2) {
     return family1._transform_name == family2._transform_name && family1._itransform_name == family2._itransform_name;
 }

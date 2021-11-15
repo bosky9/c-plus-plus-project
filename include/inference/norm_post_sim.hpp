@@ -1,10 +1,15 @@
+/**
+ * @file norm_post_sim.hpp
+ * @author Bodini Alessia, Boschi Federico e Cinquetti Ettore
+ * @date November, 2021
+ */
+
 #pragma once
 
-#include <algorithm>
+#include "Eigen/Core" // Eigen::VectorXd, Eigen::MatrixXd
+#include "sample.hpp" // Sample
 
-#include "headers.hpp"
-#include "multivariate_normal.hpp"
-#include "sample.hpp"
+namespace nps {
 
 /**
  * @brief Number of simulations
@@ -21,53 +26,20 @@ const int N95 = NSIMS * 95 / 100;
  */
 const int N5 = NSIMS * 5 / 100;
 
-// 1 dispari    (true)
-// 0 pari       (false)
 /**
  * @brief Compile time function that returns if NSIMS is odd
+ * @return True if NSIMS is odd, false otherwise
  */
 constexpr bool NSIMS_ODD() {
     return static_cast<bool>(NSIMS % 2);
 }
 
 /**
- * @brief
+ * @brief Function useful for Results' constructor
  * @param modes Modes vector
  * @param cov_matrix Covariances matrix
- * @return A NormPostSimData structure
+ * @return A Sample object
  */
-inline Sample norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& cov_matrix) {
-    Mvn mul_norm{modes, cov_matrix};
-    Eigen::Index modes_len = modes.size();
-    Eigen::Matrix<double, NSIMS, Eigen::Dynamic> phi =
-            Eigen::Matrix<double, NSIMS, Eigen::Dynamic>::Zero(NSIMS, modes_len);
+Sample norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& cov_matrix);
 
-    for (Eigen::Index i{0}; i < NSIMS; i++) {
-        phi.row(i) = mul_norm.sample(); // Incollo un vettore di lunghezza modes.size() in ogni riga
-    }
-
-    Eigen::MatrixXd chain = phi.transpose();
-
-    Eigen::VectorXd mean_vector = phi.colwise().mean();
-    Eigen::VectorXd mean_est(mean_vector.size());
-    Eigen::VectorXd::Map(&mean_est[0], mean_vector.size()) = mean_vector;
-
-    std::vector<double> median_est{}, upper_95_est{}, lower_5_est{};
-    for (int i = 0; i < modes_len; i++) {
-        std::vector<double> col_sort(NSIMS);
-        Eigen::VectorXd::Map(&col_sort[0], NSIMS) = phi.col(i);
-        std::sort(col_sort.begin(), col_sort.end());
-
-        if (NSIMS_ODD)
-            median_est.push_back(col_sort[NSIMS / 2]);
-        else
-            median_est.push_back((col_sort[NSIMS / 2] + col_sort[NSIMS / 2 - 1]) / 2);
-
-        upper_95_est.push_back(col_sort[N95]);
-        lower_5_est.push_back(col_sort[N5]);
-    }
-
-    return {chain, mean_est, Eigen::VectorXd::Map(median_est.data(), median_est.size()),
-            Eigen::VectorXd::Map(upper_95_est.data(), upper_95_est.size()),
-            Eigen::VectorXd::Map(lower_5_est.data(), lower_5_est.size())};
-}
+} // namespace nps

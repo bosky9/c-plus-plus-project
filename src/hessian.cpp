@@ -4,7 +4,7 @@ using namespace derivatives;
 
 Eigen::MatrixXd derivatives::hessian(const std::function<double(Eigen::VectorXd)>& function, Eigen::VectorXd& v) {
     Eigen::MatrixXd H(v.size(), v.size());
-    for (Eigen::Index i = 0; i < v.size(); i++) {
+    for (Eigen::Index i{0}; i < v.size(); ++i) {
         for (Eigen::Index j = i; j < v.size(); j++) {
             H(i, j) = second_derivative(function, v, i, j);
             H(j, i) = H(i, j);

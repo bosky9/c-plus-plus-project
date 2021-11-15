@@ -1,5 +1,7 @@
 #include "results.hpp"
 
+#include <iterator>
+
 Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                  const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,
                  std::vector<double> index, bool multivariate_model,
@@ -127,7 +129,7 @@ void MLEResults::summary_with_hessian(bool transformed) const {
 
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names{_z.get_z_names()};
-    for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
+    for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
         if (_z.get_z_list()[i].get_prior()->get_transform_name().empty())
             data.push_back(
                     {{"z_name", z_names[i]},
@@ -206,7 +208,7 @@ void MLEResults::summary_without_hessian() const {
     // Initialize data
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names{_z.get_z_names()};
-    for (Eigen::Index i{0}; i < z_names.size(); i++)
+    for (Eigen::Index i{0}; i < z_names.size(); ++i)
         data.push_back({{"z_name", z_names[i]},
                         {"z_value",
                          std::to_string(round_to(_z.get_z_list()[i].get_prior()->get_transform()(_results[i]), 4))}});
@@ -272,17 +274,17 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
     _aic      = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
     _bic      = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
 
-    Sample samp                   = norm_post_sim(_z_values, _ihessian);
-    _chain                        = samp.chain;
-    _mean_est                     = samp.mean_est;
-    _median_est                   = samp.median_est;
-    _upper_95_est                 = samp.upper_95_est;
-    _lower_5_est                  = samp.lower_95_est;
-    _t_chain                      = Eigen::MatrixXd(_chain.rows(), _chain.cols());
-    _t_mean_est                   = Eigen::VectorXd(_chain.rows());
-    _t_median_est                 = Eigen::VectorXd(_chain.rows());
-    _t_upper_95_est               = Eigen::VectorXd(_chain.rows());
-    _t_lower_5_est                = Eigen::VectorXd(_chain.rows());
+    Sample samp                                   = nps::norm_post_sim(_z_values, _ihessian);
+    _chain                                        = samp.chain;
+    _mean_est                                     = samp.mean_est;
+    _median_est                                   = samp.median_est;
+    _upper_95_est                                 = samp.upper_95_est;
+    _lower_5_est                                  = samp.lower_95_est;
+    _t_chain                                      = Eigen::MatrixXd(_chain.rows(), _chain.cols());
+    _t_mean_est                                   = Eigen::VectorXd(_chain.rows());
+    _t_median_est                                 = Eigen::VectorXd(_chain.rows());
+    _t_upper_95_est                               = Eigen::VectorXd(_chain.rows());
+    _t_lower_5_est                                = Eigen::VectorXd(_chain.rows());
     std::vector<std::unique_ptr<Family>> z_priors = _z.get_z_priors();
     for (Eigen::Index k{0}; k < _chain.rows(); k++) {
         auto transform{z_priors[k]->get_transform()};
@@ -339,7 +341,7 @@ void BBVIResults::summary(bool transformed) {
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names = _z.get_z_names();
     if (transformed) {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
+        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_t_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_t_median_est[i], _rounding_points))},
@@ -347,7 +349,7 @@ void BBVIResults::summary(bool transformed) {
                                            std::to_string(round_to(_t_upper_95_est[i], _rounding_points)) + ")"}});
         }
     } else {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
+        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_median_est[i], _rounding_points))},
@@ -409,13 +411,13 @@ BBVISSResults::BBVISSResults(std::vector<std::string> data_name, std::vector<std
     _aic      = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_value;
     _bic      = 2 * _objective_value + static_cast<double>(_z_values.size()) * log(_data_length);
 
-    Sample samp                   = norm_post_sim(_z_values, _ihessian);
-    _chain                        = samp.chain;
-    _mean_est                     = samp.mean_est;
-    _median_est                   = samp.median_est;
-    _upper_95_est                 = samp.upper_95_est;
-    _lower_5_est                  = samp.lower_95_est;
-    _t_chain                      = _chain;
+    Sample samp                                   = nps::norm_post_sim(_z_values, _ihessian);
+    _chain                                        = samp.chain;
+    _mean_est                                     = samp.mean_est;
+    _median_est                                   = samp.median_est;
+    _upper_95_est                                 = samp.upper_95_est;
+    _lower_5_est                                  = samp.lower_95_est;
+    _t_chain                                      = _chain;
     std::vector<std::unique_ptr<Family>> z_priors = _z.get_z_priors();
     for (Eigen::Index k{0}; k < _mean_est.size(); k++) {
         //_t_chain(k) = z_priors[k]->get_transform()(_chain(k));
@@ -470,7 +472,7 @@ void BBVISSResults::summary(bool transformed) {
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names = _z.get_z_names();
     if (transformed) {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
+        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_t_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_t_median_est[i], _rounding_points))},
@@ -478,7 +480,7 @@ void BBVISSResults::summary(bool transformed) {
                                            std::to_string(round_to(_t_upper_95_est[i], _rounding_points)) + ")"}});
         }
     } else {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
+        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_median_est[i], _rounding_points))},
@@ -550,13 +552,13 @@ LaplaceResults::LaplaceResults(std::vector<std::string> data_name, std::vector<s
     else
         _rounding_points = 4;
 
-    Sample samp                   = norm_post_sim(_z_values, _ihessian);
-    _chain                        = samp.chain;
-    _mean_est                     = samp.mean_est;
-    _median_est                   = samp.median_est;
-    _upper_95_est                 = samp.upper_95_est;
-    _lower_5_est                  = samp.lower_95_est;
-    _t_chain                      = _chain;
+    Sample samp                                   = nps::norm_post_sim(_z_values, _ihessian);
+    _chain                                        = samp.chain;
+    _mean_est                                     = samp.mean_est;
+    _median_est                                   = samp.median_est;
+    _upper_95_est                                 = samp.upper_95_est;
+    _lower_5_est                                  = samp.lower_95_est;
+    _t_chain                                      = _chain;
     std::vector<std::unique_ptr<Family>> z_priors = _z.get_z_priors();
     for (Eigen::Index k{0}; k < _mean_est.size(); k++) {
         //_t_chain(k) = z_priors[k]->get_transform()(_chain(k));
@@ -603,7 +605,7 @@ void LaplaceResults::summary(bool transformed) {
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names = _z.get_z_names();
     if (transformed) {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
+        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_t_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_t_median_est[i], _rounding_points))},
@@ -611,7 +613,7 @@ void LaplaceResults::summary(bool transformed) {
                                            std::to_string(round_to(_t_upper_95_est[i], _rounding_points)) + ")"}});
         }
     } else {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++) {
+        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_median_est[i], _rounding_points))},
@@ -716,7 +718,7 @@ void MCMCResults::summary(bool transformed) {
     _z_values = _z.get_z_values(false);
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names = _z.get_z_names();
-    for (Eigen::Index i{0}; i < z_names.size() - _z_hide; i++)
+    for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i)
         data.push_back({{"z_name", z_names[i]},
                         {"z_mean", std::to_string(round_to(_mean_est[i], _rounding_points))},
                         {"z_median", std::to_string(round_to(_median_est[i], _rounding_points))},

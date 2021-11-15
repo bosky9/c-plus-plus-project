@@ -1,16 +1,15 @@
 #pragma once
 
-#include "families/normal.hpp"
-#include "headers.hpp"
-#include "inference/bbvi_routines.hpp"
-#include "inference/stoch_optim.hpp"
-#include "multivariate_normal.hpp"
+#include "Eigen/Core"                // Eigen::VectorXd, Eigen::MatrixXd
+#include "families/family.hpp"       // Family
+#include "inference/stoch_optim.hpp" // StochOptim
 
-#include <algorithm>
-#include <cmath>
-#include <memory>
-#include <utility>
+#include <memory> // std::unique_ptr, std::shared_ptr
 
+/**
+ * @struct BBVIReturnData bbvi.hpp
+ * @brief Data structure return by run in BBVI class
+ */
 struct BBVIReturnData {
     std::vector<std::unique_ptr<Family>> q;
     Eigen::VectorXd final_means;
@@ -21,36 +20,12 @@ struct BBVIReturnData {
 };
 
 /**
+ * @class BBVI bbvi.hpp
  * @brief Black Box Variational Inference
  */
 class BBVI {
-protected:
-    std::function<double(Eigen::VectorXd, std::optional<size_t>)> _neg_posterior; ///< Posterior function
-    std::vector<std::unique_ptr<Family>> _q;          ///< List holding the distribution objects
-    size_t _sims;                     ///< Number of Monte Carlo sims for the gradient
-    bool _printer;                    ///<
-    std::string _optimizer;           ///<
-    size_t _iterations;               ///< How many iterations to run
-    double _learning_rate;            ///<
-    bool _record_elbo;                ///< Whether to record the ELBO at every iteration
-    bool _quiet_progress;             ///< Whether to print progress or stay quiet
-    Eigen::VectorXd _approx_param_no; ///<
-
-    /**
-     * @brief Internal method called by run with selected negative posterior function
-     * @param store If true, stores rgw history of updates for the benefit of a pretty animation
-     * @param neg_posterior Negative posterior function
-     * @return
-     */
-    BBVIReturnData run_with(bool store, const std::function<double(Eigen::VectorXd)>& neg_posterior);
-
 public:
-    std::unique_ptr<StochOptim> _optim{nullptr}; ///<
-
-    /**
-     * @brief Base constructor for BBVI
-     */
-    BBVI();
+    std::unique_ptr<StochOptim> _optim{nullptr}; ///< Optimizer
 
     /**
      * @brief Constructor for BBVI
@@ -63,9 +38,9 @@ public:
      * @param record_elbo Wheter to record the ELBO at every iteration
      * @param quiet_progress Wheter to print progress or stay quiet
      */
-    BBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior, std::vector<std::unique_ptr<Family>>& q,
-         size_t sims, std::string optimizer = "RMSProp", size_t iterations = 1000, double learning_rate = 0.001,
-         bool record_elbo = false, bool quiet_progress = false);
+    BBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior,
+         std::vector<std::unique_ptr<Family>>& q, size_t sims, std::string optimizer = "RMSProp",
+         size_t iterations = 1000, double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false);
 
     /**
      * @brief Copy constructor for BBVI
@@ -228,6 +203,26 @@ public:
      *          neg_posterior.
      */
     virtual BBVIReturnData run(bool store);
+
+protected:
+    std::function<double(Eigen::VectorXd, std::optional<size_t>)> _neg_posterior; ///< Posterior function
+    size_t _sims;                            ///< Number of Monte Carlo sims for the gradient
+    bool _printer;                           ///< True if printing is enabled
+    std::string _optimizer;                  ///< Name of the optimizer
+    size_t _iterations;                      ///< How many iterations to run
+    double _learning_rate;                   ///< Learning rate
+    bool _record_elbo;                       ///< Whether to record the ELBO at every iteration
+    bool _quiet_progress;                    ///< Whether to print progress or stay quiet
+    std::vector<std::unique_ptr<Family>> _q; ///< List holding the distribution objects
+    Eigen::VectorXd _approx_param_no;        ///< Number of parameters for approximations
+
+    /**
+     * @brief Internal method called by run with selected negative posterior function
+     * @param store If true, stores raw history of updates for the benefit of a pretty animation
+     * @param neg_posterior Negative posterior function
+     * @return Results in BBVIReturnData structure
+     */
+    BBVIReturnData run_with(bool store, const std::function<double(Eigen::VectorXd)>& neg_posterior);
 };
 
 class CBBVI final : public BBVI {
@@ -247,8 +242,8 @@ public:
      * @param quiet_progress
      */
     CBBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior,
-          std::function<Eigen::VectorXd(Eigen::VectorXd)> log_p_blanket, std::vector<std::unique_ptr<Family>>& q, size_t sims,
-          std::string optimizer = "RMSProp", size_t iterations = 300000, double learning_rate = 0.001,
+          std::function<Eigen::VectorXd(Eigen::VectorXd)> log_p_blanket, std::vector<std::unique_ptr<Family>>& q,
+          size_t sims, std::string optimizer = "RMSProp", size_t iterations = 300000, double learning_rate = 0.001,
           bool record_elbo = false, bool quiet_progress = false);
 
     /**
@@ -328,8 +323,8 @@ public:
      * @param quiet_progress
      */
     BBVIM(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior,
-          std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<std::unique_ptr<Family>>& q, size_t sims,
-          std::string optimizer = "RMSProp", size_t iterations = 1000, double learning_rate = 0.001,
+          std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<std::unique_ptr<Family>>& q,
+          size_t sims, std::string optimizer = "RMSProp", size_t iterations = 1000, double learning_rate = 0.001,
           size_t mini_batch = 2, bool record_elbo = false, bool quiet_progress = false);
 
     /**

@@ -44,7 +44,7 @@ inline double min(Eigen::VectorXd v) {
 
 inline std::vector<double> diff(const std::vector<double>& v) {
     std::vector<double> new_v(v.size() - 1);
-    for (size_t i{0}; i < new_v.size(); i++)
+    for (size_t i{0}; i < new_v.size(); ++i)
         new_v.at(i) = v.at(i + 1) - v.at(i);
     return std::move(new_v);
 }
@@ -278,8 +278,8 @@ public:
      *              python variables.
      *
      *              In order to assign a subclass to the unique pointer to Family (which is abstract),
-     *              the method clone creates a deep copy of the passed family (which is a const reference); the unique ptr is then
-     *              reset to the new one.
+     *              the method clone creates a deep copy of the passed family (which is a const reference); the unique
+     * ptr is then reset to the new one.
      *
      *              The _neg_loglik and _mb_neg_loglik functions are defined here,
      *              returning the results of (non_)normal_neg_loglik() and (non_)normal_mb_neg_loglik(),
@@ -289,8 +289,7 @@ public:
      *              returning (non_)normal_model(), (non_)mb_normal_model(),
      *              [which are defined in ARIMA].
      */
-    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0,
-          const Family& family = Normal());
+    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
 
     /**
      * @brief Calculates the negative log-likelihood of the model for non-Normal family
@@ -314,8 +313,7 @@ public:
      *          but multiple columns of data are passed as a DataFrame.
      *          Only one columns is selected; which one? Decided by @param target.
      */
-    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0,
-          const Family& family = Normal(),
+    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal(),
           const std::string& target = "");
 
     /**

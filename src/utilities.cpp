@@ -26,7 +26,7 @@ DataFrame csvToDataFrame(std::ifstream& file) {
                         df.data_name.push_back(cell);
                     }
                 }
-                i++;
+                ++i;
             }
         }
         df.data.resize(data_cols.size());
@@ -35,7 +35,7 @@ DataFrame csvToDataFrame(std::ifstream& file) {
             std::stringstream lineStream(line);
             std::string cell;
             bool added_index_val{false};
-            size_t i = 0;
+            size_t i{0};
             while (std::getline(lineStream, cell, ',')) {
                 auto data_col = std::find(data_cols.begin(), data_cols.end(), i);
                 if (found_index_col && i == index_col)
@@ -49,10 +49,10 @@ DataFrame csvToDataFrame(std::ifstream& file) {
                         added_index_val = true;
                     }
                 }
-                i++;
+                ++i;
             }
             // Fill the empty columns of the csv file with 0
-            for (; i < data_cols.size(); i++)
+            for (; i < data_cols.size(); ++i)
                 df.data.at(i).push_back(0);
         }
     }

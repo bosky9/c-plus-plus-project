@@ -30,7 +30,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _x = ar_matrix();
     create_latent_variables();
 
-    _family = (family.clone());
+    _family             = (family.clone());
     FamilyAttributes fa = family.setup();
     _model_name2        = fa.name;
     _link               = fa.link;
@@ -45,8 +45,8 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     std::vector<lv_to_build> lvs = _family->build_latent_variables();
     for (int64_t no{0}; no < lvs.size(); no++) {
         lv_to_build lv = lvs.at(no);
-        Family* prior = std::get<1>(lv);
-        Family* q = std::get<2>(lv);
+        Family* prior  = std::get<1>(lv);
+        Family* q      = std::get<2>(lv);
         _latent_variables.add_z(std::get<0>(lv), *prior, *q);
         _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
         delete prior;
@@ -75,8 +75,8 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     }
 }
 
-ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ,
-             const Family& family, const std::string& target)
+ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, const Family& family,
+             const std::string& target)
     : TSM{"ARIMA"} {
     // Latent Variable information
     _ar                 = ar;
@@ -105,7 +105,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ,
     _x = ar_matrix();
     create_latent_variables();
     _family.reset();
-    _family = (family.clone());
+    _family             = (family.clone());
     FamilyAttributes fa = family.setup();
     _model_name2        = fa.name;
     _link               = fa.link;
@@ -120,8 +120,8 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ,
     std::vector<lv_to_build> lvs = _family->build_latent_variables();
     for (int64_t no{0}; no < lvs.size(); no++) {
         lv_to_build lv = lvs[no];
-        Family* prior = std::get<1>(lv);
-        Family* q = std::get<2>(lv);
+        Family* prior  = std::get<1>(lv);
+        Family* q      = std::get<2>(lv);
         _latent_variables.add_z(std::get<0>(lv), *prior, *q);
         _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
         delete std::get<1>(lv);
@@ -155,7 +155,7 @@ Eigen::MatrixXd ARIMA::ar_matrix() {
                                             static_cast<Eigen::Index>(_data_length - _max_lag))};
 
     if (_ar != 0) {
-        for (Eigen::Index i{0}; i < _ar; i++)
+        for (Eigen::Index i{0}; i < _ar; ++i)
             std::copy(_data_frame.data.begin() + _max_lag - i - 1, _data_frame.data.end() - i - 1,
                       X.row(i + 1).begin());
     }
@@ -233,7 +233,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::Vec
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
-    for (Eigen::Index i{0}; i < beta.size(); i++) {
+    for (Eigen::Index i{0}; i < beta.size(); ++i) {
         z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
     }
 
@@ -258,7 +258,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(const Eigen:
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
-    for (Eigen::Index i{0}; i < beta.size(); i++) {
+    for (Eigen::Index i{0}; i < beta.size(); ++i) {
         z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
     }
 
@@ -293,12 +293,12 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(const Eigen::
     Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
     Y = Y(Eigen::all, sample);
     Eigen::MatrixXd X(_x.rows(), sample.size());
-    for (Eigen::Index i{0}; i < _x.rows(); i++)
+    for (Eigen::Index i{0}; i < _x.rows(); ++i)
         X.row(i) = _x.row(i)(Eigen::all, sample);
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
-    for (Eigen::Index i{0}; i < beta.size(); i++) {
+    for (Eigen::Index i{0}; i < beta.size(); ++i) {
         z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
     }
 
@@ -330,12 +330,12 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eig
     Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
     Y = Y(Eigen::all, sample);
     Eigen::MatrixXd X(_x.rows(), sample.size());
-    for (Eigen::Index i{0}; i < _x.rows(); i++)
+    for (Eigen::Index i{0}; i < _x.rows(); ++i)
         X.row(i) = _x.row(i)(Eigen::all, sample);
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
-    for (Eigen::Index i{0}; i < beta.size(); i++) {
+    for (Eigen::Index i{0}; i < beta.size(); ++i) {
         z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
     }
 
@@ -401,12 +401,12 @@ Eigen::VectorXd ARIMA::mean_prediction(const Eigen::VectorXd& mu, const Eigen::V
         double new_value = t_z[0];
 
         if (_ar != 0) {
-            for (Eigen::Index i{1}; i <= _ar; i++)
+            for (Eigen::Index i{1}; i <= _ar; ++i)
                 new_value += t_z[i] * Y_exp(Eigen::last - i);
         }
 
         if (_ma != 0) {
-            for (Eigen::Index i{1}; i <= _ma; i++) {
+            for (Eigen::Index i{1}; i <= _ma; ++i) {
                 if (i - 1 >= t)
                     new_value += t_z[i + static_cast<Eigen::Index>(_ar)] *
                                  (Y_exp(Eigen::last - i) - _link(mu_exp(Eigen::last - i)));
@@ -449,12 +449,12 @@ Eigen::MatrixXd ARIMA::sim_prediction(const Eigen::VectorXd& mu, const Eigen::Ve
             double new_value = t_params[0];
 
             if (_ar != 0) {
-                for (Eigen::Index i{1}; i <= _ar; i++)
+                for (Eigen::Index i{1}; i <= _ar; ++i)
                     new_value += t_params[i] * Y_exp(Eigen::last - i);
             }
 
             if (_ma != 0) {
-                for (Eigen::Index i{1}; i <= _ma; i++) {
+                for (Eigen::Index i{1}; i <= _ma; ++i) {
                     if (i - 1 >= t)
                         new_value += t_params[i + static_cast<Eigen::Index>(_ar)] *
                                      (Y_exp(Eigen::last - i) - mu_exp(Eigen::last - i));
@@ -493,7 +493,7 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
     for (Eigen::Index n{0}; n < simulations; n++) {
         Eigen::VectorXd t_z{draw_latent_variables(1).transpose().row(0)};
         auto mu_Y{_model(t_z)};
-        for (Eigen::Index i{0}; i < t_z.size(); i++)
+        for (Eigen::Index i{0}; i < t_z.size(); ++i)
             t_z[i] = _latent_variables.get_z_list()[i].get_prior()->get_transform()(t_z[i]);
 
         auto scale_shape_skew{get_scale_and_shape(t_z)};
@@ -507,12 +507,12 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
             double new_value = t_z[0];
 
             if (_ar != 0) {
-                for (Eigen::Index i{1}; i <= _ar; i++)
+                for (Eigen::Index i{1}; i <= _ar; ++i)
                     new_value += t_z[i] * Y_exp(Eigen::last - i);
             }
 
             if (_ma != 0) {
-                for (Eigen::Index i{1}; i <= _ma; i++) {
+                for (Eigen::Index i{1}; i <= _ma; ++i) {
                     if (i - 1 >= t)
                         new_value += t_z[i + static_cast<Eigen::Index>(_ar)] *
                                      (Y_exp(Eigen::last - i) - mu_exp(Eigen::last - i));
@@ -550,7 +550,7 @@ ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::Ma
     std::vector<double> error_bars;
     for (int64_t pre{5}; pre < 100; pre += 5) {
         error_bars.push_back(mean_values[static_cast<Eigen::Index>(-h - 1)]);
-        for (Eigen::Index i{0}; i < sim_vector.rows(); i++)
+        for (Eigen::Index i{0}; i < sim_vector.rows(); ++i)
             error_bars.push_back(percentile(sim_vector.row(i), pre));
     }
 
@@ -558,7 +558,7 @@ ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::Ma
     std::vector<double> forecasted_values;
     if (_latent_variables.get_estimation_method() == "M-H") {
         forecasted_values.push_back(mean_values[static_cast<Eigen::Index>(-h - 1)]);
-        for (Eigen::Index i{0}; i < sim_vector.rows(); i++)
+        for (Eigen::Index i{0}; i < sim_vector.rows(); ++i)
             forecasted_values.push_back(mean(sim_vector.row(i)));
     } else
         std::copy(mv.end() - static_cast<long>(h + 1), mv.end(), std::back_inserter(forecasted_values));
@@ -623,12 +623,12 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
 
         for (int64_t pre{5}; pre < 100; pre += 5) {
             error_bars.push_back(Y.back());
-            for (Eigen::Index i{0}; i < sim_vector.rows(); i++)
+            for (Eigen::Index i{0}; i < sim_vector.rows(); ++i)
                 error_bars.push_back(percentile(sim_vector.row(i), pre));
         }
 
         forecasted_values.push_back(Y.back());
-        for (Eigen::Index i{0}; i < sim_vector.rows(); i++)
+        for (Eigen::Index i{0}; i < sim_vector.rows(); ++i)
             forecasted_values.push_back(mean(sim_vector.row(i)));
 
         std::copy(Y.end() - 1 - static_cast<long>(past_values), Y.end() - 2, std::back_inserter(plot_values));
@@ -672,7 +672,7 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
         std::vector<double> alpha;
         for (int64_t i{50}; i > 12; i -= 2)
             alpha.push_back(0.15 * static_cast<double>(i) * 0.01);
-        for (int64_t i{0}; i < error_bars.size(); i++) {
+        for (int64_t i{0}; i < error_bars.size(); ++i) {
             std::vector<double> date_index_h;
             std::copy(date_index.end() - static_cast<long>(h) - 1, date_index.end(), std::back_inserter(date_index_h));
             plt::fill_between(date_index_h, std::vector<double>{error_bars[i]}, std::vector<double>{error_bars[-i - 1]},
@@ -694,9 +694,9 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
     DataFrame predictions;
     LatentVariables saved_lvs{""};
 
-    std::vector<std::string> names{std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}),
-                        "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval",
-                        "99% Prediction Interval"};
+    std::vector<std::string> names{
+            std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}),
+            "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval", "99% Prediction Interval"};
 
     std::vector<double> data_original_t, index;
     DataFrame new_prediction;
@@ -712,7 +712,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
         if (t == 0) {
             if (fit_once) {
                 Results* temp_r = x.fit(fit_method);
-                saved_lvs = x._latent_variables;
+                saved_lvs       = x._latent_variables;
                 delete temp_r;
             }
         } else {
@@ -720,7 +720,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
                 x._latent_variables = saved_lvs;
         }
         new_prediction = x.predict(1, intervals);
-        for (int64_t i{0}; i < new_prediction.data_name.size(); i++) {
+        for (int64_t i{0}; i < new_prediction.data_name.size(); ++i) {
             if (predictions.data.size() == i)
                 predictions.data.push_back(new_prediction.data[i]);
             else
@@ -742,7 +742,7 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     std::vector<double> data;
     std::copy(_data_frame.data.end() - static_cast<long>(h), _data_frame.data.end(), std::back_inserter(data));
     plt::named_plot("Data", predictions.index, data);
-    for (int64_t i{0}; i < predictions.data_name.size(); i++)
+    for (int64_t i{0}; i < predictions.data_name.size(); ++i)
         plt::named_plot("Predictions", predictions.index, predictions.data[i], "k");
     plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
     plt::legend({{"loc", "2"}});
@@ -761,7 +761,7 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
     std::vector<double> forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
     if (_latent_variables.get_estimation_method() == "M-H") {
         sim_values = sim_prediction_bayes(h, 15000);
-        for (Eigen::Index i{0}; i < sim_values.rows(); i++) {
+        for (Eigen::Index i{0}; i < sim_values.rows(); ++i) {
             forecasted_values.push_back(mean(sim_values.row(i)));
             prediction_01.push_back(percentile(sim_values.row(i), 1));
             prediction_05.push_back(percentile(sim_values.row(i), 5));
@@ -797,7 +797,7 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
     } else {
         if (_latent_variables.get_estimation_method() != "M-H") {
             // sim_values = sim_prediction(mu_Y.first, mu_Y.second, 5, t_z, 15000);
-            for (Eigen::Index i{0}; i < sim_values.rows(); i++) {
+            for (Eigen::Index i{0}; i < sim_values.rows(); ++i) {
                 prediction_01.push_back(percentile(sim_values.row(i), 1));
                 prediction_05.push_back(percentile(sim_values.row(i), 5));
                 prediction_95.push_back(percentile(sim_values.row(i), 95));
@@ -827,12 +827,12 @@ Eigen::MatrixXd ARIMA::sample(size_t nsims) const {
            "No latent variables estimated!");
     Eigen::MatrixXd lv_draws{draw_latent_variables(nsims)};
     std::vector<Eigen::VectorXd> mus;
-    for (Eigen::Index i{0}; i < nsims; i++)
+    for (Eigen::Index i{0}; i < nsims; ++i)
         mus.push_back(_model(lv_draws.col(i)).first);
 
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
-    for (Eigen::Index i{0}; i < nsims; i++) {
+    for (Eigen::Index i{0}; i < nsims; ++i) {
         auto scale_shape_skew{get_scale_and_shape(lv_draws.col(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         data_draws.row(i) =
@@ -853,7 +853,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
               _data_frame.index.begin() + static_cast<long>(_data_length), std::back_inserter(date_index));
     auto mu_Y = _model(_latent_variables.get_z_values());
     Eigen::MatrixXd draws{sample(nsims).transpose()};
-    for (Eigen::Index i{0}; i < draws.rows(); i++)
+    for (Eigen::Index i{0}; i < draws.rows(); ++i)
         plt::named_plot(
                 "Posterior Draws", date_index,
                 std::vector<double>(&draws.row(i)[0],
@@ -875,12 +875,12 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
 
     Eigen::MatrixXd lv_draws{draw_latent_variables(nsims)};
     std::vector<Eigen::VectorXd> mus;
-    for (Eigen::Index i{0}; i < nsims; i++)
+    for (Eigen::Index i{0}; i < nsims; ++i)
         mus.push_back(_model(lv_draws.col(i)).first);
 
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
-    for (Eigen::Index i{0}; i < nsims; i++) {
+    for (Eigen::Index i{0}; i < nsims; ++i) {
         auto scale_shape_skew{get_scale_and_shape(lv_draws.col(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         data_draws.row(i) =
@@ -889,12 +889,12 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
 
     Eigen::Matrix sample_data{sample(nsims)};
     std::vector<double> T_sims;
-    for (Eigen::Index i{0}; i < sample_data.cols(); i++)
+    for (Eigen::Index i{0}; i < sample_data.cols(); ++i)
         T_sims.push_back(T(sample_data.col(i)));
     double T_actual{T(Eigen::VectorXd::Map(_data_frame.data.data(), _data_frame.data.size()))};
 
     std::vector<double> T_sims_greater;
-    for (int64_t i{0}; i < T_sims.size(); i++) {
+    for (int64_t i{0}; i < T_sims.size(); ++i) {
         if (T_sims.at(i) > T_actual)
             T_sims_greater.push_back(T_sims.at(i));
     }
@@ -910,12 +910,12 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
 
     Eigen::MatrixXd lv_draws{draw_latent_variables(nsims)};
     std::vector<Eigen::VectorXd> mus;
-    for (Eigen::Index i{0}; i < nsims; i++)
+    for (Eigen::Index i{0}; i < nsims; ++i)
         mus.push_back(_model(lv_draws.col(i)).first);
 
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
-    for (Eigen::Index i{0}; i < nsims; i++) {
+    for (Eigen::Index i{0}; i < nsims; ++i) {
         auto scale_shape_skew{get_scale_and_shape(lv_draws.row(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         data_draws.row(i) =
@@ -924,7 +924,7 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
 
     Eigen::Matrix sample_data{sample(nsims)};
     std::vector<double> T_sims;
-    for (Eigen::Index i{0}; i < sample_data.cols(); i++)
+    for (Eigen::Index i{0}; i < sample_data.cols(); ++i)
         T_sims.push_back(T(sample_data.col(i)));
     double T_actual{T(Eigen::VectorXd(_data_frame.data.size(), _data_frame.data.size()))};
 
@@ -939,7 +939,7 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
         description = " of the median";
 
     plt::figure_size(width.value(), height.value());
-    plt::subplot(1, 1, 1);
+    plt::subplot(uint8_t{1}, uint8_t{1}, uint8_t{1});
     plt::axvline(T_actual);
     plt::plot(T_sims);
     plt::title("Posterior predictive" + description);

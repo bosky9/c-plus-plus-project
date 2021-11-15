@@ -7,12 +7,14 @@
 #pragma once
 
 #include "Eigen/Core" // Eigen::VectorXd
-#include <memory>
+
 #include <functional> // std::function
+#include <memory>     // std::unique_ptr
 #include <string>     // std::string
 
 /**
- * @struct Struct for attributes returned by families
+ * @struct FamilyAttributes family.hpp
+ * @brief Struct for attributes returned by families
  * @details Returned by normal.setup()
  */
 struct FamilyAttributes final {
@@ -37,30 +39,6 @@ public:
      * @param transform Whether to apply a transformation (e.g. "exp" or "_logit")
      */
     explicit Family(const std::string& transform = "");
-
-    /**
-     * @brief Copy constructor for Family
-     * @param family A Family object
-     */
-    Family(const Family& family);
-
-    /**
-     * @brief Move constructor for Family
-     * @param family A Family object
-     */
-    Family(Family&& family) noexcept;
-
-    /**
-     * @brief Assignment operator for Family
-     * @param family A Family object
-     */
-    Family& operator=(const Family& family);
-
-    /**
-     * @brief Move assignment operator for Family
-     * @param family A Family object
-     */
-    Family& operator=(Family&& family) noexcept;
 
     /**
      * @brief Check if Family objects are equal
@@ -109,7 +87,7 @@ public:
      * @return A list of tuples (each tuple contains latent variable information)
      */
     using lv_to_build = std::tuple<std::string, Family*, Family*, double>;
-    virtual std::vector<lv_to_build> build_latent_variables() const;
+    [[nodiscard]] virtual std::vector<lv_to_build> build_latent_variables() const;
 
     /**
      * @brief Returns a clone of the current object

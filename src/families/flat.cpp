@@ -8,19 +8,6 @@
 
 Flat::Flat(const std::string& transform) : Family{transform}, _covariance_prior{false} {}
 
-Flat::Flat(const Flat& flat){
-        _covariance_prior = flat._covariance_prior;
-        _itransform_name = flat._itransform_name;
-        _transform_name = flat._transform_name;
-        _transform = flat._transform;
-};
-
-Flat::Flat(Flat&& flat) noexcept = default;
-
-Flat& Flat::operator=(const Flat& flat) = default;
-
-Flat& Flat::operator=(Flat&& flat) noexcept = default;
-
 bool operator==(const Flat& flat1, const Flat& flat2) {
     return flat1._transform_name == flat2._transform_name && flat1._itransform_name == flat2._itransform_name &&
            flat1._covariance_prior == flat2._covariance_prior;
@@ -32,7 +19,7 @@ double Flat::logpdf([[maybe_unused]] double mu) {
 
 // Get methods -----------------------------------------------------------------------------------------------------
 
-std::string Flat::get_name() const  {
+std::string Flat::get_name() const {
     return "Flat";
 }
 

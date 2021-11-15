@@ -6,14 +6,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
-# INCLUDES
-include_directories(${PROJECT_SOURCE_DIR}/include)
+# Include headers and external libraries
+include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/third_party)
 
-# Required by matplotlibcpp.hpp
+# Fetch Eigen library
+#find_package(Eigen3 3.4 REQUIRED NO_MODULE)
+
+# Fetch Python (required by matplotlibcpp.hpp)
 find_package(Python3 COMPONENTS Interpreter Development)
 include_directories(${Python3_INCLUDE_DIRS})
 
-# FETCH EXTERNAL LIBRARIES
+# Fetch Catch2 library for tests
 Include(FetchContent)
 FetchContent_Declare(
         Catch2
@@ -22,9 +25,21 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-# TESTS
+# Perform tests
 add_executable(tests)
 file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE TESTS_LIST ${PROJECT_SOURCE_DIR}/test/*.cpp)
 target_sources(tests PRIVATE ${SRCS} ${TESTS_LIST})
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain Python3::Python)
+target_link_libraries(tests PRIVATE Python3::Python Catch2::Catch2WithMain)
+add_custom_target(test tests)
+
+# Generate documentation with Doxygen with "make doc"
+find_package(Doxygen)
+if (Doxygen_FOUND)
+    add_custom_target(doc
+            COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Doxyfile
+            COMMENT "Generating Doxygen documentation")
+endif ()
+
+# Move executables in bin
+#add_custom_target(install)

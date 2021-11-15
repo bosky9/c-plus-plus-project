@@ -6,10 +6,11 @@
 
 #pragma once
 
-#include "Eigen/Core" // Eigen::VectorXd, Eigen::MatrixXd
-#include "families/family.hpp"
+#include "Eigen/Core"          // Eigen::VectorXd, Eigen::MatrixXd
+#include "families/family.hpp" // Family, FamilyAttributes, lv_to_build
 
 #include <cassert> // static_assert(), assert()
+#include <memory>  // std::unique_ptr
 
 /**
  * @class Normal normal.hpp
@@ -27,30 +28,6 @@ public:
      *  (e.g. "exp" or "logit")
      */
     explicit Normal(double mu = 0.0, double sigma = 1.0, const std::string& transform = "");
-
-    /**
-     * @brief Copy constructor for Normal distribution
-     * @param normal A Normal object
-     */
-    Normal(const Normal& normal);
-
-    /**
-     * @brief Move constructor for Normal distribution
-     * @param normal A Normal object
-     */
-    Normal(Normal&& normal) noexcept;
-
-    /**
-     * @brief Assignment operator for Normal distribution
-     * @param normal A Normal object
-     */
-    Normal& operator=(const Normal& normal);
-
-    /**
-     * @brief Move assignment operator for Normal distribution
-     * @param normal A Normal object
-     */
-    Normal& operator=(Normal&& normal) noexcept;
 
     /**
      * @brief Equal operator for Normal
@@ -289,9 +266,9 @@ public:
     [[nodiscard]] std::unique_ptr<Family> clone() const override;
 
 private:
-    double _mu0;                  ///< The mean of the Gaussian
-    double _sigma0;               ///< The variance of the Gaussian
-    uint8_t _param_no;            ///< Number of parameters
-    bool _covariance_prior;       ///< Covariance's prior
+    double _mu0;            ///< The mean of the Gaussian
+    double _sigma0;         ///< The variance of the Gaussian
+    uint8_t _param_no;      ///< Number of parameters
+    bool _covariance_prior; ///< Covariance's prior
     // gradient_only won't be used (no GAS models)
 };

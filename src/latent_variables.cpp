@@ -35,12 +35,10 @@ LatentVariable::LatentVariable(const LatentVariable& lv)
 LatentVariable::LatentVariable(LatentVariable&& lv) noexcept {
     _name  = lv.get_name();
     _index = lv._index;
-    _prior.reset();
-    _prior = (lv.get_prior()->clone());
+    _prior = (lv.get_prior());
     _transform = lv._transform;
     _start     = lv.get_start();
-    _q.reset();
-    _q = (lv.get_q()->clone());
+    _q = (lv.get_q());
     _method       = lv.get_method();
     _value        = lv.get_value();
     _std          = lv.get_std();
@@ -327,7 +325,7 @@ Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
     assert(_estimated);
     std::vector<std::function<double(double)>> transforms = get_z_transforms();
     Eigen::VectorXd values{Eigen::VectorXd::Zero(_z_list.size())};
-    for (Eigen::Index i{0}; i < _z_list.size(); i++) {
+    for (Eigen::Index i{0}; i < _z_list.size(); ++i) {
         assert(_z_list[i].get_value().has_value());
         values(i) = transformed ? transforms[i](_z_list[i].get_value().value()) : _z_list[i].get_value().value();
     }
@@ -345,7 +343,7 @@ std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
     std::vector<std::unique_ptr<Family>> approx_dists = get_z_approx_dist();
     std::vector<std::string> q_list(approx_dists.size());
     for (auto &approx : approx_dists)
-        q_list.emplace_back((approx->get_name() == "Normal") ? "Normal" : "Approximate distribution not detected");
+        q_list.emplace_back((isinstance<Normal>(approx.get())) ? "Normal" : "Approximate distribution not detected");
     return q_list;
 }
 
@@ -365,7 +363,7 @@ void LatentVariables::set_z_values(const Eigen::VectorXd& values, const std::str
                                    const std::optional<Eigen::VectorXd>& stds,
                                    const std::optional<Eigen::MatrixXd>& samples) {
     assert(values.size() == _z_list.size());
-    for (int64_t i{0}; i < _z_list.size(); i++) {
+    for (int64_t i{0}; i < _z_list.size(); ++i) {
         _z_list[i].set_method(method);
         _z_list[i].set_value(values[static_cast<Eigen::Index>(i)]);
         if (stds)
@@ -378,7 +376,7 @@ void LatentVariables::set_z_values(const Eigen::VectorXd& values, const std::str
 
 void LatentVariables::set_z_starting_values(const Eigen::VectorXd& values) {
     assert(values.size() == _z_list.size());
-    for (int64_t i{0}; i < _z_list.size(); i++) {
+    for (int64_t i{0}; i < _z_list.size(); ++i) {
         _z_list[i].set_start(values[static_cast<Eigen::Index>(i)]);
     }
 }
@@ -438,7 +436,7 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
     std::vector<std::string> palette{"royalblue",    "mediumseagreen", "chocolate",
                                      "mediumpurple", "goldenrod",      "skyblue"};
 
-    for (int64_t i{0}; i < _z_list.size(); i++) {
+    for (int64_t i{0}; i < _z_list.size(); ++i) {
         Eigen::VectorXd chain{_z_list[i].get_sample().value()};
         for (int64_t j{0}; j < 4; j++) {
             int64_t iteration = i * 4 + j + 1;

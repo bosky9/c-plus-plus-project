@@ -68,8 +68,8 @@ Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& mea
            (means.size() == scales.size() && (x.size() == 1 || x.size() == means.size())));
     int64_t size = std::max({x.size(), means.size(), scales.size()});
     Eigen::VectorXd result(size);
-    const double ONE_OVER_SQRT_2PI = 0.39894228040143267793994605993438;
-    for (Eigen::Index i{0}; i < size; i++) {
+    const double ONE_OVER_SQRT_2PI{0.39894228040143267793994605993438};
+    for (Eigen::Index i{0}; i < size; ++i) {
         double x_val  = x.size() == 1 ? x(0) : x(i);
         double mean   = means.size() == 1 ? means(0) : means(i);
         double scale  = scales.size() == 1 ? scales(0) : scales(i);
@@ -102,7 +102,7 @@ Eigen::VectorXd Mvn::random(double mean, double scale, int64_t n) {
     std::default_random_engine generator(seed);
     std::normal_distribution<double> distribution{mean, scale};
     Eigen::VectorXd rands(n);
-    for (Eigen::Index i{0}; i < n; i++) {
+    for (Eigen::Index i{0}; i < n; ++i) {
         rands(i) = distribution(generator);
     }
     return rands;
@@ -112,7 +112,7 @@ Eigen::VectorXd Mvn::random(const Eigen::VectorXd& mean, double scale, int64_t n
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine generator(seed);
     Eigen::VectorXd rands(n);
-    for (Eigen::Index i{0}; i < n; i++) {
+    for (Eigen::Index i{0}; i < n; ++i) {
         std::normal_distribution<double> distribution{mean(i), scale};
         rands(i) = distribution(generator);
     }
@@ -124,7 +124,7 @@ Eigen::MatrixXd Mvn::random(const Eigen::VectorXd& mean, const Eigen::VectorXd& 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine generator(seed);
     Eigen::MatrixXd rands(n, mean.size());
-    for (Eigen::Index i{0}; i < n; i++) {
+    for (Eigen::Index i{0}; i < n; ++i) {
         for (Eigen::Index j{0}; j < mean.size(); j++) {
             std::normal_distribution<double> distribution{mean(j), scale(j)};
             rands(i, j) = distribution(generator);

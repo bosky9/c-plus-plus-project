@@ -8,9 +8,8 @@
 #include <chrono>
 #include <random>
 
-constexpr unsigned int str2int(const char* str, int h = 0)
-{
-    return !str[h] ? 5381 : (str2int(str, h+1) * 33) ^ str[h];
+constexpr unsigned int str2int(const char* str, int h = 0) {
+    return !str[h] ? 5381 : (str2int(str, h + 1) * 33) ^ str[h];
 }
 
 TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_variables{model_type} {
@@ -48,10 +47,9 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         start_loc = phi;
     Eigen::VectorXd start_ses{};
 
-    std::string temp_normal = "Normal";
-    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
-        std::unique_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
-        if (temp_normal == approx_dist->get_name()) {
+    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
+        std::shared_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
+        if (isinstance<Normal>(approx_dist.get())) {
             _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
                 _latent_variables.get_z_list()[i].get_q()->vi_change_param(1, std::exp(-3.0));
@@ -61,8 +59,8 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     }
 
     std::vector<std::unique_ptr<Family>> q_list;
-    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
-        q_list.push_back(_latent_variables.get_z_list()[i].get_q());
+    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
+        q_list.push_back(_latent_variables.get_z_list()[i].get_q()->clone());
     }
 
     BBVI* bbvi_obj; // TODO: Trovare un modo per eliminare il puntatore senza che crei segmentation fault!
@@ -151,15 +149,14 @@ MCMCResults* TSM::_mcmc_fit(double scale, size_t nsims, const std::string& metho
     _latent_variables.set_z_values(sample.mean_est, "M-H", std::nullopt, sample.chain);
     std::function<double(double)> transform;
     if (_latent_variables.get_z_list().size() == 1) {
-        transform = _latent_variables.get_z_list()[0].get_prior()->get_transform();
+        transform              = _latent_variables.get_z_list()[0].get_prior()->get_transform();
         sample.mean_est[0]     = transform(sample.mean_est[0]);
         sample.median_est[0]   = transform(sample.median_est[0]);
         sample.upper_95_est[0] = transform(sample.upper_95_est[0]);
         sample.lower_95_est[0] = transform(sample.lower_95_est[0]);
-    }
-    else
-        for (Eigen::Index i{0}; i < sample.chain.rows(); i++) {
-            transform = _latent_variables.get_z_list()[i].get_prior()->get_transform();
+    } else
+        for (Eigen::Index i{0}; i < sample.chain.rows(); ++i) {
+            transform              = _latent_variables.get_z_list()[i].get_prior()->get_transform();
             sample.mean_est[i]     = transform(sample.mean_est[i]);
             sample.median_est[i]   = transform(sample.median_est[i]);
             sample.upper_95_est[i] = transform(sample.upper_95_est[i]);
@@ -236,7 +233,7 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd>& cov_matrix
     assert(std::find(_supported_methods.begin(), _supported_methods.end(), method) != _supported_methods.end() &&
            "Method not supported!");
 
-    switch(str2int(method.c_str())) {
+    switch (str2int(method.c_str())) {
 
         case str2int("MLE"):
             return _optimize_fit(method, _neg_loglik);
@@ -284,10 +281,10 @@ std::vector<double> TSM::shift_dates(size_t n) const {
     assert(_data_frame.index.size() > _max_lag);
     std::vector<double> date_index(_data_frame.index.begin() + _max_lag, _data_frame.index.end());
     if (date_index.size() > 1) {
-        for (int64_t i{0}; i < n; i++)
+        for (int64_t i{0}; i < n; ++i)
             date_index.push_back(date_index.back() + (date_index.back() - date_index.at(date_index.size() - 2)));
     } else {
-        for (int64_t i{0}; i < n; i++)
+        for (int64_t i{0}; i < n; ++i)
             date_index.push_back(date_index.back() + 1);
     }
     return date_index;
@@ -313,7 +310,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         std::vector<std::unique_ptr<Family>> q_vec = _latent_variables.get_z_approx_dist();
         Eigen::MatrixXd output(q_vec.size(), nsims);
         Eigen::Index r = 0;
-        for (auto &f : q_vec) {
+        for (auto& f : q_vec) {
             output.row(r) = f->draw_variable_local(nsims);
             r++;
         }
@@ -324,7 +321,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         if (!lvs.empty())
             cols = lvs.at(0).get_sample().value().size();
         Eigen::MatrixXd chain(lvs.size(), cols);
-        for (Eigen::Index i{0}; i < lvs.size(); i++) {
+        for (Eigen::Index i{0}; i < lvs.size(); ++i) {
             // Check that the samples exists (since they are optional)
             assert(lvs.at(i).get_sample());
             // Check that the samples have the same size

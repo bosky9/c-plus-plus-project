@@ -10,14 +10,14 @@ TablePrinter::TablePrinter(const std::vector<std::tuple<std::string, std::string
         // try_emplace should append a new key:value pair. If key already exists, no insert
         std::stringstream sshe;
         sshe << std::get<0>(f);
-        for (int i = 1; i < std::get<2>(f); i++)
+        for (int i = 1; i < std::get<2>(f); ++i)
             sshe << " ";
         _head.try_emplace(std::get<1>(f), sshe.str());
 
 
         if (!ul.empty()) {
             std::stringstream ulss;
-            for (int i = 0; i < std::get<2>(f); i++)
+            for (int i{0}; i < std::get<2>(f); ++i)
                 ulss << ul;
             _ul.try_emplace(std::get<1>(f), ulss.str());
         } else
@@ -58,8 +58,7 @@ std::string TablePrinter::row(const T& data) {
     return std::move(str_to_return);
 }
 
-std::string
-TablePrinter::operator()(const std::list<std::map<std::string /*key*/, std::string>>& dataList) {
+std::string TablePrinter::operator()(const std::list<std::map<std::string /*key*/, std::string>>& dataList) {
     std::list<std::string> res;
     for (auto const& dl : dataList)
         res.push_back(row(dl));

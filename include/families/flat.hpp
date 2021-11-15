@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "Eigen/Core"
-#include "families/family.hpp"
-#include <memory>
+#include "families/family.hpp" // Family
+
+#include <memory> // std::unique_ptr
 
 /**
  * @class Flat flat.hpp
@@ -21,30 +21,6 @@ public:
      * @param transform Whether to apply a transformation - e.g. 'exp' or '_logit'
      */
     explicit Flat(const std::string& transform = "");
-
-    /**
-     * @brief Copy constructor for Flat distribution
-     * @param flat A Flat object
-     */
-    Flat(const Flat& flat);
-
-    /**
-     * @brief Move constructor for Flat distribution
-     * @param flat A Flat object
-     */
-    Flat(Flat&& flat) noexcept;
-
-    /**
-     * @brief Assignment operator for Flat distribution
-     * @param flat A Flat object
-     */
-    Flat& operator=(const Flat& flat);
-
-    /**
-     * @brief Move assignment operator for Flat distribution
-     * @param flat A Flat object
-     */
-    Flat& operator=(Flat&& flat) noexcept;
 
     /**
      * @brief Equal operator for Flat

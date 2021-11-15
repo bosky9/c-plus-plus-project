@@ -1,12 +1,16 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include "inference/bbvi.hpp"
+
+#include "catch2/catch_test_macros.hpp"
+#include "families/normal.hpp"
+#include "inference/bbvi_routines.hpp"
+#include "multivariate_normal.hpp"
+
 TEST_CASE("Create a BBVI object", "[BBVI]") {
     std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior =
             [](const Eigen::VectorXd& v, std::optional<size_t> = std::nullopt) { return v[0]; };
     std::vector<std::unique_ptr<Family>> q;
     q.push_back(std::make_unique<Normal>(Normal()));
-    BBVI bbvi1             = BBVI(neg_posterior, q, 3, "ADAM", 100, 0.01, false, false);
+    BBVI bbvi1 = BBVI(neg_posterior, q, 3, "ADAM", 100, 0.01, false, false);
     BBVI bbvi2{bbvi1};
     REQUIRE(bbvi2 == bbvi1);
     BBVI bbvi3{std::move(bbvi1)};
@@ -35,7 +39,6 @@ TEST_CASE("Change parameters to BBVI object", "[change_parameters, current_param
     q[1]->vi_change_param(0, 2.0);
     q[1]->vi_change_param(1, 1.0);
     REQUIRE(bbvi.current_parameters() == params);
-
 }
 
 TEST_CASE("Compute cv_gradient", "[cv_gradient]") {
@@ -44,8 +47,8 @@ TEST_CASE("Compute cv_gradient", "[cv_gradient]") {
     std::vector<std::unique_ptr<Family>> q;
     q.push_back(std::make_unique<Normal>(Normal()));
     q.push_back(std::make_unique<Normal>(Normal()));
-    int sims               = 3;
-    BBVI bbvi              = BBVI(neg_posterior, q, sims);
+    int sims  = 3;
+    BBVI bbvi = BBVI(neg_posterior, q, sims);
 
     Eigen::MatrixXd z          = Eigen::MatrixXd::Identity(2, sims);
     Eigen::MatrixXd z_t        = z.transpose();
@@ -54,13 +57,13 @@ TEST_CASE("Compute cv_gradient", "[cv_gradient]") {
     Eigen::MatrixXd grad_log_q = bbvi.grad_log_q(z);
     log_q                      = log_q.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
     Eigen::MatrixXd gradient(grad_log_q.rows(), sims);
-    for (Eigen::Index i = 0; i < gradient.rows(); i++)
+    for (Eigen::Index i{0}; i < gradient.rows(); ++i)
         gradient.row(i) = grad_log_q.row(i).array() * (log_p - log_q).transpose().array();
     Eigen::VectorXd alpha0 = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(bbvi.get_approx_param_no().sum()));
-    alpha_recursion(alpha0, grad_log_q, gradient, static_cast<size_t>(bbvi.get_approx_param_no().sum()));
+    bbvi_routines::alpha_recursion(alpha0, grad_log_q, gradient, static_cast<size_t>(bbvi.get_approx_param_no().sum()));
     double var = pow((grad_log_q.array() - grad_log_q.mean()).abs(), 2).mean();
     Eigen::MatrixXd sub(gradient.cols(), gradient.rows());
-    for (Eigen::Index i = 0; i < sub.rows(); i++)
+    for (Eigen::Index i{0}; i < sub.rows(); ++i)
         sub.row(i) = (alpha0.transpose().array() / var) * grad_log_q.transpose().row(i).array();
     Eigen::MatrixXd vectorized = gradient - sub.transpose();
 
@@ -70,11 +73,11 @@ TEST_CASE("Compute cv_gradient", "[cv_gradient]") {
                                             bbvi.get_learning_rate(), 0.99);
     log_q       = bbvi.normal_log_q(z_t, false);
     log_q       = log_q.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
-    for (Eigen::Index i = 0; i < gradient.rows(); i++)
+    for (Eigen::Index i{0}; i < gradient.rows(); ++i)
         gradient.row(i) = grad_log_q.row(i).array() * (log_p - log_q).transpose().array();
-    alpha_recursion(alpha0, grad_log_q, gradient, static_cast<size_t>(bbvi.get_approx_param_no().sum()));
+    bbvi_routines::alpha_recursion(alpha0, grad_log_q, gradient, static_cast<size_t>(bbvi.get_approx_param_no().sum()));
     var = pow((grad_log_q.array() - grad_log_q.mean()).abs(), 2).mean();
-    for (Eigen::Index i = 0; i < sub.rows(); i++)
+    for (Eigen::Index i{0}; i < sub.rows(); ++i)
         sub.row(i) = (alpha0.transpose().array() / var) * grad_log_q.transpose().row(i).array();
     vectorized = gradient - sub.transpose();
     REQUIRE(bbvi.cv_gradient(z, false) == vectorized.rowwise().mean());
@@ -155,8 +158,7 @@ TEST_CASE("Compute the gradient of the approximating distributions", "[grad_log_
     for (size_t core_param = 0; core_param < q.size(); core_param++) {
         for (size_t approx_param = 0; approx_param < q[core_param]->get_param_no(); approx_param++) {
             Eigen::VectorXd temp_z = z.row(static_cast<Eigen::Index>(core_param));
-            grad.row(param_count)  =
-                    dynamic_cast<Normal*>(q[core_param].get())->vi_score(temp_z, approx_param);
+            grad.row(param_count)  = dynamic_cast<Normal*>(q[core_param].get())->vi_score(temp_z, approx_param);
             param_count++;
         }
     }
@@ -174,7 +176,7 @@ TEST_CASE("Compute the unnormalized log posterior components", "[log_p]") {
     BBVI bbvi = BBVI(neg_posterior, q, sims);
 
     Eigen::MatrixXd z = Eigen::MatrixXd::Identity(2, sims);
-    REQUIRE(bbvi.log_p(z) == log_p_posterior(z, neg_posterior));
+    REQUIRE(bbvi.log_p(z) == bbvi_routines::log_p_posterior(z, neg_posterior));
 }
 
 TEST_CASE("Compute the mean-field normal log posterior components", "[normal_log_q]") {
@@ -247,7 +249,7 @@ TEST_CASE("Run", "[run, run_with]") {
     Eigen::VectorXd stored_predictive_likelihood = Eigen::VectorXd::Zero(iterations);
     Eigen::VectorXd elbo_records                 = Eigen::VectorXd::Zero(iterations);
 
-    for (Eigen::Index i = 0; i < iterations; i++) {
+    for (Eigen::Index i{0}; i < iterations; ++i) {
         Eigen::MatrixXd x = bbvi.draw_normal();
         gradient          = bbvi.cv_gradient(x, false);
         Eigen::VectorXd optim_parameters{bbvi._optim->update(gradient)};
@@ -267,7 +269,7 @@ TEST_CASE("Run", "[run, run_with]") {
     final_parameters = final_parameters / static_cast<double>(final_samples);
     bbvi.change_parameters(final_parameters);
     std::vector<double> means, ses;
-    for (Eigen::Index i = 0; i < final_parameters.size(); i++) {
+    for (Eigen::Index i{0}; i < final_parameters.size(); ++i) {
         if (i % 2 == 0)
             means.push_back(final_parameters[i]);
         else
@@ -319,7 +321,7 @@ TEST_CASE("Compute the unnormalized log posterior components (for CBBVI)", "[log
 
     Eigen::MatrixXd z = Eigen::MatrixXd::Identity(2, sims);
     Eigen::MatrixXd result(2, sims);
-    for (Eigen::Index i = 0; i < 2; i++)
+    for (Eigen::Index i{0}; i < 2; ++i)
         result.row(i) = log_p_blanket(static_cast<Eigen::VectorXd>(z.row(i)));
     REQUIRE(cbbvi.log_p(z) == result);
 }
@@ -353,8 +355,8 @@ TEST_CASE("Compute cv_gradient (for CBBVI)", "[cv_gradient]") {
     q.push_back(std::make_unique<Normal>(Normal()));
     q.push_back(std::make_unique<Normal>(Normal()));
 
-    int sims               = 3;
-    CBBVI cbbvi            = CBBVI(neg_posterior, log_p_blanket, q, sims);
+    int sims    = 3;
+    CBBVI cbbvi = CBBVI(neg_posterior, log_p_blanket, q, sims);
 
     Eigen::MatrixXd z          = Eigen::MatrixXd::Identity(2, sims);
     Eigen::MatrixXd z_t        = z.transpose();
@@ -367,10 +369,11 @@ TEST_CASE("Compute cv_gradient (for CBBVI)", "[cv_gradient]") {
     Eigen::MatrixXd gradient = grad_log_q.array() * sub_log.array();
 
     Eigen::VectorXd alpha0 = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(cbbvi.get_approx_param_no().sum()));
-    alpha_recursion(alpha0, grad_log_q, gradient, static_cast<size_t>(cbbvi.get_approx_param_no().sum()));
+    bbvi_routines::alpha_recursion(alpha0, grad_log_q, gradient,
+                                   static_cast<size_t>(cbbvi.get_approx_param_no().sum()));
     double var = pow((grad_log_q.array() - grad_log_q.mean()).abs(), 2).mean();
     Eigen::MatrixXd sub(gradient.cols(), gradient.rows());
-    for (Eigen::Index i = 0; i < sub.rows(); i++)
+    for (Eigen::Index i{0}; i < sub.rows(); ++i)
         sub.row(i) = (alpha0.transpose().array() / var) * grad_log_q.transpose().row(i).array();
     Eigen::MatrixXd vectorized = gradient - sub.transpose();
 
@@ -381,9 +384,10 @@ TEST_CASE("Compute cv_gradient (for CBBVI)", "[cv_gradient]") {
     log_q        = cbbvi.normal_log_q(z_t, false);
     sub_log << (log_p - log_q).transpose(), (log_p - log_q).transpose();
     gradient = grad_log_q.array() * sub_log.array();
-    alpha_recursion(alpha0, grad_log_q, gradient, static_cast<size_t>(cbbvi.get_approx_param_no().sum()));
+    bbvi_routines::alpha_recursion(alpha0, grad_log_q, gradient,
+                                   static_cast<size_t>(cbbvi.get_approx_param_no().sum()));
     var = pow((grad_log_q.array() - grad_log_q.mean()).abs(), 2).mean();
-    for (Eigen::Index i = 0; i < sub.rows(); i++)
+    for (Eigen::Index i{0}; i < sub.rows(); ++i)
         sub.row(i) = (alpha0.transpose().array() / var) * grad_log_q.transpose().row(i).array();
     vectorized = gradient - sub.transpose();
     REQUIRE(cbbvi.cv_gradient(z, false) == vectorized.rowwise().mean());
@@ -421,7 +425,7 @@ TEST_CASE("Compute the unnormalized log posterior components (for BVVIM)", "[log
     BBVIM bbvim = BBVIM(neg_posterior, full_neg_posterior, q, sims);
 
     Eigen::MatrixXd z = Eigen::MatrixXd::Identity(2, sims);
-    REQUIRE(bbvim.log_p(z) == mb_log_p_posterior(z, neg_posterior, 2));
+    REQUIRE(bbvim.log_p(z) == bbvi_routines::mb_log_p_posterior(z, neg_posterior, 2));
 }
 
 TEST_CASE("Get ELBO (for BBVIM)", "[get_elbo]") {
@@ -455,7 +459,7 @@ TEST_CASE("Print progress (for BBVIM)", "[print_progress]") {
                                           bbvim.get_learning_rate(), 0.9, 0.999);
 
     Eigen::VectorXd current_params = Eigen::Vector2d::Ones();
-    //bbvim.print_progress(2, current_params);
+    // bbvim.print_progress(2, current_params);
 }
 
 TEST_CASE("Run (for BBVIM)", "[run, run_with]") {
@@ -480,7 +484,7 @@ TEST_CASE("Run (for BBVIM)", "[run, run_with]") {
     Eigen::VectorXd stored_predictive_likelihood = Eigen::VectorXd::Zero(iterations);
     Eigen::VectorXd elbo_records                 = Eigen::VectorXd::Zero(iterations);
 
-    for (Eigen::Index i = 0; i < iterations; i++) {
+    for (Eigen::Index i{0}; i < iterations; ++i) {
         Eigen::MatrixXd x = bbvim.draw_normal();
         gradient          = bbvim.cv_gradient(x, false);
         Eigen::VectorXd optim_parameters{bbvim._optim->update(gradient)};
@@ -500,7 +504,7 @@ TEST_CASE("Run (for BBVIM)", "[run, run_with]") {
     final_parameters = final_parameters / static_cast<double>(final_samples);
     bbvim.change_parameters(final_parameters);
     std::vector<double> means, ses;
-    for (Eigen::Index i = 0; i < final_parameters.size(); i++) {
+    for (Eigen::Index i{0}; i < final_parameters.size(); ++i) {
         if (i % 2 == 0)
             means.push_back(final_parameters[i]);
         else
