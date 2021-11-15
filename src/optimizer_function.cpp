@@ -1,6 +1,8 @@
 #include "optimizer_function.hpp"
 
-#include <iostream>
+#include "Eigen/Core"
+
+#include <functional>
 
 OptimizerFunction::OptimizerFunction(std::function<double(Eigen::VectorXd)> function)
     : _function{std::move(function)} {}
@@ -10,7 +12,7 @@ double OptimizerFunction::operator()(const Eigen::VectorXd& beta, Eigen::VectorX
     Eigen::VectorXd beta_temp_plus  = beta;
     Eigen::VectorXd beta_temp_minus = beta;
 
-    for (int i = 0; i < beta.size(); i++) {
+    for (int64_t i{0}; i < beta.size(); i++) {
         // Init h
         double h;
         if (beta[i] != 0) {

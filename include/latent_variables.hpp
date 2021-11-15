@@ -1,17 +1,15 @@
 #pragma once
 
-#include "covariances.hpp"
+#include "Eigen/Core"
 #include "families/family.hpp"
-#include "headers.hpp"
 #include "matplotlibcpp.hpp"
-#include "multivariate_normal.hpp"
-#include "output/tableprinter.hpp"
 
-#include <list>
+#include <functional>
 #include <map>
-#include <numeric>
+#include <memory>
 #include <optional>
-#include <tuple>
+#include <ostream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -182,6 +180,7 @@ private:
 };
 
 /**
+ * @class LatentVariables latent_variables.hpp
  * @brief Class that represents a list of latent variables.
  * Holds latent variable objects and contains method for latent variable manipulation. Latent variables are
  * referred to as z as shorthand. This is convention in much of the literature.

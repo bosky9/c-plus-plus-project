@@ -1,7 +1,27 @@
 #include "latent_variables.hpp"
 
+#include "covariances.hpp"
+#include "Eigen/Core"
+#include "families/family.hpp"
 #include "families/normal.hpp"
+#include "matplotlibcpp.hpp"
+#include "multivariate_normal.hpp"
+#include "output/tableprinter.hpp"
 #include "utilities.hpp"
+
+#include <algorithm>
+#include <functional>
+#include <list>
+#include <map>
+#include <cmath>
+#include <memory>
+#include <numeric>
+#include <optional>
+#include <ostream>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 LatentVariable::LatentVariable(const std::string& name, const Family& prior, const Family& q)
     : _name{name}, _prior{prior.clone()}, _index{0},

@@ -1,6 +1,8 @@
 #include "tsm.hpp"
 
+#include "families/normal.hpp"
 #include "optimizer_function.hpp"
+#include "utilities.hpp"
 
 #include <lbfgspp/LBFGS.h>
 
