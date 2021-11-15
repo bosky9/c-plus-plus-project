@@ -2,11 +2,12 @@
 
 #define _USE_MATH_DEFINES
 
-#include <Eigen/Eigenvalues>
-#include <chrono>
-#include <cmath>
-#include <random>
+#include "Eigen/Core"
 
+/**
+ * @class Mvn multivariate_normal.hpp
+ * @brief Class that represents a multivariate normal distribution
+ */
 class Mvn final {
 public:
     Eigen::VectorXd _mean;
@@ -17,7 +18,7 @@ public:
      * @param mu Vector of means
      * @param s Matrix of scales
      */
-    Mvn(Eigen::VectorXd mu, const Eigen::MatrixXd& s);
+    Mvn(const Eigen::VectorXd& mu, const Eigen::MatrixXd& s);
 
     /**
      * @brief Compute the PDF (Probabilty Density Function) of the distribution
@@ -31,7 +32,7 @@ public:
      * @param nr_iterations Number of iterations
      * @return Random sample from the distribution
      */
-    [[nodiscard]] Eigen::VectorXd sample(unsigned int nr_iterations = 20) const;
+    [[nodiscard]] Eigen::VectorXd sample(int64_t nr_iterations = 20) const;
 
     // The following field are used as mathematical formulas, and are independent from the class itself.
 
@@ -51,7 +52,6 @@ public:
      */
     static Eigen::VectorXd pdf(const Eigen::VectorXd& x, double mean = 0.0, double sigma = 1.0);
 
-    // @TODO: Consider a template approach (but how?)
     /**
      * @brief Compute the logpdf of a normal distribution (like scipy.stats.norm.logpdf)
      * @param x Vector of indexes
@@ -112,7 +112,7 @@ public:
      * @param n Number of values to generate
      * @return Vector of random values
      */
-    [[nodiscard]] static Eigen::VectorXd random(double mean, double scale, size_t n);
+    [[nodiscard]] static Eigen::VectorXd random(double mean, double scale, int64_t n);
 
     /**
      * @brief Generate random values from a normal distribution
@@ -121,7 +121,7 @@ public:
      * @param n Number of values to generate
      * @return Vector of random values
      */
-    [[nodiscard]] static Eigen::VectorXd random(Eigen::VectorXd mean, double scale, size_t n);
+    [[nodiscard]] static Eigen::VectorXd random(const Eigen::VectorXd& mean, double scale, int64_t n);
 
     /**
      * @brief Generate random values from a normal distribution
@@ -130,5 +130,5 @@ public:
      * @param n Number of values to generate
      * @return Vector of random values
      */
-    [[nodiscard]] static Eigen::MatrixXd random(Eigen::VectorXd mean, Eigen::VectorXd scale, size_t n);
+    [[nodiscard]] static Eigen::MatrixXd random(const Eigen::VectorXd& mean, const Eigen::VectorXd& scale, int64_t n);
 };
