@@ -165,7 +165,7 @@ public:
      * @brief Sets a new family object in q
      * @param family Family object
      */
-    void set_q(std::shared_ptr<Family> q);
+    void set_q(const Family& q);
 
 private:
     std::string _name;                        ///< Name of the latent variable
@@ -174,7 +174,7 @@ private:
     std::function<double(double)> _transform; ///< The transform function of the prior
     double _start;                            ///< Starting value
     std::shared_ptr<Family> _q; ///< The variational distribution for the latent variable, e.g. Normal(0,1)
-    // TODO: I seguenti attributi non sono dichiarati nella classe Python ma usati in LatentVariables
+    // The following attributes aren't declared in Python code but used in LatentVariables class
     std::string _method;
     std::optional<double> _value           = std::nullopt;
     std::optional<double> _std             = std::nullopt;
@@ -210,7 +210,7 @@ public:
      * @param q Which distribution to use for variational approximation
      * @param index Whether to index the variable in the z_indices dictionary
      */
-    void add_z(const std::string& name, Family* prior, Family* q, bool index = true);
+    void add_z(const std::string& name, const Family& prior, const Family& q, bool index = true);
 
     /**
      * @brief Creates multiple latent variables
@@ -261,7 +261,7 @@ public:
      *          At position 0 -> [6 (total) / 1] = 6, init
      *          At position 1 -> [6 (previous value)/ 3  (previous num of dims)] = 2
      */
-    void create(const std::string& name, const std::vector<size_t>& dim, Family& q, Family& prior);
+    void create(const std::string& name, const std::vector<size_t>& dim, const Family& q, const Family& prior);
 
     /**
      * @brief Adjusts priors for the latent variables in _z_list
@@ -395,6 +395,6 @@ private:
     std::string _model_name;                                         ///< Model's name
     std::vector<LatentVariable> _z_list;                             ///< List of latent variables, as a std::vector
     std::map<std::string, std::map<std::string, size_t>> _z_indices; ///< Info about latent variables
-    bool _estimated                               = false;           ///<
-    std::optional<std::string> _estimation_method = std::nullopt;    ///<
+    bool _estimated                               = false;           ///< Status of the latent variables estimation
+    std::optional<std::string> _estimation_method = std::nullopt;    ///< Method of the latent variables estimation
 };

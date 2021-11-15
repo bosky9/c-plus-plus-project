@@ -77,7 +77,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     _latent_variables.set_z_values(data.final_means, "BBVI", data.final_ses);
 
     for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++)
-        _latent_variables.get_z_list()[i].set_q(data.q[i]->clone());
+        _latent_variables.get_z_list()[i].set_q(*data.q[i]->clone().get());
 
     _latent_variables.set_estimation_method("BBVI");
 

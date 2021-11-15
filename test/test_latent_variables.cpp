@@ -9,7 +9,8 @@
 TEST_CASE("LatentVariable creation", "[LatentVariable]") {
     Normal prior{0, 3};
     Normal q{0, 3};
-    LatentVariable lv{"Constant", prior, q};
+    std::string name = "Constant";
+    LatentVariable lv{name, prior, q};
 
     SECTION("Get methods") {
         REQUIRE(lv.get_name() == "Constant");
@@ -45,7 +46,8 @@ TEST_CASE("LatentVariable creation", "[LatentVariable]") {
 TEST_CASE("Plot latent variable", "[plot_z]") {
     Normal prior{};
     Normal q{};
-    LatentVariable lv{"Constant", prior, q};
+    std::string name = "Constant";
+    LatentVariable lv{name, prior, q};
     lv.set_sample(Eigen::Vector3d{1, 2, 3});
     lv.plot_z(600, 400);
 }

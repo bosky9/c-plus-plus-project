@@ -4,10 +4,8 @@
 #include "utilities.hpp"
 
 LatentVariable::LatentVariable(const std::string& name, const Family& prior, const Family& q)
-: _name{name}, _prior{prior.clone()}, _index{0},
-_transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
-
-
+    : _name{name}, _prior{prior.clone()}, _index{0},
+      _transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
 
 LatentVariable::LatentVariable(const LatentVariable& lv)
     : _name{lv.get_name()}, _index{lv._index}, _prior{lv.get_prior()},
@@ -166,17 +164,15 @@ void LatentVariable::set_sample(const Eigen::VectorXd& sample) {
     _sample = sample;
 }
 
-void LatentVariable::set_q(std::shared_ptr<Family> q) {
-    _q = (q->clone());
+void LatentVariable::set_q(const Family& q) {
+    _q = (q.clone());
 }
 
 LatentVariables::LatentVariables(const std::string& model_name)
     : _model_name{model_name}, _z_list{}, _z_indices{} {}
 
-
 inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs) {
     std::vector<std::string> z_names{lvs.get_z_names()};
-    // std::vector<Family*> priors{lvs.get_z_priors()};
     std::pair<std::vector<std::string>, std::vector<std::string>> z_priors_names{lvs.get_z_priors_names()};
     std::vector<std::string> prior_names{z_priors_names.first};
     std::vector<std::string> prior_z_names{z_priors_names.second};
@@ -201,14 +197,14 @@ inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs
     return stream;
 }
 
-void LatentVariables::add_z(const std::string& name, Family* prior, Family* q, bool index) {
-    LatentVariable lv{name, *prior, *q};
+void LatentVariables::add_z(const std::string& name, const Family& prior, const Family& q, bool index) {
+    LatentVariable lv{name, prior, q};
     _z_list.push_back(std::move(lv));
     if (index)
         _z_indices[name] = {{"start", _z_list.size() - 1}, {"end", _z_list.size() - 1}};
 }
 
-void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, Family& q, Family& prior) {
+void LatentVariables::create(const std::string& name, const std::vector<size_t>& dim, const Family& q, const Family& prior) {
     // Initialize indices vector
     // tot size of elements (it's a tree in Python)
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
@@ -234,7 +230,7 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
     size_t starting_index = _z_list.size();
     _z_indices[name] = {{"start", starting_index}, {"end", starting_index + indices.size() - 1}, {"dim", dim.size()}};
     for (const std::string& index : indices)
-        add_z(name + " " + index, &prior, &q, false);
+        add_z(name + " " + index, prior, q, false);
 }
 
 void LatentVariables::adjust_prior(const std::vector<int64_t>& index, const Family& prior) {
@@ -368,7 +364,7 @@ void LatentVariables::set_z_starting_value(size_t index, double value) {
 void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width, size_t height,
                              const std::string& loc) const {
     plt::figure_size(width, height);
-    for (int64_t z = 0; z < _z_list.size(); z++) {
+    for (int64_t z{0}; z < _z_list.size(); z++) {
         assert(!_z_list[z].get_sample().has_value() ||
                !(_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value()) &&
                        "No information on latent variable to plot!");
@@ -411,12 +407,13 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
 void LatentVariables::trace_plot(size_t width, size_t height) {
     assert(_z_list[0].get_sample().has_value() && "No samples to plot!");
     plt::figure_size(width, height);
+    // A color name based plot is used instead of a RGB color based plot
     std::vector<std::string> palette{"royalblue",    "mediumseagreen", "chocolate",
                                      "mediumpurple", "goldenrod",      "skyblue"};
 
-    for (int64_t i = 0; i < _z_list.size(); i++) {
+    for (int64_t i{0}; i < _z_list.size(); i++) {
         Eigen::VectorXd chain{_z_list[i].get_sample().value()};
-        for (int64_t j = 0; j < 4; j++) {
+        for (int64_t j{0}; j < 4; j++) {
             int64_t iteration = i * 4 + j + 1;
             plt::subplot(static_cast<long>(_z_list.size()), 4, static_cast<long>(iteration));
             if (iteration >= 1 && iteration <= _z_list.size() * 4 + 1) {
