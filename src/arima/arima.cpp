@@ -1,5 +1,7 @@
 #include "arima/arima.hpp"
 
+#include <random>
+
 ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, const Family& family) : TSM{"ARIMA"} {
     // Latent Variable information
     _ar                 = ar;

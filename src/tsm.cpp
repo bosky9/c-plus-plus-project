@@ -1,8 +1,12 @@
 #include "tsm.hpp"
 
+#include "families/normal.hpp"
+#include "lbfgspp/LBFGS.h"
 #include "optimizer_function.hpp"
+#include "utilities.hpp"
 
-#include <lbfgspp/LBFGS.h>
+#include <chrono>
+#include <random>
 
 constexpr unsigned int str2int(const char* str, int h = 0)
 {

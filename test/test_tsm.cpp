@@ -3,6 +3,8 @@
 #include "arima/arima.hpp"
 #include "tsm.hpp"
 
+#include <random>
+
 TEST_CASE("Tests an ARIMA model", "[TSM]") {
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(0, 1);
