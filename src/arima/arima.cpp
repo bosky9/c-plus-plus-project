@@ -58,7 +58,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _z_no        = _latent_variables.get_z_list().size();
 
     // If Normal family is selected, we use faster likelihood functions
-    if (isinstance<Normal>(_family.get())) {
+    if ("Normal" ==_family->get_name()) {
         _model         = {[this](const Eigen::VectorXd& x) { return normal_model(x); }};
         _mb_model      = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_normal_model(x, mb); }};
         _neg_loglik    = {[this](const Eigen::VectorXd& x) { return normal_neg_loglik(x); }};
@@ -102,7 +102,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ,
 
     _x = ar_matrix();
     create_latent_variables();
-
+    _family.reset();
     _family = (family.clone());
     FamilyAttributes fa = family.setup();
     _model_name2        = fa.name;
@@ -133,7 +133,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ,
     _z_no        = _latent_variables.get_z_list().size();
 
     // If Normal family is selected, we use faster likelihood functions
-    if (isinstance<Normal>(_family.get())) {
+    if ("Normal" ==_family->get_name()) {
         _model         = {[this](const Eigen::VectorXd& x) { return normal_model(x); }};
         _mb_model      = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_normal_model(x, mb); }};
         _neg_loglik    = {[this](const Eigen::VectorXd& x) { return normal_neg_loglik(x); }};
@@ -702,7 +702,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
         std::iota(index.begin(), index.end(), 0);
-        ARIMA x{data_original_t, _ar, _ma, _integ, *_family->clone()};
+        ARIMA x{data_original_t, _ar, _ma, _integ, *_family};
         if (!fit_once) {
             Results* temp_r = x.fit(fit_method);
             delete temp_r;

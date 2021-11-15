@@ -68,7 +68,7 @@ private:
     std::vector<double> _data_original;
     size_t _data_length;
     Eigen::MatrixXd _x;
-    std::shared_ptr<Family> _family; ///< E.g. Normal()
+    std::unique_ptr<Family> _family; ///< E.g. Normal()
     std::function<double(double)> _link;
     bool _scale;
     bool _shape;

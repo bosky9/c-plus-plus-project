@@ -119,7 +119,7 @@ public:
      *          calls this function. This is needed in other classes, namely LatenVariable and TSM, in order to return a
      *          deep copy of some family object.
      */
-    [[nodiscard]] virtual std::shared_ptr<Family> clone() const;
+    [[nodiscard]] virtual std::unique_ptr<Family> clone() const;
 
     /**
      * @brief Draws random variables from this distribution with new latent variables

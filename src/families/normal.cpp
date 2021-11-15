@@ -12,7 +12,15 @@
 Normal::Normal(double mu, double sigma, const std::string& transform)
     : Family{transform}, _mu0{mu}, _sigma0{sigma}, _param_no{2}, _covariance_prior{false} {}
 
-Normal::Normal(const Normal& normal) = default;
+Normal::Normal(const Normal& normal){
+        _mu0 = normal._mu0;
+        _sigma0 = normal._sigma0;
+        _param_no = normal._param_no;
+        _covariance_prior = normal._covariance_prior;
+        _transform_name = normal._transform_name;
+        _itransform_name = normal._itransform_name;
+        _transform = normal._transform;
+};
 
 Normal::Normal(Normal&& normal) noexcept = default;
 
@@ -151,6 +159,6 @@ std::string Normal::get_z_name() const {
 // Clone function
 // ------------------------------------------------------------------------------------------------------
 
-std::shared_ptr<Family>  Normal::clone() const {
+std::unique_ptr<Family>  Normal::clone() const {
     return std::make_unique<Normal>(*this);
 }

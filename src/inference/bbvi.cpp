@@ -2,30 +2,45 @@
 
 BBVI::BBVI() = default;
 
-BBVI::BBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior, std::vector<std::shared_ptr<Family>>& q,
+BBVI::BBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior, std::vector<std::unique_ptr<Family>>& q,
            size_t sims, std::string optimizer, size_t iterations, double learning_rate, bool record_elbo,
            bool quiet_progress)
-    : _neg_posterior{std::move(neg_posterior)}, _q{q}, _sims{sims}, _printer{true}, _optimizer{std::move(optimizer)},
-      _iterations{iterations}, _learning_rate{learning_rate}, _record_elbo{record_elbo}, _quiet_progress{
-                                                                                                 quiet_progress} {
+    : _neg_posterior{std::move(neg_posterior)}, _sims{sims}, _printer{true}, _optimizer{std::move(optimizer)},
+      _iterations{iterations}, _learning_rate{learning_rate}, _record_elbo{record_elbo}, _quiet_progress{quiet_progress} {
+
+    _q.resize(q.size());
+    for(int64_t i{0}; i < _q.size(); i++)
+        _q[i] = q[i]->clone();
+
     _approx_param_no = Eigen::VectorXd(_q.size());
+
     for (Eigen::Index i{0}; i < _q.size(); i++) {
         _approx_param_no[i] = _q[i]->get_param_no();
     }
 }
 
 BBVI::BBVI(const BBVI& bbvi)
-    : _neg_posterior{bbvi._neg_posterior}, _q{bbvi._q}, _sims{bbvi._sims}, _printer{bbvi._printer},
+    : _neg_posterior{bbvi._neg_posterior}, _sims{bbvi._sims}, _printer{bbvi._printer},
       _optimizer{bbvi._optimizer}, _iterations{bbvi._iterations}, _learning_rate{bbvi._learning_rate},
       _record_elbo{bbvi._record_elbo}, _quiet_progress{bbvi._quiet_progress}, _approx_param_no{bbvi._approx_param_no} {
+
+    _q.resize(bbvi._q.size());
+    for(int64_t i{0}; i < bbvi._q.size(); i++)
+        _q[i] = bbvi._q[i]->clone();
+
     if (bbvi._optim != nullptr)
         _optim.reset(bbvi._optim.get());
 }
 
 BBVI::BBVI(BBVI&& bbvi) noexcept
-    : _neg_posterior{bbvi._neg_posterior}, _q{bbvi._q}, _sims{bbvi._sims}, _printer{bbvi._printer},
+    : _neg_posterior{bbvi._neg_posterior}, _sims{bbvi._sims}, _printer{bbvi._printer},
       _optimizer{bbvi._optimizer}, _iterations{bbvi._iterations}, _learning_rate{bbvi._learning_rate},
       _record_elbo{bbvi._record_elbo}, _quiet_progress{bbvi._quiet_progress}, _approx_param_no{bbvi._approx_param_no} {
+
+    _q.resize(bbvi._q.size());
+    for(int64_t i{0}; i < bbvi._q.size(); i++)
+        _q[i] = bbvi._q[i]->clone();
+
     if (bbvi._optim != nullptr)
         _optim.reset(bbvi._optim.get());
     bbvi._neg_posterior = {};
@@ -45,7 +60,9 @@ BBVI& BBVI::operator=(const BBVI& bbvi) {
     if (this == &bbvi)
         return *this;
     _neg_posterior   = bbvi._neg_posterior;
-    _q               = bbvi._q;
+    _q.resize(bbvi._q.size());
+    for(int64_t i{0}; i < bbvi._q.size(); i++)
+        _q[i] = bbvi._q[i]->clone();
     _sims            = bbvi._sims;
     _printer         = bbvi._printer;
     _optimizer       = bbvi._optimizer;
@@ -61,7 +78,9 @@ BBVI& BBVI::operator=(const BBVI& bbvi) {
 
 BBVI& BBVI::operator=(BBVI&& bbvi) noexcept {
     _neg_posterior   = bbvi._neg_posterior;
-    _q               = bbvi._q;
+    _q.resize(bbvi._q.size());
+    for(int64_t i{0}; i < bbvi._q.size(); i++)
+        _q[i] = bbvi._q[i]->clone();
     _sims            = bbvi._sims;
     _printer         = bbvi._printer;
     _optimizer       = bbvi._optimizer;
@@ -317,10 +336,13 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(Eigen::Vect
     if (!_quiet_progress)
         std::cout << "\nFinal model ELBO is " << -neg_posterior(final_means) - create_normal_logq(final_means) << "\n";
 
+    std::vector<std::unique_ptr<Family>> temp_q(_q.size());
+    for(int64_t i{0}; i < _q.size(); i++)
+        temp_q[i] = _q[i]->clone();
     if (store) {
-        return {_q, final_means, final_ses, elbo_records, stored_means, stored_predictive_likelihood};
+        return {std::move(temp_q), final_means, final_ses, elbo_records, stored_means, stored_predictive_likelihood};
     }
-    return {_q, final_means, final_ses, elbo_records, {}, {}};
+    return {std::move(temp_q), final_means, final_ses, elbo_records, {}, {}};
 }
 
 BBVIReturnData BBVI::run(bool store) {
@@ -331,7 +353,7 @@ BBVIReturnData BBVI::run(bool store) {
 }
 
 CBBVI::CBBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior,
-             std::function<Eigen::VectorXd(Eigen::VectorXd)> log_p_blanket, std::vector<std::shared_ptr<Family>>& q, size_t sims,
+             std::function<Eigen::VectorXd(Eigen::VectorXd)> log_p_blanket, std::vector<std::unique_ptr<Family>>& q, size_t sims,
              std::string optimizer, size_t iterations, double learning_rate, bool record_elbo, bool quiet_progress)
     : BBVI{std::move(neg_posterior),
            q,
@@ -353,7 +375,9 @@ CBBVI& CBBVI::operator=(const CBBVI& cbbvi) {
     if (this == &cbbvi)
         return *this;
     _neg_posterior   = cbbvi._neg_posterior;
-    _q               = cbbvi._q;
+    _q.resize(cbbvi._q.size());
+    for(int64_t i{0}; i < cbbvi._q.size(); i++)
+        _q[i] = cbbvi._q[i]->clone();
     _sims            = cbbvi._sims;
     _printer         = cbbvi._printer;
     _optimizer       = cbbvi._optimizer;
@@ -377,7 +401,9 @@ CBBVI& CBBVI::operator=(const CBBVI& cbbvi) {
 
 CBBVI& CBBVI::operator=(CBBVI&& cbbvi) noexcept {
     _neg_posterior   = cbbvi._neg_posterior;
-    _q               = cbbvi._q;
+    _q.resize(cbbvi._q.size());
+    for(int64_t i{0}; i < cbbvi._q.size(); i++)
+        _q[i] = cbbvi._q[i]->clone();
     _sims            = cbbvi._sims;
     _printer         = cbbvi._printer;
     _optimizer       = cbbvi._optimizer;
@@ -456,7 +482,7 @@ Eigen::VectorXd CBBVI::cv_gradient(Eigen::MatrixXd& z, bool initial) {
 }
 
 BBVIM::BBVIM(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior,
-             std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<std::shared_ptr<Family>>& q, size_t sims,
+             std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<std::unique_ptr<Family>>& q, size_t sims,
              std::string optimizer, size_t iterations, double learning_rate, size_t mini_batch, bool record_elbo,
              bool quiet_progress)
     : BBVI{std::move(neg_posterior),
@@ -481,7 +507,9 @@ BBVIM& BBVIM::operator=(const BBVIM& bbvim) {
     if (this == &bbvim)
         return *this;
     _neg_posterior      = bbvim._neg_posterior;
-    _q                  = bbvim._q;
+    _q.resize(bbvim._q.size());
+    for(int64_t i{0}; i < bbvim._q.size(); i++)
+        _q[i] = bbvim._q[i]->clone();
     _sims               = bbvim._sims;
     _printer            = bbvim._printer;
     _optimizer          = bbvim._optimizer;
@@ -497,7 +525,9 @@ BBVIM& BBVIM::operator=(const BBVIM& bbvim) {
 
 BBVIM& BBVIM::operator=(BBVIM&& bbvim) noexcept {
     _neg_posterior       = bbvim._neg_posterior;
-    _q                   = bbvim._q;
+    _q.resize(bbvim._q.size());
+    for(int64_t i{0}; i < bbvim._q.size(); i++)
+        _q[i] = bbvim._q[i]->clone();
     _sims                = bbvim._sims;
     _printer             = bbvim._printer;
     _optimizer           = bbvim._optimizer;

@@ -283,7 +283,7 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
     _t_median_est                 = Eigen::VectorXd(_chain.rows());
     _t_upper_95_est               = Eigen::VectorXd(_chain.rows());
     _t_lower_5_est                = Eigen::VectorXd(_chain.rows());
-    std::vector<std::shared_ptr<Family>> z_priors = _z.get_z_priors();
+    std::vector<std::unique_ptr<Family>> z_priors = _z.get_z_priors();
     for (Eigen::Index k{0}; k < _chain.rows(); k++) {
         auto transform{z_priors[k]->get_transform()};
         std::transform(_chain.row(k).begin(), _chain.row(k).end(), _t_chain.row(k).begin(),
@@ -416,7 +416,7 @@ BBVISSResults::BBVISSResults(std::vector<std::string> data_name, std::vector<std
     _upper_95_est                 = samp.upper_95_est;
     _lower_5_est                  = samp.lower_95_est;
     _t_chain                      = _chain;
-    std::vector<std::shared_ptr<Family>> z_priors = _z.get_z_priors();
+    std::vector<std::unique_ptr<Family>> z_priors = _z.get_z_priors();
     for (Eigen::Index k{0}; k < _mean_est.size(); k++) {
         //_t_chain(k) = z_priors[k]->get_transform()(_chain(k));
         _t_mean_est(k)     = z_priors[k]->get_transform()(_mean_est(k));
@@ -557,7 +557,7 @@ LaplaceResults::LaplaceResults(std::vector<std::string> data_name, std::vector<s
     _upper_95_est                 = samp.upper_95_est;
     _lower_5_est                  = samp.lower_95_est;
     _t_chain                      = _chain;
-    std::vector<std::shared_ptr<Family>> z_priors = _z.get_z_priors();
+    std::vector<std::unique_ptr<Family>> z_priors = _z.get_z_priors();
     for (Eigen::Index k{0}; k < _mean_est.size(); k++) {
         //_t_chain(k) = z_priors[k]->get_transform()(_chain(k));
         _t_mean_est(k)     = z_priors[k]->get_transform()(_mean_est(k));

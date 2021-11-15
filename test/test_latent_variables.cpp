@@ -30,8 +30,8 @@ TEST_CASE("LatentVariable creation", "[LatentVariable]") {
         REQUIRE(lv.get_start() == 2.0);
         lv.set_method("AR");
         REQUIRE(lv.get_method() == "AR");
-        Flat prior{};
-        lv.set_prior(prior);
+        Flat prior1{};
+        lv.set_prior(prior1);
         REQUIRE(lv.get_prior()->get_name() == "Flat");
         Eigen::Vector3d s{2.0, 5.0, 4.0};
         lv.set_sample(s);

@@ -12,7 +12,7 @@
 #include <utility>
 
 struct BBVIReturnData {
-    std::vector<std::shared_ptr<Family>> q;
+    std::vector<std::unique_ptr<Family>> q;
     Eigen::VectorXd final_means;
     Eigen::VectorXd final_ses;
     Eigen::VectorXd elbo_records;
@@ -26,7 +26,7 @@ struct BBVIReturnData {
 class BBVI {
 protected:
     std::function<double(Eigen::VectorXd, std::optional<size_t>)> _neg_posterior; ///< Posterior function
-    std::vector<std::shared_ptr<Family>> _q;          ///< List holding the distribution objects
+    std::vector<std::unique_ptr<Family>> _q;          ///< List holding the distribution objects
     size_t _sims;                     ///< Number of Monte Carlo sims for the gradient
     bool _printer;                    ///<
     std::string _optimizer;           ///<
@@ -45,7 +45,7 @@ protected:
     BBVIReturnData run_with(bool store, const std::function<double(Eigen::VectorXd)>& neg_posterior);
 
 public:
-    std::shared_ptr<StochOptim> _optim{nullptr}; ///<
+    std::unique_ptr<StochOptim> _optim{nullptr}; ///<
 
     /**
      * @brief Base constructor for BBVI
@@ -63,7 +63,7 @@ public:
      * @param record_elbo Wheter to record the ELBO at every iteration
      * @param quiet_progress Wheter to print progress or stay quiet
      */
-    BBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior, std::vector<std::shared_ptr<Family>>& q,
+    BBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior, std::vector<std::unique_ptr<Family>>& q,
          size_t sims, std::string optimizer = "RMSProp", size_t iterations = 1000, double learning_rate = 0.001,
          bool record_elbo = false, bool quiet_progress = false);
 
@@ -247,7 +247,7 @@ public:
      * @param quiet_progress
      */
     CBBVI(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior,
-          std::function<Eigen::VectorXd(Eigen::VectorXd)> log_p_blanket, std::vector<std::shared_ptr<Family>>& q, size_t sims,
+          std::function<Eigen::VectorXd(Eigen::VectorXd)> log_p_blanket, std::vector<std::unique_ptr<Family>>& q, size_t sims,
           std::string optimizer = "RMSProp", size_t iterations = 300000, double learning_rate = 0.001,
           bool record_elbo = false, bool quiet_progress = false);
 
@@ -328,7 +328,7 @@ public:
      * @param quiet_progress
      */
     BBVIM(std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior,
-          std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<std::shared_ptr<Family>>& q, size_t sims,
+          std::function<double(Eigen::VectorXd)> full_neg_posterior, std::vector<std::unique_ptr<Family>>& q, size_t sims,
           std::string optimizer = "RMSProp", size_t iterations = 1000, double learning_rate = 0.001,
           size_t mini_batch = 2, bool record_elbo = false, bool quiet_progress = false);
 

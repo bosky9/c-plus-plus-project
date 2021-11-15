@@ -62,7 +62,7 @@ std::vector<lv_to_build> Family::build_latent_variables() const {
     return {};
 }
 
-std::shared_ptr<Family> Family::clone() const {
+std::unique_ptr<Family> Family::clone() const {
     return std::make_unique<Family>(*this);
 }
 

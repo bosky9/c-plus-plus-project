@@ -8,27 +8,29 @@ LatentVariable::LatentVariable(const std::string& name, const Family& prior, con
       _transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
 
 LatentVariable::LatentVariable(const LatentVariable& lv)
-    : _name{lv.get_name()}, _index{lv._index}, _prior{lv.get_prior()},
-      _transform{lv._transform}, _start{lv.get_start()}, _q{lv.get_q()}, _method{lv.get_method()},
+    : _name{lv.get_name()}, _index{lv._index}, _prior{lv.get_prior()->clone()},
+      _transform{lv._transform}, _start{lv.get_start()}, _q{lv.get_q()->clone()}, _method{lv.get_method()},
       _value{lv.get_value()}, _std{lv.get_std()}, _sample{lv.get_sample()} {}
 
 LatentVariable::LatentVariable(LatentVariable&& lv) noexcept {
     _name  = lv.get_name();
     _index = lv._index;
-    _prior = (lv.get_prior());
+    _prior.reset();
+    _prior = (lv.get_prior()->clone());
     _transform = lv._transform;
     _start     = lv.get_start();
-    _q = (lv.get_q());
+    _q.reset();
+    _q = (lv.get_q()->clone());
     _method       = lv.get_method();
     _value        = lv.get_value();
     _std          = lv.get_std();
     _sample       = lv.get_sample();
     lv._name      = "";
     lv._index     = 0;
-    lv._prior     = nullptr;
+    lv._prior.reset();
     lv._transform = {};
     lv._start     = 0;
-    lv._q         = nullptr;
+    lv._q.reset();
     lv._method    = "";
     lv._value     = std::nullopt;
     lv._std       = std::nullopt;
@@ -40,10 +42,12 @@ LatentVariable& LatentVariable::operator=(const LatentVariable& lv) {
         return *this;
     _name  = lv.get_name();
     _index = lv._index;
-    _prior = (lv.get_prior());
+    _prior.reset();
+    _prior = (lv.get_prior()->clone());
     _transform = lv._transform;
     _start     = lv.get_start();
-    _q = (lv.get_q());
+    _q.reset();
+    _q = (lv.get_q()->clone());
     _method = lv.get_method();
     _value  = lv.get_value();
     _std    = lv.get_std();
@@ -54,20 +58,22 @@ LatentVariable& LatentVariable::operator=(const LatentVariable& lv) {
 LatentVariable& LatentVariable::operator=(LatentVariable&& lv) noexcept {
     _name  = lv.get_name();
     _index = lv._index;
-    _prior = (lv.get_prior());
+    _prior.reset();
+    _prior = (lv.get_prior()->clone());
     _transform = lv._transform;
     _start     = lv.get_start();
-    _q = (lv.get_q());
+    _q.reset();
+    _q = (lv.get_q()->clone());
     _method       = lv.get_method();
     _value        = lv.get_value();
     _std          = lv.get_std();
     _sample       = lv.get_sample();
     lv._name      = "";
     lv._index     = 0;
-    lv._prior     = nullptr;
+    lv._prior.reset();
     lv._transform = {};
     lv._start     = 0;
-    lv._q         = nullptr;
+    lv._q.reset();
     lv._method    = "";
     lv._value     = std::nullopt;
     lv._std       = std::nullopt;
@@ -116,8 +122,8 @@ std::string LatentVariable::get_name() const {
     return _name;
 }
 
-std::shared_ptr<Family> LatentVariable::get_prior() const {
-    return _prior->clone();
+std::unique_ptr<Family> LatentVariable::get_prior() const {
+    return (_prior->clone());
 }
 
 std::optional<Eigen::VectorXd> LatentVariable::get_sample() const {
@@ -136,12 +142,13 @@ std::optional<double> LatentVariable::get_value() const {
     return _value;
 }
 
-std::shared_ptr<Family> LatentVariable::get_q() const {
+std::unique_ptr<Family> LatentVariable::get_q() const {
     return _q->clone();
 }
 
 void LatentVariable::set_prior(const Family& prior) {
-    _prior = (prior.clone());
+    _prior.reset();
+    _prior = prior.clone();
 }
 
 void LatentVariable::set_start(double start) {
@@ -255,15 +262,15 @@ std::vector<std::string> LatentVariables::get_z_names() const {
     return names;
 }
 
-std::vector<std::shared_ptr<Family>> LatentVariables::get_z_priors() const {
-    std::vector<std::shared_ptr<Family>> priors;
+std::vector<std::unique_ptr<Family>> LatentVariables::get_z_priors() const {
+    std::vector<std::unique_ptr<Family>> priors;
     for (const LatentVariable& z : _z_list)
         priors.push_back(z.get_prior());
     return priors;
 }
 
 std::pair<std::vector<std::string>, std::vector<std::string>> LatentVariables::get_z_priors_names() const {
-    std::vector<std::shared_ptr<Family>> priors = get_z_priors();
+    std::vector<std::unique_ptr<Family>> priors = get_z_priors();
     std::vector<std::string> prior_names;
     std::vector<std::string> prior_z_names;
     for (const auto& prior : priors) {
@@ -307,18 +314,18 @@ Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
     return values;
 }
 
-std::vector<std::shared_ptr<Family>> LatentVariables::get_z_approx_dist() const {
-    std::vector<std::shared_ptr<Family>> dists;
+std::vector<std::unique_ptr<Family>> LatentVariables::get_z_approx_dist() const {
+    std::vector<std::unique_ptr<Family>> dists;
     for (const LatentVariable& z : _z_list)
         dists.push_back(z.get_q());
     return dists;
 }
 
 std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
-    std::vector<std::shared_ptr<Family>> approx_dists = get_z_approx_dist();
+    std::vector<std::unique_ptr<Family>> approx_dists = get_z_approx_dist();
     std::vector<std::string> q_list(approx_dists.size());
     for (auto &approx : approx_dists)
-        q_list.emplace_back((isinstance<Normal>(approx.get())) ? "Normal" : "Approximate distribution not detected");
+        q_list.emplace_back((approx->get_name() == "Normal") ? "Normal" : "Approximate distribution not detected");
     return q_list;
 }
 

@@ -44,9 +44,10 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         start_loc = phi;
     Eigen::VectorXd start_ses{};
 
+    std::string temp_normal = "Normal";
     for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
-        std::shared_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
-        if (isinstance<Normal>(approx_dist.get())) {
+        std::unique_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
+        if (temp_normal == approx_dist->get_name()) {
             _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
                 _latent_variables.get_z_list()[i].get_q()->vi_change_param(1, std::exp(-3.0));
@@ -55,9 +56,9 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         }
     }
 
-    std::vector<std::shared_ptr<Family>> q_list;
+    std::vector<std::unique_ptr<Family>> q_list;
     for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++) {
-        q_list.push_back(_latent_variables.get_z_list()[i].get_q()->clone());
+        q_list.push_back(_latent_variables.get_z_list()[i].get_q());
     }
 
     BBVI* bbvi_obj; // TODO: Trovare un modo per eliminare il puntatore senza che crei segmentation fault!
@@ -77,7 +78,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     _latent_variables.set_z_values(data.final_means, "BBVI", data.final_ses);
 
     for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++)
-        _latent_variables.get_z_list()[i].set_q(*data.q[i]->clone().get());
+        _latent_variables.get_z_list()[i].set_q(*data.q[i]);
 
     _latent_variables.set_estimation_method("BBVI");
 
@@ -107,8 +108,8 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
 LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& obj_type) {
     // Get Mode and Inverse Hessian information
-    // shared_ptr because there is no room for delete
-    std::shared_ptr<MLEResults> y{dynamic_cast<MLEResults*>(fit("PML"))};
+    // unique_ptr because there is no room for delete
+    std::unique_ptr<MLEResults> y{dynamic_cast<MLEResults*>(fit("PML"))};
 
     assert(y->get_ihessian().size() > 0 && "No Hessian information - Laplace approximation cannot be performed");
     Eigen::MatrixXd ihessian = y->get_ihessian();
@@ -305,7 +306,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
     assert(_latent_variables.get_estimation_method().value() == "BBVI" ||
            _latent_variables.get_estimation_method().value() == "M-H");
     if (_latent_variables.get_estimation_method().value() == "BBVI") {
-        std::vector<std::shared_ptr<Family>> q_vec = _latent_variables.get_z_approx_dist();
+        std::vector<std::unique_ptr<Family>> q_vec = _latent_variables.get_z_approx_dist();
         Eigen::MatrixXd output(q_vec.size(), nsims);
         Eigen::Index r = 0;
         for (auto &f : q_vec) {

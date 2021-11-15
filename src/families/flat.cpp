@@ -8,7 +8,12 @@
 
 Flat::Flat(const std::string& transform) : Family{transform}, _covariance_prior{false} {}
 
-Flat::Flat(const Flat& flat) = default;
+Flat::Flat(const Flat& flat){
+        _covariance_prior = flat._covariance_prior;
+        _itransform_name = flat._itransform_name;
+        _transform_name = flat._transform_name;
+        _transform = flat._transform;
+};
 
 Flat::Flat(Flat&& flat) noexcept = default;
 
@@ -27,7 +32,7 @@ double Flat::logpdf([[maybe_unused]] double mu) {
 
 // Get methods -----------------------------------------------------------------------------------------------------
 
-std::string Flat::get_name() const {
+std::string Flat::get_name() const  {
     return "Flat";
 }
 
@@ -37,6 +42,6 @@ std::string Flat::get_z_name() const {
 
 // Clone function --------------------------------------------------------------------------------------------------
 
-std::shared_ptr<Family> Flat::clone() const {
+std::unique_ptr<Family> Flat::clone() const {
     return std::make_unique<Flat>(*this);
 }
