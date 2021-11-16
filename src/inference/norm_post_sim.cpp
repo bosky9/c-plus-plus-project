@@ -35,7 +35,7 @@ Sample nps::norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& c
         lower_5_est.push_back(col_sort[nps::N5]);
     }
 
-    return {chain, mean_est, Eigen::VectorXd::Map(&median_est[0], static_cast<Eigen::Index>(median_est.size())),
-            Eigen::VectorXd::Map(&upper_95_est[0], static_cast<Eigen::Index>(upper_95_est.size())),
-            Eigen::VectorXd::Map(&lower_5_est[0], static_cast<Eigen::Index>(lower_5_est.size()))};
+    return {chain, mean_est, Eigen::VectorXd::Map(median_est.data(), static_cast<Eigen::Index>(median_est.size())),
+            Eigen::VectorXd::Map(upper_95_est.data(), static_cast<Eigen::Index>(upper_95_est.size())),
+            Eigen::VectorXd::Map(lower_5_est.data(), static_cast<Eigen::Index>(lower_5_est.size()))};
 }

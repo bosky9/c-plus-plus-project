@@ -7,8 +7,9 @@
 #include "inference/metropolis_sampler.hpp"
 
 void metropolis::metropolis_sampler(int64_t sims_to_do, Eigen::MatrixXd& phi,
-                                    const std::function<double(Eigen::VectorXd)>& posterior, Eigen::VectorXd& a_rate,
-                                    const Eigen::MatrixXd& rnums, const Eigen::VectorXd& crit) {
+                                    const std::function<double(const Eigen::VectorXd&)>& posterior,
+                                    Eigen::VectorXd& a_rate, const Eigen::MatrixXd& rnums,
+                                    const Eigen::VectorXd& crit) {
 
     double old_lik = -posterior(phi.row(0)); // float in Cython
 

@@ -39,7 +39,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         // Create solver and function object
         LBFGSpp::LBFGSSolver<double> solver(param);
         double fx;
-        OptimizerFunction function(reverse_function_params(posterior));
+        OptimizerFunction function(posterior::reverse_function_params(posterior));
         Eigen::VectorXd x{phi};
         int niter = solver.minimize(function, x, fx);
         start_loc = 0.8 * x.array() + 0.2 * phi.array();
@@ -253,9 +253,12 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd>& cov_matrix
         case str2int("BBVI"):
             std::function<double(const Eigen::VectorXd&, std::optional<size_t>)> posterior;
             if (!mini_batch.has_value()) {
-                posterior = change_function_params(_neg_logposterior);
+                posterior = posterior::change_function_params(_neg_logposterior);
             } else
-                posterior = change_function_params(_mb_neg_logposterior);
+                posterior = posterior::change_function_params(_mb_neg_logposterior);
+            auto y = Eigen::Vector2d{0, 1};
+            auto z = neg_logposterior(y);
+            auto x = posterior(y, std::nullopt);
             return _bbvi_fit(posterior, optimizer.value(), iterations.value(), map_start.value(), batch_size.value(),
                              mini_batch, learning_rate.value(), record_elbo.value_or(false), quiet_progress.value());
     }

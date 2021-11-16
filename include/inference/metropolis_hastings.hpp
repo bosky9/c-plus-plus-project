@@ -47,11 +47,11 @@ public:
     Sample sample();
 
 private:
-    std::function<double(Eigen::VectorXd)> _posterior; ///< A posterior function
-    double _scale;                                     ///< The scale for the random walk
-    int64_t _nsims;                                    ///< The number of iterations to perform
-    Eigen::VectorXd _initials;                         ///< Where to start the MCMC chain
-    Eigen::Index _param_no;                            ///< Number of parameters
+    std::function<double(const Eigen::VectorXd&)> _posterior; ///< A posterior function
+    double _scale;                                            ///< The scale for the random walk
+    int64_t _nsims;                                           ///< The number of iterations to perform
+    Eigen::VectorXd _initials;                                ///< Where to start the MCMC chain
+    Eigen::Index _param_no;                                   ///< Number of parameters
     int64_t _thinning;           ///< By how much to thin the chains (2 means drop every other point)
     bool _warm_up_period;        ///< Whether to discard first half of the chain as 'warm-up'
     bool _quiet_progress;        ///< Whether to print progress to console or stay quiet

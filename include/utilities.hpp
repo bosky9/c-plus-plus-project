@@ -1,6 +1,9 @@
 #pragma once
 
 #include "families/family.hpp"
+#include "families/flat.hpp"
+#include "families/normal.hpp"
+#include "inference/bbvi.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -24,7 +27,7 @@ DataFrame parse_csv(const std::string& path);
 
 DataFrame parse_csv(std::ifstream& path);
 
-template<typename T>
-bool isinstance(Family* obj) {
+template<typename T, typename R>
+bool isinstance(R* obj) {
     return obj == dynamic_cast<T*>(obj);
 }
