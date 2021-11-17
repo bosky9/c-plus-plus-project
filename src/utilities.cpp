@@ -5,14 +5,16 @@
 DataFrame csvToDataFrame(std::ifstream& file) {
     DataFrame df;
     std::string line;
+    std::stringstream lineStream(line);
+    std::string cell;
     if (file.is_open()) {
         // First line (if there aren't column with name "time", simulate it incrementing by 1 the time value)
         bool found_index_col{false};
         size_t index_col{0};
         std::vector<size_t> data_cols;
         if (std::getline(file, line)) {
-            std::stringstream lineStream(line);
-            std::string cell;
+            lineStream.str("");
+            cell.clear();
             size_t i{0};
             while (std::getline(lineStream, cell, ',')) {
                 // Find the times column
@@ -31,11 +33,13 @@ DataFrame csvToDataFrame(std::ifstream& file) {
         }
         df.data.resize(data_cols.size());
         // Other lines
+        bool added_index_val;
+        size_t i;
         while (std::getline(file, line)) {
-            std::stringstream lineStream(line);
-            std::string cell;
-            bool added_index_val{false};
-            size_t i{0};
+            lineStream.str("");
+            cell.clear();
+            added_index_val = false;
+            i = 0;
             while (std::getline(lineStream, cell, ',')) {
                 auto data_col = std::find(data_cols.begin(), data_cols.end(), i);
                 if (found_index_col && i == index_col)
