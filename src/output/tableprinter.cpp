@@ -36,6 +36,7 @@ std::string TablePrinter::row(const T& data) {
     // I want to append every value of data map
     // I get the value from the _width key
     // I append it to the returned string, with width given by _width value
+    // setfill + setw create (w.second) empty spaces
     for (auto const& w : _width)
         ss << std::setfill(' ') << std::setw(w.second) << data.at(w.first) << " ";
     str_to_return.append(ss.str());
