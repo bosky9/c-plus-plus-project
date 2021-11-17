@@ -33,75 +33,31 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
         data[i] = 0.9 * data[i - 1] + distribution(generator);
 
     /**
-     * @brief Tests on ARIMA model with no AR or MA terms that the latent variable list length is correct and that
-     * the estimated latent variables are not nan
+     * @brief Tests that prediction intervals are ordered correctly
      */
-    SECTION("Test with no AR or MA terms", "[fit]") {
-        ARIMA model{data, 0, 0};
-        Results* x{model.fit()};
-        REQUIRE(model.get_latent_variables().get_z_list().size() == 2);
-
-        std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
-        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
-                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
-        REQUIRE(nan == 0);
-
-        delete x;
-    }
-
-    SECTION("Test an ARIMA model with 1 AR and 1 MA term", "[fit]") {
-        ARIMA model{data, 1, 1, 0, Normal(0, 3)};
-        Results* x{model.fit()};
-        REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
-
-        std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
-        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
-                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
-        REQUIRE(nan == 0);
-
-        delete x;
-    }
-
-    /**
-     * @brief Tests on ARIMA model with 1 AR and 1 MA term, integrated once, that the latent variable list length is
-     * correct and that the estimated latent variables are not nan
-     */
-    SECTION("Test an ARIMA model with 1 AR and 1 MA term", "[fit]") {
-        ARIMA model{data, 1, 1, 1};
-        Results* x{model.fit()};
-        REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
-
-        std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
-        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
-                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
-        REQUIRE(nan == 0);
-
-        delete x;
-    }
-
-    /**
-     * @brief Tests that the prediction dataframe length is equal to the number of steps h
-     */
-    SECTION("Test prediction length", "[predict]") {
+    SECTION("Test prediction intervals are ordered correctly", "[predict]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
 
-        REQUIRE(model.predict(5).data.at(0).size() == 5);
+        DataFrame predictions = model.predict(10, true);
+        catch_utilities::check_intervals_order(predictions.data);
 
         delete x;
     }
 
     /**
-     * @brief Tests that the in-sample prediction dataframe length is equal to the number of steps h
+     * @brief Tests that in-sample prediction intervals are ordered correctly
      */
-    SECTION("Test prediction IS length", "[predict_is]") {
+    SECTION("Test prediction IS intervals are ordered correctly", "[predict_is]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
 
-        REQUIRE(model.predict_is(5).data.at(0).size() == 5);
+        DataFrame predictions = model.predict_is(10, true, "MLE", true);
+        catch_utilities::check_intervals_order(predictions.data);
 
         delete x;
     }
+
 }
 
 
@@ -246,6 +202,8 @@ TEST_CASE("Test an ARIMA model with a Normal family, 2", "[ARIMA]") {
 
         DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
+
+        delete x;
     }
 
     /**
