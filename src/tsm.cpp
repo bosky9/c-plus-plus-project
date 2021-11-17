@@ -47,8 +47,10 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         start_loc = phi;
     Eigen::VectorXd start_ses{};
 
+    std::unique_ptr<Family> approx_dist;
     for (int64_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
-        std::shared_ptr<Family> approx_dist{_latent_variables.get_z_list()[i].get_q()};
+        approx_dist.reset();
+        approx_dist =_latent_variables.get_z_list()[i].get_q();
         if (isinstance<Normal>(approx_dist.get())) {
             _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
@@ -256,9 +258,6 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd>& cov_matrix
                 posterior = posterior::change_function_params(_neg_logposterior);
             } else
                 posterior = posterior::change_function_params(_mb_neg_logposterior);
-            auto y = Eigen::Vector2d{0, 1};
-            auto z = neg_logposterior(y);
-            auto x = posterior(y, std::nullopt);
             return _bbvi_fit(posterior, optimizer.value(), iterations.value(), map_start.value(), batch_size.value(),
                              mini_batch, learning_rate.value(), record_elbo.value_or(false), quiet_progress.value());
     }

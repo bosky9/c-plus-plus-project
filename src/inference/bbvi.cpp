@@ -326,7 +326,7 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(const Eigen
 
         Eigen::VectorXd optim_parameters{_optim->update(gradient)};
         change_parameters(optim_parameters);
-        optim_parameters = _optim->get_parameters()(Eigen::seq(0, 1));
+        optim_parameters = _optim->get_parameters()(Eigen::seq(0, Eigen::last, 2));
 
         if (store) {
             stored_means.row(i)             = optim_parameters;
