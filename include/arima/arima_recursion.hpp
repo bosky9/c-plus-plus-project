@@ -8,7 +8,7 @@
  * @param b Second value
  * @return Maximum number between a and b
  */
-inline double double_max(double a, double b) {
+[[maybe_unused]] inline double double_max(double a, double b) {
     return a ? a >= b : b;
 }
 
@@ -18,7 +18,7 @@ inline double double_max(double a, double b) {
  * @param b Second value
  * @return Minimum number between a and b
  */
-inline double double_min(double a, double b) {
+[[maybe_unused]] inline double double_min(double a, double b) {
     return a ? a <= b : b;
 }
 
@@ -37,8 +37,8 @@ inline double double_min(double a, double b) {
 Eigen::VectorXd arima_recursion(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd link_mu,
                                 Eigen::VectorXd Y, size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
 
-// TODO: Non abbiamo implementato in families Poisson!
-Eigen::VectorXd arima_recursion_poisson(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd link_mu,
+// Poisson families were not implemented.
+[[maybe_unused]] Eigen::VectorXd arima_recursion_poisson(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd link_mu,
                                         Eigen::VectorXd Y, size_t max_lag, size_t Y_len, size_t ar_terms,
                                         size_t ma_terms);
 
@@ -57,6 +57,6 @@ Eigen::VectorXd arima_recursion_poisson(Eigen::VectorXd parameters, Eigen::Vecto
 Eigen::VectorXd arima_recursion_normal(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd Y,
                                        size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
 
-// TODO: Da implementare solo in caso si faccia la classe ARIMAX
-Eigen::VectorXd arimax_recursion(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd Y, size_t max_lag,
+// ARIMAX class has not been implemented
+[[maybe_unused]] Eigen::VectorXd arimax_recursion(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd Y, size_t max_lag,
                                  size_t Y_len, size_t ar_terms, size_t ma_terms);
