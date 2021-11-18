@@ -23,7 +23,7 @@ inline SingleDataFrame data_check(const std::vector<double>& data) {
     checked_data.index = std::vector<double>(data.size());
     std::iota(checked_data.index.begin(), checked_data.index.end(), 0);
     checked_data.data_name = "Series";
-    return std::move(checked_data);
+    return checked_data;
 }
 
 /**
@@ -53,7 +53,7 @@ inline SingleDataFrame data_check(const DataFrame& data_frame, const std::string
     }
     checked_data.index = data_frame.index;
 
-    return std::move(checked_data);
+    return checked_data;
 }
 
 // TODO: The following methods (used only in VAR models) is useful? Consider to remove it
@@ -74,7 +74,7 @@ inline DataFrame mv_data_check(const std::vector<std::vector<double>>& data) {
     std::transform(checked_data.index.begin(), checked_data.index.end(), checked_data.data_name.begin(),
                    [](double x) { return std::to_string(static_cast<int>(x) + 1); });
 
-    return std::move(checked_data);
+    return checked_data;
 }
 
 /**

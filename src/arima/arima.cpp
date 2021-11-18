@@ -30,6 +30,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _x = ar_matrix();
     create_latent_variables();
 
+    _family.reset();
     _family             = (family.clone());
     FamilyAttributes fa = family.setup();
     _model_name2        = fa.name;

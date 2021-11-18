@@ -33,11 +33,14 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
         data[i] = 0.9 * data[i - 1] + distribution(generator);
 
     /**
-     * @brief Tests that prediction intervals are ordered correctly
+     * @brief Tests that prediction intervals are ordered correctly using Metropolis-Hastings method
      */
-    SECTION("Test prediction intervals are ordered correctly", "[predict]") {
+
+    SECTION("Test prediction intervals are ordered correctly using MH", "[predict]") {
         ARIMA model{data, 2, 2};
-        Results* x{model.fit()};
+        std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
+        Results* x{model.fit("M-H", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03, std::nullopt,
+                             true)};
 
         DataFrame predictions = model.predict(10, true);
         catch_utilities::check_intervals_order(predictions.data);
@@ -46,17 +49,52 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
     }
 
     /**
-     * @brief Tests that in-sample prediction intervals are ordered correctly
+     * @brief Tests that in-sample prediction intervals are ordered correctly using Metropolis-Hastings method
      */
-    SECTION("Test prediction IS intervals are ordered correctly", "[predict_is]") {
+    SECTION("Test prediction IS intervals are ordered correctly using MH", "[predict_is]") {
         ARIMA model{data, 2, 2};
-        Results* x{model.fit()};
+        std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
+        Results* x{model.fit("M-H", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03, std::nullopt,
+                             true)};
 
         DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
 
         delete x;
     }
+
+    /**
+     * @brief Tests sampling function
+     */
+    SECTION("Test sampling function", "[sample]") {
+        ARIMA model{data, 2, 2};
+        std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
+        Results* x{
+            model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
+
+        Eigen::MatrixXd sample = model.sample(100);
+        REQUIRE(sample.rows() == 100);
+        REQUIRE(sample.cols() == data.size() - 2);
+
+        delete x;
+    }
+
+    /**
+     * @brief Tests PPC value
+     */
+    SECTION("Test PPC value", "[ppc]") {
+        ARIMA model{data, 2, 2};
+        std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
+        Results* x{
+            model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
+
+        double p_value = model.ppc();
+        REQUIRE(p_value >= 0.0);
+        REQUIRE(p_value <= 1.0);
+
+        delete x;
+    }
+
 
 }
 
@@ -235,6 +273,8 @@ TEST_CASE("Test an ARIMA model with a Normal family, 2", "[ARIMA]") {
 
         delete x;
     }
+
+    // ---  Up to this point, no memory leaks are detected ---
 
     /**
      * @brief Tests that prediction intervals are ordered correctly using Metropolis-Hastings method

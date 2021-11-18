@@ -46,7 +46,7 @@ inline std::vector<double> diff(const std::vector<double>& v) {
     std::vector<double> new_v(v.size() - 1);
     for (size_t i{0}; i < new_v.size(); ++i)
         new_v.at(i) = v.at(i + 1) - v.at(i);
-    return std::move(new_v);
+    return new_v;
 }
 
 inline double percentile(Eigen::VectorXd v, uint8_t p) {

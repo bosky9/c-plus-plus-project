@@ -40,6 +40,8 @@ public:
      */
     explicit Family(const std::string& transform = "");
 
+    virtual ~Family()= default;
+
     /**
      * @brief Check if Family objects are equal
      * @param family1 First object

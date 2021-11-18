@@ -79,7 +79,6 @@ public:
      *          a virtual destructor is necessary to avoid undefined behaviour.
      */
     virtual ~Results() = default;
-    ;
 
     /**
      * @brief Returns latent variables

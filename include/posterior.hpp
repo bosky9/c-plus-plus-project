@@ -28,4 +28,4 @@ posterior_opt change_function_params(posterior_with_mb function);
  */
 posterior_wo_mb reverse_function_params(posterior_opt function);
 
-}; // namespace posterior
+} // namespace posterior
