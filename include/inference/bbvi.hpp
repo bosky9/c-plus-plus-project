@@ -43,10 +43,9 @@ public:
      * @param record_elbo Wheter to record the ELBO at every iteration
      * @param quiet_progress Wheter to print progress or stay quiet
      */
-    BBVI(const std::function<double(const Eigen::VectorXd&, std::optional<int64_t>)>& neg_posterior,
-         const std::vector<std::unique_ptr<Family>>& q, int64_t sims, std::string optimizer = "RMSProp",
-         int64_t iterations = 1000, double learning_rate = 0.001, bool record_elbo = false,
-         bool quiet_progress = false);
+    BBVI(const std::function<double(const Eigen::VectorXd&, std::optional<size_t>)>& neg_posterior,
+         const std::vector<std::unique_ptr<Family>>& q, size_t sims, std::string optimizer = "RMSProp",
+         size_t iterations = 1000, double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false);
 
     /**
      * @brief Copy constructor for BBVI
@@ -173,7 +172,7 @@ public:
      * @param i Iteration
      * @param current_params Current set of parameters
      */
-    virtual void print_progress(int64_t i, const Eigen::VectorXd& current_params) const;
+    virtual void print_progress(size_t i, const Eigen::VectorXd& current_params) const;
 
     /**
      * @brief Obtains the ELBO for the current set of parameters
@@ -194,10 +193,10 @@ public:
 
 protected:
     std::function<double(const Eigen::VectorXd&, std::optional<size_t>)> _neg_posterior; ///< Posterior function
-    int64_t _sims;                               ///< Number of Monte Carlo sims for the gradient
+    size_t _sims;                                ///< Number of Monte Carlo sims for the gradient
     bool _printer;                               ///< True if printing is enabled
     std::string _optimizer;                      ///< Name of the optimizer
-    int64_t _iterations;                         ///< How many iterations to run
+    size_t _iterations;                          ///< How many iterations to run
     double _learning_rate;                       ///< Learning rate
     bool _record_elbo;                           ///< Whether to record the ELBO at every iteration
     bool _quiet_progress;                        ///< Whether to print progress or stay quiet
@@ -231,9 +230,9 @@ public:
      * @param record_elbo Wheter to record the ELBO at every iteration
      * @param quiet_progress Wheter to print progress or stay quiet
      */
-    CBBVI(const std::function<double(const Eigen::VectorXd&, std::optional<int64_t>)>& neg_posterior,
+    CBBVI(const std::function<double(const Eigen::VectorXd&, std::optional<size_t>)>& neg_posterior,
           std::function<Eigen::VectorXd(const Eigen::VectorXd&)> log_p_blanket, std::vector<std::unique_ptr<Family>>& q,
-          int64_t sims, const std::string& optimizer = "RMSProp", int64_t iterations = 300000,
+          size_t sims, const std::string& optimizer = "RMSProp", size_t iterations = 300000,
           double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false);
 
     /**
@@ -313,10 +312,10 @@ public:
      * @param record_elbo Whether to record the ELBO
      * @param quiet_progress Whether to print progress or stay quiet
      */
-    BBVIM(const std::function<double(const Eigen::VectorXd&, std::optional<int64_t>)>& neg_posterior,
+    BBVIM(const std::function<double(const Eigen::VectorXd&, std::optional<size_t>)>& neg_posterior,
           std::function<double(const Eigen::VectorXd&)> full_neg_posterior,
-          const std::vector<std::unique_ptr<Family>>& q, int64_t sims, const std::string& optimizer = "RMSProp",
-          int64_t iterations = 1000, double learning_rate = 0.001, int64_t mini_batch = 2, bool record_elbo = false,
+          const std::vector<std::unique_ptr<Family>>& q, size_t sims, const std::string& optimizer = "RMSProp",
+          size_t iterations = 1000, double learning_rate = 0.001, size_t mini_batch = 2, bool record_elbo = false,
           bool quiet_progress = false);
 
     /**
@@ -370,7 +369,7 @@ public:
      * @param i Iteration
      * @param current_params Current set of parameters
      */
-    void print_progress(int64_t i, const Eigen::VectorXd& current_params) const override;
+    void print_progress(size_t i, const Eigen::VectorXd& current_params) const override;
 
     /**
      * @brief The core BBVI routine - Draws Monte Carlo gradients and uses a stochastic optimizer
@@ -381,5 +380,5 @@ public:
 
 private:
     std::function<double(const Eigen::VectorXd&)> _full_neg_posterior; ///< Posterior function
-    int64_t _mini_batch;                                               ///< Number of mini batches
+    size_t _mini_batch;                                                ///< Number of mini batches
 };

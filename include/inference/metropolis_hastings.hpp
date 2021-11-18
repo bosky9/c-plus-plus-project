@@ -28,9 +28,9 @@ public:
      * @param warm_up_period Whether to discard first half of the chain as 'warm-up'
      * @param quiet_progress Whether to print progress to console or stay quiet
      */
-    MetropolisHastings(std::function<double(const Eigen::VectorXd&)>& posterior, double scale, int64_t nsims,
+    MetropolisHastings(std::function<double(const Eigen::VectorXd&)>& posterior, double scale, size_t nsims,
                        const Eigen::VectorXd& initials, const std::optional<Eigen::MatrixXd>& cov_matrix = std::nullopt,
-                       int64_t thinning = 2, bool warm_up_period = true, bool quiet_progress = false);
+                       size_t thinning = 2, bool warm_up_period = true, bool quiet_progress = false);
 
     /**
      * @brief Tunes scale for M-H algorithm
@@ -49,10 +49,10 @@ public:
 private:
     std::function<double(const Eigen::VectorXd&)> _posterior; ///< A posterior function
     double _scale;                                            ///< The scale for the random walk
-    int64_t _nsims;                                           ///< The number of iterations to perform
+    size_t _nsims;                                            ///< The number of iterations to perform
     Eigen::VectorXd _initials;                                ///< Where to start the MCMC chain
-    Eigen::Index _param_no;                                   ///< Number of parameters
-    int64_t _thinning;           ///< By how much to thin the chains (2 means drop every other point)
+    size_t _param_no;                                         ///< Number of parameters
+    size_t _thinning;            ///< By how much to thin the chains (2 means drop every other point)
     bool _warm_up_period;        ///< Whether to discard first half of the chain as 'warm-up'
     bool _quiet_progress;        ///< Whether to print progress to console or stay quiet
     Eigen::MatrixXd _phi;        ///< Matrix for the Metropolis-Hastings algorithm

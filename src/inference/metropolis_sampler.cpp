@@ -6,7 +6,7 @@
 
 #include "inference/metropolis_sampler.hpp"
 
-void metropolis::metropolis_sampler(int64_t sims_to_do, Eigen::MatrixXd& phi,
+void metropolis::metropolis_sampler(size_t sims_to_do, Eigen::MatrixXd& phi,
                                     const std::function<double(const Eigen::VectorXd&)>& posterior,
                                     Eigen::VectorXd& a_rate, const Eigen::MatrixXd& rnums,
                                     const Eigen::VectorXd& crit) {

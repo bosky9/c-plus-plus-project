@@ -40,7 +40,7 @@ public:
      */
     explicit Family(const std::string& transform = "");
 
-    virtual ~Family()= default;
+    virtual ~Family() = default;
 
     /**
      * @brief Check if Family objects are equal
@@ -109,15 +109,15 @@ public:
      * @return Random draws from the distribution, obtained thanks to the std::normal_distribution library.
      * @details Parameters shape and skewness were present but not actually used
      */
-    [[nodiscard]] virtual Eigen::VectorXd draw_variable(double loc, double scale, int64_t nsims) const;
-    [[nodiscard]] virtual Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, int64_t nsims) const;
+    [[nodiscard]] virtual Eigen::VectorXd draw_variable(double loc, double scale, size_t nsims) const;
+    [[nodiscard]] virtual Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, size_t nsims) const;
 
     /**
      * @brief Wrapper function for changing latent variables for variational inference
      * @param size How many simulations to perform
      * @return Array of Family random variable
      */
-    [[nodiscard]] virtual Eigen::VectorXd draw_variable_local(int64_t size) const;
+    [[nodiscard]] virtual Eigen::VectorXd draw_variable_local(size_t size) const;
 
     /**
      * @brief Returns the number of parameters

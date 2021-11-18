@@ -58,15 +58,17 @@ std::unique_ptr<Family> Family::clone() const {
     return std::make_unique<Family>(*this);
 }
 
-Eigen::VectorXd Family::draw_variable([[maybe_unused]] double loc, [[maybe_unused]]double scale, [[maybe_unused]]int64_t nsims) const {
+Eigen::VectorXd Family::draw_variable([[maybe_unused]] double loc, [[maybe_unused]] double scale,
+                                      [[maybe_unused]] size_t nsims) const {
     return {};
 }
 
-Eigen::VectorXd Family::draw_variable([[maybe_unused]]const Eigen::VectorXd& loc, [[maybe_unused]]double scale, [[maybe_unused]]int64_t nsims) const {
+Eigen::VectorXd Family::draw_variable([[maybe_unused]] const Eigen::VectorXd& loc, [[maybe_unused]] double scale,
+                                      [[maybe_unused]] size_t nsims) const {
     return {};
 }
 
-Eigen::VectorXd Family::draw_variable_local([[maybe_unused]]int64_t size) const {
+Eigen::VectorXd Family::draw_variable_local([[maybe_unused]] size_t size) const {
     return {};
 }
 
@@ -78,11 +80,12 @@ std::string Family::get_z_name() const {
     return "";
 }
 
-double Family::logpdf([[maybe_unused]]double mu) const {
+double Family::logpdf([[maybe_unused]] double mu) const {
     return {};
 }
 
-double Family::neg_loglikelihood([[maybe_unused]]const Eigen::VectorXd& y,[[maybe_unused]] const Eigen::VectorXd& mean, [[maybe_unused]]double scale) const {
+double Family::neg_loglikelihood([[maybe_unused]] const Eigen::VectorXd& y,
+                                 [[maybe_unused]] const Eigen::VectorXd& mean, [[maybe_unused]] double scale) const {
     return 0;
 }
 
@@ -90,9 +93,9 @@ FamilyAttributes Family::setup() const {
     return {"Family", [](double x) { return x; }, false, false, false, [](double x) { return x; }};
 }
 
-void Family::vi_change_param([[maybe_unused]]uint8_t index, [[maybe_unused]]double value) {}
+void Family::vi_change_param([[maybe_unused]] uint8_t index, [[maybe_unused]] double value) {}
 
-double Family::vi_return_param([[maybe_unused]]uint8_t index) const {
+double Family::vi_return_param([[maybe_unused]] uint8_t index) const {
     return 0.0;
 }
 

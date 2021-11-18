@@ -78,16 +78,16 @@ public:
      *
      * @details Parameters shape and skewness were present but not actually used
      */
-    [[nodiscard]] Eigen::VectorXd draw_variable(double loc, double scale, int64_t nsims) const override;
+    [[nodiscard]] Eigen::VectorXd draw_variable(double loc, double scale, size_t nsims) const override;
 
-    [[nodiscard]] Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, int64_t nsims) const override;
+    [[nodiscard]] Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, size_t nsims) const override;
 
     /**
      * @brief Wrapper function for changing latent variables for variational inference
      * @param size How many simulations to perform
      * @return Array of Normal random variable
      */
-    [[nodiscard]] Eigen::VectorXd draw_variable_local(int64_t size) const override;
+    [[nodiscard]] Eigen::VectorXd draw_variable_local(size_t size) const override;
 
     /**
      * @brief Log PDF for Normal prior
@@ -177,9 +177,7 @@ public:
      *          ... x.array() + 4 ... adds 4 to each element of x.
      */
     template<typename T>
-    T vi_loc_score(const T& x) const {
-        return {};
-    }
+    T vi_loc_score(const T& x) const;
 
     /**
      * @brief Return the score of the scale, where scale = exp(x)
@@ -198,9 +196,7 @@ public:
      *          ... x.array() + 4 ... adds 4 to each element of x.
      */
     template<typename T>
-    T vi_scale_score(const T& x) const {
-        return {};
-    }
+    T vi_scale_score(const T& x) const;
 
     /**
      * @brief Wrapper function for selecting appropriate score

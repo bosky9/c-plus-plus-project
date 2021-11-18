@@ -32,7 +32,7 @@ Eigen::VectorXd bbvi_routines::log_p_posterior(
 
 Eigen::VectorXd bbvi_routines::mb_log_p_posterior(
         const Eigen::MatrixXd& z,
-        const std::function<double(const Eigen::VectorXd&, std::optional<size_t>)>& neg_posterior, int64_t mini_batch) {
+        const std::function<double(const Eigen::VectorXd&, std::optional<size_t>)>& neg_posterior, size_t mini_batch) {
     Eigen::VectorXd result = Eigen::VectorXd::Zero(z.rows());
 
     for (Eigen::Index i{0}; i < z.rows(); ++i)

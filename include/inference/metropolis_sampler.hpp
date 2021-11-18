@@ -22,7 +22,7 @@ namespace metropolis {
  * @param rnums Samples of multivariate uniform distributions
  * @param crit Random numbers
  */
-void metropolis_sampler(int64_t sims_to_do, Eigen::MatrixXd& phi,
+void metropolis_sampler(size_t sims_to_do, Eigen::MatrixXd& phi,
                         const std::function<double(const Eigen::VectorXd&)>& posterior, Eigen::VectorXd& a_rate,
                         const Eigen::MatrixXd& rnums, const Eigen::VectorXd& crit);
 

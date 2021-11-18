@@ -39,7 +39,8 @@ void alpha_recursion(Eigen::VectorXd& alpha0, const Eigen::MatrixXd& grad_log_q,
  * @param neg_posterior A function which takes a vector (Eigen::VectorXd) and returns a double
  * @return A vector of doubles
  */
-Eigen::VectorXd log_p_posterior(const Eigen::MatrixXd& z,
+Eigen::VectorXd
+log_p_posterior(const Eigen::MatrixXd& z,
                 const std::function<double(const Eigen::VectorXd&, std::optional<size_t>)>& neg_posterior);
 
 /**
@@ -49,8 +50,9 @@ Eigen::VectorXd log_p_posterior(const Eigen::MatrixXd& z,
  * @param mini_batch Number of mini batches
  * @return An array of doubles
  */
-Eigen::VectorXd mb_log_p_posterior(const Eigen::MatrixXd& z,
+Eigen::VectorXd
+mb_log_p_posterior(const Eigen::MatrixXd& z,
                    const std::function<double(const Eigen::VectorXd&, std::optional<size_t>)>& neg_posterior,
-                   int64_t mini_batch);
+                   size_t mini_batch);
 
 } // namespace bbvi_routines

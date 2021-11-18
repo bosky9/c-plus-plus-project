@@ -12,17 +12,18 @@
 #include <iostream> // std::cout
 
 MetropolisHastings::MetropolisHastings(std::function<double(const Eigen::VectorXd&)>& posterior, double scale,
-                                       int64_t nsims, const Eigen::VectorXd& initials,
-                                       const std::optional<Eigen::MatrixXd>& cov_matrix, int64_t thinning,
+                                       size_t nsims, const Eigen::VectorXd& initials,
+                                       const std::optional<Eigen::MatrixXd>& cov_matrix, size_t thinning,
                                        bool warm_up_period, bool quiet_progress)
     : _posterior{posterior}, _scale{scale}, _nsims{(1 + warm_up_period) * nsims * thinning}, _initials{initials},
-      _param_no{initials.size()}, _thinning{thinning}, _warm_up_period{warm_up_period}, _quiet_progress{
-                                                                                                quiet_progress} {
+      _param_no{static_cast<size_t>(initials.size())}, _thinning{thinning}, _warm_up_period{warm_up_period},
+      _quiet_progress{quiet_progress} {
 
-    _phi        = Eigen::MatrixXd::Zero(_nsims, _param_no);
+    _phi        = Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(_nsims), static_cast<Eigen::Index>(_param_no));
     _phi.row(0) = _initials;
 
-    _cov_matrix = cov_matrix.value_or(Eigen::MatrixXd::Identity(_param_no, _param_no));
+    _cov_matrix = cov_matrix.value_or(
+            Eigen::MatrixXd::Identity(static_cast<Eigen::Index>(_param_no), static_cast<Eigen::Index>(_param_no)));
     _cov_matrix.array().colwise() *= _initials.cwiseAbs().array();
 }
 
@@ -48,7 +49,7 @@ Sample MetropolisHastings::sample() {
 
     while (acceptance < 0.234 || acceptance > 0.4 || finish) {
         // If acceptance is in range, proceed to sample, else continue tuning
-        int64_t sims_to_do;
+        size_t sims_to_do;
         if (!(acceptance < 0.234 || acceptance > 0.4)) {
             finish = false;
             if (!_quiet_progress) {
@@ -60,11 +61,11 @@ Sample MetropolisHastings::sample() {
         }
 
         // Holds data on acceptance rates and uniform random numbers
-        Eigen::VectorXd a_rate{Eigen::VectorXd::Zero(sims_to_do)};
-        Eigen::VectorXd crit{Eigen::VectorXd::Random(sims_to_do)};
-        Mvn post{Eigen::VectorXd::Zero(_param_no), _cov_matrix};
+        Eigen::VectorXd a_rate{Eigen::VectorXd::Zero(static_cast<Eigen::Index>(sims_to_do))};
+        Eigen::VectorXd crit{Eigen::VectorXd::Random(static_cast<Eigen::Index>(sims_to_do))};
+        Mvn post{Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_param_no)), _cov_matrix};
         Eigen::MatrixXd rnums(sims_to_do, _param_no);
-        for (Eigen::Index i{0}; i < sims_to_do; ++i) {
+        for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(sims_to_do); ++i) {
             rnums.row(i) = post.sample() * _scale;
         }
         metropolis::metropolis_sampler(sims_to_do, _phi, _posterior, a_rate, rnums, crit);
@@ -82,7 +83,7 @@ Sample MetropolisHastings::sample() {
     Eigen::VectorXd mean_est = _phi.colwise().mean();
 
     std::vector<double> median_est{}, upper_95_est{}, lower_5_est{};
-    for (int64_t i{0}; i < _param_no; ++i) {
+    for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(_param_no); ++i) {
         Eigen::VectorXd col_sort{_phi.col(i)};
         std::sort(col_sort.begin(), col_sort.end());
 
