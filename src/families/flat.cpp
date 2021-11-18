@@ -13,7 +13,7 @@ bool operator==(const Flat& flat1, const Flat& flat2) {
            flat1._covariance_prior == flat2._covariance_prior;
 }
 
-double Flat::logpdf([[maybe_unused]] double mu) {
+double Flat::logpdf([[maybe_unused]] double mu) const {
     return 0.0;
 }
 

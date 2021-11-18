@@ -35,7 +35,7 @@ public:
      * @param mu Latent variable for which the prior is being formed over
      * @return log(p(mu))
      */
-    double logpdf([[maybe_unused]] double mu);
+    [[nodiscard]] double logpdf(double mu) const override;
 
     // Get methods -----------------------------------------------------------------------------------------------------
 

@@ -12,7 +12,7 @@ StochOptim::StochOptim(Eigen::VectorXd starting_parameters, Eigen::VectorXd star
     : _parameters{std::move(starting_parameters)}, _variances{std::move(starting_variances)}, _learning_rate{
                                                                                                       learning_rate} {}
 
-Eigen::VectorXd StochOptim::update(Eigen::VectorXd& gradient) {
+Eigen::VectorXd StochOptim::update([[maybe_unused]] Eigen::VectorXd& gradient) {
     return {};
 }
 

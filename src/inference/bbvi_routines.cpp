@@ -27,7 +27,7 @@ Eigen::VectorXd bbvi_routines::log_p_posterior(
     for (Eigen::Index i{0}; i < z.rows(); ++i)
         result[i] = -neg_posterior(z.row(i), std::nullopt);
 
-    return std::move(result);
+    return result;
 }
 
 Eigen::VectorXd bbvi_routines::mb_log_p_posterior(
@@ -38,5 +38,5 @@ Eigen::VectorXd bbvi_routines::mb_log_p_posterior(
     for (Eigen::Index i{0}; i < z.rows(); ++i)
         result[i] = -neg_posterior(z.row(i), mini_batch);
 
-    return std::move(result);
+    return result;
 }

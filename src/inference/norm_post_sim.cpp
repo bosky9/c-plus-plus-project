@@ -26,7 +26,7 @@ Sample nps::norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& c
         Eigen::VectorXd col_sort{phi.col(i)};
         std::sort(col_sort.begin(), col_sort.end());
 
-        if (nps::NSIMS_ODD)
+        if (nps::NSIMS_ODD())
             median_est.push_back(col_sort[nps::NSIMS / 2]);
         else
             median_est.push_back((col_sort[nps::NSIMS / 2] + col_sort[nps::NSIMS / 2 - 1]) / 2);

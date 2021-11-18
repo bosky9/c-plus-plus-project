@@ -135,24 +135,6 @@ public:
     [[nodiscard]] Eigen::MatrixXd draw_variables() const;
 
     /**
-     * @brief Returns the number of parameters for every function (Normal) in q
-     * @return Number of parameters
-     */
-    [[nodiscard]] Eigen::VectorXd get_approx_param_no() const;
-
-    /**
-     * @brief Returns the number of iterations
-     * @return Number of iterations
-     */
-    [[nodiscard]] size_t get_iterations() const;
-
-    /**
-     * @brief Returns the learning rate
-     * @return Learning rate
-     */
-    [[nodiscard]] double get_learning_rate() const;
-
-    /**
      * @brief Gets the mean and scales for normal approximating parameters
      * @return Vectors of means and scales
      */
