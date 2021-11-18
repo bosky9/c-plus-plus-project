@@ -1,16 +1,34 @@
 #pragma once
 
-#include "inference/norm_post_sim.hpp"
-#include "latent_variables.hpp"
-#include "matplotlibcpp.hpp"
-#include "output/tableprinter.hpp"
-#include "tests/nhst.hpp"
+#include "Eigen/Core"           // Eigen::VectorXd, Eigen::MatrixXd
+#include "latent_variables.hpp" // LatentVariables
 
-#include <algorithm>
-#include <cmath>
-#include <utility>
+#include <functional>           // std::function
+#include <optional>             // std::optional, std::nullopt
+#include <ostream>              // std::ostream
+#include <string>               // std::string
+#include <vector>               // std::vector
 
+/**
+ * @class Results results.hpp
+ */
 class Results {
+public:
+    virtual void summary(bool transformed) = 0;
+
+    /**
+     * @detail  Since we will be using Results* pointers
+     *          inside TSM to refer to Results subclasses,
+     *          a virtual destructor is necessary to avoid undefined behaviour.
+     */
+    virtual ~Results() = default;
+
+    /**
+     * @brief Returns latent variables
+     * @return Latent variables in _z
+     */
+    [[nodiscard]] LatentVariables get_z() const;
+
 protected:
     std::vector<std::string> _x_names;
     std::string _model_name;
@@ -25,7 +43,7 @@ protected:
     uint8_t _z_hide;
     int _max_lag;
     Eigen::VectorXd _signal;
-    // FIXME: _scores, _states e _states_var non sono mai usate con i modelli ARMA
+    // The variables _scores, _states and _states_var aren't used with ARMA models
     std::optional<Eigen::VectorXd> _scores;
     std::optional<Eigen::VectorXd> _states;
     std::optional<Eigen::VectorXd> _states_var;
@@ -69,43 +87,13 @@ protected:
      * @return Value rounded up to rounding points
      */
     [[nodiscard]] static double round_to(double x, uint8_t rounding_points);
-
-public:
-    virtual void summary(bool transformed) = 0;
-
-    /**
-     * @detail  Since we will be using Results* pointers
-     *          inside TSM to refer to Results subclasses,
-     *          a virtual destructor is necessary to avoid undefined behaviour.
-     */
-    virtual ~Results() = default;
-
-    /**
-     * @brief Returns latent variables
-     * @return Latent variables in _z
-     */
-    [[nodiscard]] LatentVariables get_z() const;
 };
 
-// Public is necessary for pointers (Return* p = &MLEResults{...})
+/**
+ * @class MLEResults results.hpp
+ * @details Inheritance declaration has to be public for pointers (Return* p = &MLEResults{...})
+ */
 class MLEResults : public Results {
-private:
-    Eigen::VectorXd _results; // FIXME: OptimizeResult type in Python (da scipy) ma viene utilizzato solo l'array
-                              // non gli altri oggetti al suo interno
-    Eigen::MatrixXd _ihessian;
-    double _loglik;
-
-    /**
-     * @brief Prints results with hessian
-     * @param transformed
-     */
-    void summary_with_hessian(bool transformed = true) const;
-
-    /**
-     * @brief Prints results without hessian
-     */
-    void summary_without_hessian() const;
-
 public:
     /**
      * @brief Returns the Inverse Hessian matrix
@@ -113,7 +101,6 @@ public:
      */
     [[nodiscard]] Eigen::MatrixXd get_ihessian() const;
 
-public:
     /**
      * @brief Constructor for MLEResults
      * @param data_name
@@ -156,24 +143,28 @@ public:
      * @param transformed
      */
     void summary(bool transformed) override;
+
+private:
+    Eigen::VectorXd _results;
+    Eigen::MatrixXd _ihessian;
+    double _loglik;
+
+    /**
+     * @brief Prints results with hessian
+     * @param transformed
+     */
+    void summary_with_hessian(bool transformed = true) const;
+
+    /**
+     * @brief Prints results without hessian
+     */
+    void summary_without_hessian() const;
 };
 
+/**
+ * @class BBVIResults results.hpp
+ */
 class BBVIResults : public Results {
-private:
-    Eigen::MatrixXd _ihessian;
-    Eigen::VectorXd _ses;
-    Eigen::VectorXd _elbo_records;
-    Eigen::MatrixXd _chain;          ///< Chains for each parameter
-    Eigen::VectorXd _mean_est;       ///< Mean values for each parameter
-    Eigen::VectorXd _median_est;     ///< Median values for each parameter
-    Eigen::VectorXd _upper_95_est;   ///< Upper 95% credibility interval for each parameter
-    Eigen::VectorXd _lower_5_est;    ///< Lower 95% credibility interval for each parameter
-    Eigen::MatrixXd _t_chain;        ///< Transformed chains for each parameter
-    Eigen::VectorXd _t_mean_est;     ///< Transformed mean values for each parameter
-    Eigen::VectorXd _t_median_est;   ///< Transformed median values for each parameter
-    Eigen::VectorXd _t_upper_95_est; ///< Transformed upper 95% credibility interval for each parameter
-    Eigen::VectorXd _t_lower_5_est;  ///< Transformed lower 95% credibility interval for each parameter
-
 public:
     /**
      * @brief Constructor for BBVIResults
@@ -226,11 +217,8 @@ public:
      * @param transformed
      */
     void summary(bool transformed) override;
-};
 
-class BBVISSResults : public Results {
 private:
-    double _objective_value;
     Eigen::MatrixXd _ihessian;
     Eigen::VectorXd _ses;
     Eigen::VectorXd _elbo_records;
@@ -244,7 +232,12 @@ private:
     Eigen::VectorXd _t_median_est;   ///< Transformed median values for each parameter
     Eigen::VectorXd _t_upper_95_est; ///< Transformed upper 95% credibility interval for each parameter
     Eigen::VectorXd _t_lower_5_est;  ///< Transformed lower 95% credibility interval for each parameter
+};
 
+/**
+ * @class BBVISSResults results.hpp
+ */
+class BBVISSResults : public Results {
 public:
     /**
      * @brief Constructor for BBVISSResults
@@ -296,13 +289,13 @@ public:
      * @param transformed
      */
     void summary(bool transformed) override;
-};
 
-class LaplaceResults : public Results {
 private:
-    Eigen::MatrixXd _chain;
+    double _objective_value;
     Eigen::MatrixXd _ihessian;
-
+    Eigen::VectorXd _ses;
+    Eigen::VectorXd _elbo_records;
+    Eigen::MatrixXd _chain;          ///< Chains for each parameter
     Eigen::VectorXd _mean_est;       ///< Mean values for each parameter
     Eigen::VectorXd _median_est;     ///< Median values for each parameter
     Eigen::VectorXd _upper_95_est;   ///< Upper 95% credibility interval for each parameter
@@ -312,7 +305,12 @@ private:
     Eigen::VectorXd _t_median_est;   ///< Transformed median values for each parameter
     Eigen::VectorXd _t_upper_95_est; ///< Transformed upper 95% credibility interval for each parameter
     Eigen::VectorXd _t_lower_5_est;  ///< Transformed lower 95% credibility interval for each parameter
+};
 
+/**
+ * @class LaplaceResults results.hpp
+ */
+class LaplaceResults : public Results {
 public:
     /**
      * Constructor for LaplaceResults
@@ -356,16 +354,25 @@ public:
      * @param transformed
      */
     void summary(bool transformed) override;
+
+private:
+    Eigen::MatrixXd _chain;
+    Eigen::MatrixXd _ihessian;
+    Eigen::VectorXd _mean_est;       ///< Mean values for each parameter
+    Eigen::VectorXd _median_est;     ///< Median values for each parameter
+    Eigen::VectorXd _upper_95_est;   ///< Upper 95% credibility interval for each parameter
+    Eigen::VectorXd _lower_5_est;    ///< Lower 95% credibility interval for each parameter
+    Eigen::MatrixXd _t_chain;        ///< Transformed chains for each parameter
+    Eigen::VectorXd _t_mean_est;     ///< Transformed mean values for each parameter
+    Eigen::VectorXd _t_median_est;   ///< Transformed median values for each parameter
+    Eigen::VectorXd _t_upper_95_est; ///< Transformed upper 95% credibility interval for each parameter
+    Eigen::VectorXd _t_lower_5_est;  ///< Transformed lower 95% credibility interval for each parameter
 };
 
+/**
+ * @class MCMCResults results.hpp
+ */
 class MCMCResults : public Results {
-private:
-    Eigen::MatrixXd _samples;
-    Eigen::VectorXd _mean_est;
-    Eigen::VectorXd _median_est;
-    Eigen::VectorXd _lower_95_est;
-    Eigen::VectorXd _upper_95_est;
-
 public:
     /**
      * @brief Constructor for MCMCResults
@@ -414,4 +421,11 @@ public:
      * @param transformed
      */
     void summary(bool transformed) override;
+
+private:
+    Eigen::MatrixXd _samples;
+    Eigen::VectorXd _mean_est;
+    Eigen::VectorXd _median_est;
+    Eigen::VectorXd _lower_95_est;
+    Eigen::VectorXd _upper_95_est;
 };

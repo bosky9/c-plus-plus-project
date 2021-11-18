@@ -1,6 +1,23 @@
 #include "results.hpp"
 
-#include <iterator>
+#include "Eigen/Core"                  // Eigen::Index, Eigen::VectorXd, Eigen::MatrixXd
+#include "inference/norm_post_sim.hpp" // Sample, nps::norm_post_sim
+#include "latent_variables.hpp"        // LatentVariables
+#include "matplotlibcpp.hpp"           // plt::figure_size, plt::plot, plt::xlabel, plt::ylabel, plt::save, plt::show
+#include "output/tableprinter.hpp"     // TablePrinter
+#include "tests/nhst.hpp"              // find_p_value
+
+#include <algorithm>  // std::transform
+#include <cmath>      // pow, log
+#include <functional> // std::function
+#include <iterator>   // std::ostream_iterator
+#include <list>       // std::list
+#include <map>        // std::map
+#include <optional>   // std::optional
+#include <ostream>    // std::ostream
+#include <string>     // std::string, std::to_string
+#include <tuple>      // std::tuple
+#include <vector>     // std::vector
 
 Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,
                  const std::string& model_type, const LatentVariables& latent_variables, Eigen::MatrixXd data,

@@ -1,5 +1,10 @@
+#define _USE_MATH_DEFINES
+
 #include "arima/arima.hpp"
 
+#include "multivariate_normal.hpp"
+
+#include <cmath>
 #include <random>
 
 ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, const Family& family) : TSM{"ARIMA"} {

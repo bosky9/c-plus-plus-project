@@ -11,6 +11,7 @@
 #include "inference/stoch_optim.hpp" // StochOptim
 
 #include <memory> // std::unique_ptr, std::shared_ptr
+#include <optional>
 
 /**
  * @struct BBVIReturnData bbvi.hpp
