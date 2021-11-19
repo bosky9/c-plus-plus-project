@@ -94,28 +94,47 @@ double Normal::vi_return_param(uint8_t index) const {
     return {};
 }
 
-template<>
-double Normal::vi_loc_score<double>(const double& x) const {
+// Template definition
+template<typename T>
+T Normal::vi_loc_score(const T& x) const {
     return (x - _mu0) / pow(_sigma0, 2);
 }
 
+// Template specializations
+template double Normal::vi_loc_score<double>(const double& x) const;
 template<>
 Eigen::VectorXd Normal::vi_loc_score<Eigen::VectorXd>(const Eigen::VectorXd& x) const {
     return (x.array() - _mu0) / pow(_sigma0, 2);
 }
 
-template<>
-double Normal::vi_scale_score<double>(const double& x) const {
+// Template definition
+template<typename T>
+T Normal::vi_scale_score(const T& x) const {
     return exp(-2 * log(_sigma0)) * pow(x - _mu0, 2) - 1;
 }
 
+// Template specializations
+template double Normal::vi_scale_score<double>(const double& x) const;
 template<>
 Eigen::VectorXd Normal::vi_scale_score<Eigen::VectorXd>(const Eigen::VectorXd& x) const {
     return exp(-2 * log(_sigma0)) * pow(x.array() - _mu0, 2) - 1;
 }
 
-template double Normal::vi_score<double>(const double&, uint8_t) const;
+// Template definition
+template<typename T>
+T Normal::vi_score(const T& x, uint8_t index) const {
+    static_assert(std::is_same_v<T, double> || std::is_same_v<T, Eigen::VectorXd>,
+            "Variable must be a double or an Eigen::VectorXd");
+    assert((index == 0 || index == 1) && "Index is neither 0 nor 1");
 
+    if (index == 0)
+        return vi_loc_score(x);
+    else
+        return vi_scale_score(x);
+}
+
+// Template specializations
+template double Normal::vi_score<double>(const double&, uint8_t) const;
 template Eigen::VectorXd Normal::vi_score<Eigen::VectorXd>(const Eigen::VectorXd&, uint8_t) const;
 
 // Get methods ----------------------------------------------------------------------------------------------------

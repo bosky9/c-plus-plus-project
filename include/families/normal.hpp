@@ -205,17 +205,7 @@ public:
      * @return The gradient of the scale latent variable at x
      */
     template<typename T>
-    T vi_score(const T& x, uint8_t index) const {
-        static_assert(std::is_same_v<T, double> || std::is_same_v<T, Eigen::VectorXd>,
-                      "Variable must be a double or an Eigen::VectorXd");
-        assert((index == 0 || index == 1) && "Index is neither 0 nor 1");
-
-        if (index == 0)
-            return vi_loc_score(x);
-        else if (index == 1)
-            return vi_scale_score(x);
-        return {};
-    }
+    T vi_score(const T& x, uint8_t index) const;
 
 
     // Get methods -----------------------------------------------------------------------------------------------------
