@@ -24,7 +24,7 @@
 template<typename T, int N>
 T cov(const Eigen::Vector<T, N>& x, size_t lag = 0) {
     static_assert(std::is_floating_point<T>::value, "cov accepts only vector of float or double");
-    assert(lag < x.size());
+    assert(lag < static_cast<size_t>(x.size()));
     const T mean = std::accumulate(x.begin(), x.end(), (T) 0) / x.size();
     std::vector<T> x1, x2;
     std::transform(x.begin() + lag, x.end(), std::back_inserter(x1), [mean](T val) { return val - mean; });

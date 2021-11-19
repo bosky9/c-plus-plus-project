@@ -70,11 +70,11 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
         Results* x{
-            model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
+                model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
 
         Eigen::MatrixXd sample = model.sample(100);
         REQUIRE(sample.rows() == 100);
-        REQUIRE(sample.cols() == data.size() - 2);
+        REQUIRE(static_cast<size_t>(sample.cols()) == data.size() - 2);
 
         delete x;
     }
@@ -86,7 +86,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
         Results* x{
-            model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
+                model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
 
         double p_value = model.ppc();
         REQUIRE(p_value >= 0.0);
@@ -94,8 +94,6 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
 
         delete x;
     }
-
-
 }
 
 
@@ -318,7 +316,7 @@ TEST_CASE("Test an ARIMA model with a Normal family, 2", "[ARIMA]") {
 
         Eigen::MatrixXd sample = model.sample(100);
         REQUIRE(sample.rows() == 100);
-        REQUIRE(sample.cols() == data.size() - 2);
+        REQUIRE(static_cast<size_t>(sample.cols()) == data.size() - 2);
 
         delete x;
     }

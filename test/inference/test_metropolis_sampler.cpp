@@ -11,7 +11,7 @@
 
 TEST_CASE("Test Metropolis sampler", "[metropolis_sampler]") {
     Eigen::MatrixXd phi{Eigen::MatrixXd::Identity(3, 3)};
-    std::function<double(const Eigen::VectorXd&)> posterior = [](const Eigen::VectorXd& v) { return 0.5; };
+    std::function<double(const Eigen::VectorXd&)> posterior = [](const Eigen::VectorXd& v) { return v[0]; };
     Eigen::VectorXd a_rate{Eigen::VectorXd::Constant(3, 0.5)};
     Eigen::MatrixXd rnums{Eigen::MatrixXd::Identity(3, 3)};
     Eigen::VectorXd crit{Eigen::VectorXd::Zero(3)};

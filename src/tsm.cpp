@@ -20,8 +20,8 @@ TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_varia
 }
 
 BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
-                            const std::string& optimizer, size_t iterations, bool map_start, size_t batch_size,
-                            std::optional<size_t> mini_batch, double learning_rate, bool record_elbo,
+                            const std::string& optimizer, size_t iterations, [[maybe_unused]] bool map_start,
+                            size_t batch_size, std::optional<size_t> mini_batch, double learning_rate, bool record_elbo,
                             bool quiet_progress, const std::optional<Eigen::VectorXd>& start) {
 
     Eigen::VectorXd phi{(start.has_value() && start.value().size() > 0)
@@ -41,16 +41,16 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         double fx;
         OptimizerFunction function(posterior::reverse_function_params(posterior));
         Eigen::VectorXd x{phi};
-        int niter = solver.minimize(function, x, fx);
+        solver.minimize(function, x, fx);
         start_loc = 0.8 * x.array() + 0.2 * phi.array();
     } else
         start_loc = phi;
     Eigen::VectorXd start_ses{};
 
     std::unique_ptr<Family> approx_dist;
-    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
+    for (size_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
         approx_dist.reset();
-        approx_dist =_latent_variables.get_z_list()[i].get_q();
+        approx_dist = _latent_variables.get_z_list()[i].get_q();
         if (isinstance<Normal>(approx_dist.get())) {
             _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
@@ -61,7 +61,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     }
 
     std::vector<std::unique_ptr<Family>> q_list;
-    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
+    for (size_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
         q_list.push_back(_latent_variables.get_z_list()[i].get_q()->clone());
     }
 
@@ -81,7 +81,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
                    [](double x) { return exp(x); });
     _latent_variables.set_z_values(data.final_means, "BBVI", data.final_ses);
 
-    for (int64_t i{0}; i < _latent_variables.get_z_list().size(); i++)
+    for (size_t i{0}; i < _latent_variables.get_z_list().size(); i++)
         _latent_variables.get_z_list()[i].set_q(*data.q[i]);
 
     _latent_variables.set_estimation_method("BBVI");
@@ -181,7 +181,8 @@ MLEResults* TSM::_ols_fit() {
 }
 
 MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<double(Eigen::VectorXd)>& obj_type,
-                               std::optional<bool> preopt_search, const std::optional<Eigen::VectorXd>& start) {
+                               [[maybe_unused]] std::optional<bool> preopt_search,
+                               const std::optional<Eigen::VectorXd>& start) {
     // Starting values - Check to see if model has preoptimize method, if not, simply use default starting values
     Eigen::VectorXd phi;
     bool preoptimized{false};
@@ -201,11 +202,11 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
     LBFGSpp::LBFGSSolver<double> solver(param);
     double fx;
     OptimizerFunction function(obj_type);
-    int niter = solver.minimize(function, phi, fx);
+    solver.minimize(function, phi, fx);
 
     if (preoptimized) {
         Eigen::VectorXd phi2 = _latent_variables.get_z_starting_values();
-        int niter            = solver.minimize(function, phi2, fx);
+        solver.minimize(function, phi2, fx);
         if (_neg_loglik(phi2) < _neg_loglik(phi))
             phi = phi2;
     }
@@ -261,11 +262,12 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd>& cov_matrix
             return _bbvi_fit(posterior, optimizer.value(), iterations.value(), map_start.value(), batch_size.value(),
                              mini_batch, learning_rate.value(), record_elbo.value_or(false), quiet_progress.value());
     }
+    return nullptr;
 }
 
 [[nodiscard]] double TSM::neg_logposterior(const Eigen::VectorXd& beta) {
     double post = _neg_loglik(beta);
-    for (Eigen::Index k{0}; k < _z_no; k++)
+    for (Eigen::Index k{0}; k < static_cast<Eigen::Index>(_z_no); k++)
         post += -_latent_variables.get_z_list()[k].get_prior()->logpdf(beta[k]);
     return post;
 }
@@ -273,20 +275,20 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd>& cov_matrix
 [[nodiscard]] double TSM::mb_neg_logposterior(const Eigen::VectorXd& beta, size_t mini_batch) {
     double post = (static_cast<double>(_data_frame.data.size()) / static_cast<double>(mini_batch)) *
                   _mb_neg_loglik(beta, mini_batch);
-    for (Eigen::Index k{0}; k < _z_no; k++)
+    for (Eigen::Index k{0}; k < static_cast<Eigen::Index>(_z_no); k++)
         post += -_latent_variables.get_z_list()[k].get_prior()->logpdf(beta[k]);
     return post;
 }
 
 std::vector<double> TSM::shift_dates(size_t n) const {
     assert(!_data_frame.index.empty());
-    assert(_data_frame.index.size() > _max_lag);
+    assert(static_cast<int>(_data_frame.index.size()) > _max_lag);
     std::vector<double> date_index(_data_frame.index.begin() + _max_lag, _data_frame.index.end());
     if (date_index.size() > 1) {
-        for (int64_t i{0}; i < n; ++i)
+        for (size_t i{0}; i < n; ++i)
             date_index.push_back(date_index.back() + (date_index.back() - date_index.at(date_index.size() - 2)));
     } else {
-        for (int64_t i{0}; i < n; ++i)
+        for (size_t i{0}; i < n; ++i)
             date_index.push_back(date_index.back() + 1);
     }
     return date_index;
@@ -323,11 +325,11 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         if (!lvs.empty())
             cols = lvs.at(0).get_sample().value().size();
         Eigen::MatrixXd chain(lvs.size(), cols);
-        for (Eigen::Index i{0}; i < lvs.size(); ++i) {
+        for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(lvs.size()); ++i) {
             // Check that the samples exists (since they are optional)
             assert(lvs.at(i).get_sample());
             // Check that the samples have the same size
-            assert(lvs.at(i).get_sample().value().size() == cols);
+            assert(static_cast<size_t>(lvs.at(i).get_sample().value().size()) == cols);
             chain.row(i) = lvs.at(i).get_sample().value();
         }
         // Equivalent of np.random.choice()
@@ -335,7 +337,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine generator(seed);
         std::uniform_int_distribution<size_t> distribution{0, cols};
-        for (int64_t n{0}; n < nsims; n++)
+        for (size_t n{0}; n < nsims; n++)
             ind.push_back(distribution(generator));
         // Copy elision should work just fine
         return chain(Eigen::all, ind);

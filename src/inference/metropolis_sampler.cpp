@@ -14,7 +14,7 @@ void metropolis::metropolis_sampler(size_t sims_to_do, Eigen::MatrixXd& phi,
     double old_lik = -posterior(phi.row(0)); // float in Cython
 
     Eigen::VectorXd phi_prop;
-    for (Eigen::Index i{1}; i < sims_to_do; ++i) {
+    for (Eigen::Index i{1}; i < static_cast<Eigen::Index>(sims_to_do); ++i) {
         phi_prop         = phi.row(i - 1) + rnums.row(i);
         double post_prop = -posterior(phi_prop);
         double lik_rate  = exp(post_prop - old_lik);

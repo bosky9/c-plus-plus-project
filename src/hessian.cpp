@@ -10,7 +10,7 @@ Eigen::MatrixXd derivatives::hessian(const std::function<double(Eigen::VectorXd)
             H(j, i) = H(i, j);
         }
     }
-    return std::move(H);
+    return H;
 }
 
 double derivatives::first_derivative(const std::function<double(Eigen::VectorXd)>& function, Eigen::VectorXd& v,

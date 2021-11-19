@@ -33,13 +33,11 @@ DataFrame csvToDataFrame(std::ifstream& file) {
         }
         df.data.resize(data_cols.size());
         // Other lines
-        bool added_index_val;
-        size_t i;
         while (std::getline(file, line)) {
             lineStream.str("");
             cell.clear();
-            added_index_val = false;
-            i = 0;
+            bool added_index_val = false;
+            size_t i             = 0;
             while (std::getline(lineStream, cell, ',')) {
                 auto data_col = std::find(data_cols.begin(), data_cols.end(), i);
                 if (found_index_col && i == index_col)
@@ -60,16 +58,16 @@ DataFrame csvToDataFrame(std::ifstream& file) {
                 df.data.at(i).push_back(0);
         }
     }
-    return std::move(df);
+    return df;
 }
 
 DataFrame parse_csv(const std::string& file) {
     std::ifstream myfile(file);
     DataFrame df = csvToDataFrame(myfile);
     myfile.close();
-    return std::move(df);
+    return df;
 }
 
 DataFrame parse_csv(std::ifstream& file) {
-    return std::move(csvToDataFrame(file));
+    return csvToDataFrame(file);
 }

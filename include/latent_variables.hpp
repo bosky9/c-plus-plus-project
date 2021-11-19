@@ -4,14 +4,14 @@
 #include "families/family.hpp" // Family
 #include "matplotlibcpp.hpp"   // matplotlibcpp
 
-#include <functional>          // std::function
-#include <map>                 // std::map
-#include <memory>              // std::unique_ptr
-#include <optional>            // std::optional, std::nullopt
-#include <ostream>             // std::ostream
-#include <string>              // std::string
-#include <utility>             // std::pair
-#include <vector>              // std::vector
+#include <functional> // std::function
+#include <map>        // std::map
+#include <memory>     // std::unique_ptr
+#include <optional>   // std::optional, std::nullopt
+#include <ostream>    // std::ostream
+#include <string>     // std::string
+#include <utility>    // std::pair
+#include <vector>     // std::vector
 
 namespace plt = matplotlibcpp;
 
@@ -32,7 +32,7 @@ public:
      * @param prior The prior for the latent variable, e.g. Normal(0,1)
      * @param q The variational distribution for the latent variable, e.g. Normal(0,1)
      */
-    LatentVariable(const std::string& name, const Family& prior, const Family& q);
+    LatentVariable(std::string name, const Family& prior, const Family& q);
 
     /**
      * @brief Copy constructor
@@ -171,7 +171,7 @@ private:
     std::unique_ptr<Family> _prior;           ///< The prior for the latent variable, e.g. Normal(0,1)
     std::function<double(double)> _transform; ///< The transform function of the prior
     double _start;                            ///< Starting value
-    std::unique_ptr<Family> _q;               ///< The variational distribution for the latent variable, e.g. Normal(0,1)
+    std::unique_ptr<Family> _q; ///< The variational distribution for the latent variable, e.g. Normal(0,1)
     // The following attributes aren't declared in Python code but used in LatentVariables class
     std::string _method;
     std::optional<double> _value           = std::nullopt;
@@ -192,7 +192,7 @@ public:
      * Constructor for LatentVariables
      * @param model_name The name of the model
      */
-    explicit LatentVariables(const std::string& model_name);
+    explicit LatentVariables(std::string model_name);
 
     /**
      * @brief Overload of the stream operation

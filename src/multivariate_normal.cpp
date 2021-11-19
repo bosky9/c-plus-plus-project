@@ -3,13 +3,13 @@
 #include "Eigen/Core"        // Eigen::VectorXd, Eigen::MatrixXd, Eigen::Index
 #include "Eigen/Eigenvalues" // Eigen::SelfAdjointEigenSolver
 
-#include <algorithm>         // std::transform, std::max
-#include <chrono>            // std::chrono
-#include <cmath>             // std::sqrt, std::pow, std::exp, std::erfc, std::expl, std::log
-#include <random>            // std::default_random_engine, std::normal_distribution
-#include <utility>           // std::move
+#include <algorithm> // std::transform, std::max
+#include <chrono>    // std::chrono
+#include <cmath>     // std::sqrt, std::pow, std::exp, std::erfc, std::expl, std::log
+#include <random>    // std::default_random_engine, std::normal_distribution
+#include <utility>   // std::move
 
-Mvn::Mvn(Eigen::VectorXd mu, const Eigen::MatrixXd& s) : _mean{std::move(mu)}, _sigma{s} {}
+Mvn::Mvn(Eigen::VectorXd mu, Eigen::MatrixXd s) : _mean{std::move(mu)}, _sigma{std::move(s)} {}
 
 double Mvn::pdf(const Eigen::VectorXd& x) const {
     auto n          = static_cast<double>(x.size());
@@ -74,11 +74,11 @@ Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& mea
         double x_val  = x.size() == 1 ? x(0) : x(i);
         double mean   = means.size() == 1 ? means(0) : means(i);
         double scale  = scales.size() == 1 ? scales(0) : scales(i);
-        long double e = std::expl(-0.5 * std::pow((x_val - mean) / scale, 2.0));
+        long double e = expl(-0.5 * std::pow((x_val - mean) / scale, 2.0));
         if (e == 0)
             result(i) = -(0.5 * std::pow((x_val - mean) / scale, 2.0)) + std::log(ONE_OVER_SQRT_2PI / scale);
         else
-            result(i) = std::log((static_cast<double>(ONE_OVER_SQRT_2PI) / scale) * e);
+            result(i) = static_cast<double>(std::log((ONE_OVER_SQRT_2PI / scale) * e));
     }
     return result;
 }

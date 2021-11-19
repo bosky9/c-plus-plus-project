@@ -22,7 +22,7 @@ Sample nps::norm_post_sim(const Eigen::VectorXd& modes, const Eigen::MatrixXd& c
     Eigen::VectorXd mean_est = phi.colwise().mean();
 
     std::vector<double> median_est{}, upper_95_est{}, lower_5_est{};
-    for (size_t i{0}; i < modes_len; ++i) {
+    for (Eigen::Index i{0}; i < modes_len; ++i) {
         Eigen::VectorXd col_sort{phi.col(i)};
         std::sort(col_sort.begin(), col_sort.end());
 

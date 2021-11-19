@@ -43,7 +43,7 @@ public:
      * @param record_elbo Wheter to record the ELBO at every iteration
      * @param quiet_progress Wheter to print progress or stay quiet
      */
-    BBVI(const std::function<double(const Eigen::VectorXd&, std::optional<size_t>)>& neg_posterior,
+    BBVI(std::function<double(const Eigen::VectorXd&, std::optional<size_t>)> neg_posterior,
          const std::vector<std::unique_ptr<Family>>& q, size_t sims, std::string optimizer = "RMSProp",
          size_t iterations = 1000, double learning_rate = 0.001, bool record_elbo = false, bool quiet_progress = false);
 

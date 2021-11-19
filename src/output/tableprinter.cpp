@@ -41,7 +41,7 @@ std::string TablePrinter::row(const T& data) {
         ss << std::setfill(' ') << std::setw(w.second) << data.at(w.first) << " ";
     str_to_return.append(ss.str());
 
-    return std::move(str_to_return);
+    return str_to_return;
 }
 
 template<typename T, std::enable_if_t<is_map_str_str<T>::value, int>>
@@ -56,7 +56,7 @@ std::string TablePrinter::row(const T& data) {
         ss << std::setfill(' ') << data.at(w.first) << " ";
     str_to_return.append(ss.str());
 
-    return std::move(str_to_return);
+    return str_to_return;
 }
 
 std::string TablePrinter::operator()(const std::list<std::map<std::string /*key*/, std::string>>& dataList) {
@@ -69,5 +69,5 @@ std::string TablePrinter::operator()(const std::list<std::map<std::string /*key*
     std::string return_string;
     for (auto const& r : res)
         return_string.append(r).append("\n");
-    return std::move(return_string);
+    return return_string;
 }

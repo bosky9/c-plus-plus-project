@@ -38,7 +38,7 @@ TEST_CASE("Alpha recursion", "[alpha_recursion]") {
 TEST_CASE("Log p posterior", "[log_p_posterior]") {
     Eigen::MatrixXd z = Eigen::MatrixXd::Identity(2, 2);
     std::function<double(Eigen::VectorXd, std::optional<size_t>)> neg_posterior =
-            [](Eigen::VectorXd v, std::optional<size_t> n) { return v[0]; };
+            [](Eigen::VectorXd v, [[maybe_unused]] std::optional<size_t> n) { return v[0]; };
 
     REQUIRE(bbvi_routines::log_p_posterior(z, neg_posterior) == Eigen::Vector2d{-1, -0});
 }

@@ -22,6 +22,8 @@ public:
      */
     StochOptim(Eigen::VectorXd starting_parameters, Eigen::VectorXd starting_variances, double learning_rate);
 
+    virtual ~StochOptim() = default;
+
     /**
      * @brief Update variances and parameters given a vector of gradients
      * @param gradient Vector of gradients

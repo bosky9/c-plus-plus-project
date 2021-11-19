@@ -97,6 +97,7 @@ TEST_CASE("Test a BBVI object", "[BBVI]") {
     SECTION("Get ELBO", "[get_elbo]") {
         auto result{bbvi.run(false)};
         auto elbo{bbvi.get_elbo(bbvi.current_parameters()(Eigen::seq(0, 1)))};
+        REQUIRE(elbo >= 0);
     }
 
     SECTION("Run", "[run, run_with]") {
@@ -179,6 +180,7 @@ TEST_CASE("Test a BBVIM object", "[BBVIM]") {
     SECTION("Get ELBO (for BBVIM)", "[get_elbo]") {
         auto result{bbvim.run(false)};
         auto elbo{bbvim.get_elbo(bbvim.current_parameters()(Eigen::seq(0, 1)))};
+        REQUIRE(elbo >= 0);
     }
 
     SECTION("Print progress", "[print_progress]") {

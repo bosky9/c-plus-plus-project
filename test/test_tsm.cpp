@@ -15,5 +15,6 @@ TEST_CASE("Tests an ARIMA model", "[TSM]") {
     SECTION("Fit", "[fit]") {
         ARIMA model{data, 1, 2};
         Results* x{model.fit()};
+        REQUIRE(x != nullptr);
     }
 }

@@ -18,7 +18,7 @@ public:
      * @param mu Vector of means
      * @param s Matrix of scales
      */
-    Mvn(Eigen::VectorXd mu, const Eigen::MatrixXd& s);
+    Mvn(Eigen::VectorXd mu, Eigen::MatrixXd s);
 
     /**
      * @brief Compute the PDF (Probabilty Density Function) of the distribution

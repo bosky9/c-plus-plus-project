@@ -148,7 +148,7 @@ void MLEResults::summary_with_hessian(bool transformed) const {
 
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names{_z.get_z_names()};
-    for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
+    for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size() - _z_hide); ++i) {
         if (_z.get_z_list()[i].get_prior()->get_transform_name().empty())
             data.push_back(
                     {{"z_name", z_names[i]},
@@ -227,7 +227,7 @@ void MLEResults::summary_without_hessian() const {
     // Initialize data
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names{_z.get_z_names()};
-    for (Eigen::Index i{0}; i < z_names.size(); ++i)
+    for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size()); ++i)
         data.push_back({{"z_name", z_names[i]},
                         {"z_value",
                          std::to_string(round_to(_z.get_z_list()[i].get_prior()->get_transform()(_results[i]), 4))}});
@@ -360,7 +360,7 @@ void BBVIResults::summary(bool transformed) {
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names = _z.get_z_names();
     if (transformed) {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
+        for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size() - _z_hide); ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_t_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_t_median_est[i], _rounding_points))},
@@ -368,7 +368,7 @@ void BBVIResults::summary(bool transformed) {
                                            std::to_string(round_to(_t_upper_95_est[i], _rounding_points)) + ")"}});
         }
     } else {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
+        for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size() - _z_hide); ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_median_est[i], _rounding_points))},
@@ -491,7 +491,7 @@ void BBVISSResults::summary(bool transformed) {
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names = _z.get_z_names();
     if (transformed) {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
+        for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size() - _z_hide); ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_t_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_t_median_est[i], _rounding_points))},
@@ -499,7 +499,7 @@ void BBVISSResults::summary(bool transformed) {
                                            std::to_string(round_to(_t_upper_95_est[i], _rounding_points)) + ")"}});
         }
     } else {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
+        for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size() - _z_hide); ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_median_est[i], _rounding_points))},
@@ -624,7 +624,7 @@ void LaplaceResults::summary(bool transformed) {
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names = _z.get_z_names();
     if (transformed) {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
+        for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size() - _z_hide); ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_t_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_t_median_est[i], _rounding_points))},
@@ -632,7 +632,7 @@ void LaplaceResults::summary(bool transformed) {
                                            std::to_string(round_to(_t_upper_95_est[i], _rounding_points)) + ")"}});
         }
     } else {
-        for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i) {
+        for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size() - _z_hide); ++i) {
             data.push_back({{"z_name", z_names[i]},
                             {"z_mean", std::to_string(round_to(_mean_est[i], _rounding_points))},
                             {"z_median", std::to_string(round_to(_median_est[i], _rounding_points))},
@@ -733,11 +733,11 @@ std::ostream& operator<<(std::ostream& stream, const MCMCResults& results) {
     return stream;
 }
 
-void MCMCResults::summary(bool transformed) {
+void MCMCResults::summary([[maybe_unused]] bool transformed) {
     _z_values = _z.get_z_values(false);
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names = _z.get_z_names();
-    for (Eigen::Index i{0}; i < z_names.size() - _z_hide; ++i)
+    for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size() - _z_hide); ++i)
         data.push_back({{"z_name", z_names[i]},
                         {"z_mean", std::to_string(round_to(_mean_est[i], _rounding_points))},
                         {"z_median", std::to_string(round_to(_median_est[i], _rounding_points))},

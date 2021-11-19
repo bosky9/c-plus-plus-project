@@ -13,17 +13,17 @@
 
 #include <iostream> // std::cout
 
-BBVI::BBVI(const std::function<double(const Eigen::VectorXd&, std::optional<int64_t>)>& neg_posterior,
-           const std::vector<std::unique_ptr<Family>>& q, int64_t sims, std::string optimizer, int64_t iterations,
+BBVI::BBVI(std::function<double(const Eigen::VectorXd&, std::optional<size_t>)> neg_posterior,
+           const std::vector<std::unique_ptr<Family>>& q, size_t sims, std::string optimizer, size_t iterations,
            double learning_rate, bool record_elbo, bool quiet_progress)
-    : _neg_posterior{neg_posterior}, _sims{sims}, _printer{true}, _optimizer{std::move(optimizer)},
+    : _neg_posterior{std::move(neg_posterior)}, _sims{sims}, _printer{true}, _optimizer{std::move(optimizer)},
       _iterations{iterations}, _learning_rate{learning_rate}, _record_elbo{record_elbo}, _quiet_progress{
                                                                                                  quiet_progress} {
     _q.resize(q.size());
     _approx_param_no = Eigen::VectorXd(_q.size());
-    for (int64_t i{0}; i < static_cast<int64_t>(_q.size()); ++i) {
-        _q[i]               = q[i]->clone();
-        _approx_param_no[i] = q[i]->get_param_no();
+    for (size_t i{0}; i < _q.size(); ++i) {
+        _q[i]                                          = q[i]->clone();
+        _approx_param_no[static_cast<Eigen::Index>(i)] = q[i]->get_param_no();
     }
 }
 
@@ -33,7 +33,7 @@ BBVI::BBVI(const BBVI& bbvi)
       _quiet_progress{bbvi._quiet_progress}, _approx_param_no{bbvi._approx_param_no} {
 
     _q.resize(bbvi._q.size());
-    for (int64_t i{0}; i < static_cast<int64_t>(bbvi._q.size()); ++i)
+    for (size_t i{0}; i < bbvi._q.size(); ++i)
         _q[i] = bbvi._q[i]->clone();
 
     if (bbvi._optim != nullptr)
@@ -46,7 +46,7 @@ BBVI::BBVI(BBVI&& bbvi) noexcept
       _quiet_progress{bbvi._quiet_progress}, _approx_param_no{bbvi._approx_param_no} {
 
     _q.resize(bbvi._q.size());
-    for (int64_t i{0}; i < static_cast<int64_t>(bbvi._q.size()); ++i)
+    for (size_t i{0}; i < bbvi._q.size(); ++i)
         _q[i] = bbvi._q[i]->clone();
 
     if (bbvi._optim != nullptr)
@@ -79,7 +79,7 @@ BBVI& BBVI::operator=(const BBVI& bbvi) {
     _approx_param_no = bbvi._approx_param_no;
 
     _q.resize(bbvi._q.size());
-    for (int64_t i{0}; i < static_cast<int64_t>(bbvi._q.size()); ++i)
+    for (size_t i{0}; i < bbvi._q.size(); ++i)
         _q[i] = bbvi._q[i]->clone();
 
     if (bbvi._optim != nullptr)
@@ -100,7 +100,7 @@ BBVI& BBVI::operator=(BBVI&& bbvi) noexcept {
     _approx_param_no = bbvi._approx_param_no;
 
     _q.resize(bbvi._q.size());
-    for (int64_t i{0}; i < static_cast<int64_t>(bbvi._q.size()); ++i)
+    for (size_t i{0}; i < bbvi._q.size(); ++i)
         _q[i] = bbvi._q[i]->clone();
 
     if (bbvi._optim != nullptr)
@@ -138,7 +138,7 @@ BBVI::~BBVI() {
 bool operator==(const BBVI& bbvi1, const BBVI& bbvi2) {
     if (bbvi1._q.size() != bbvi2._q.size())
         return false;
-    for (int64_t i{0}; i < static_cast<int64_t>(bbvi1._q.size()); ++i)
+    for (size_t i{0}; i < bbvi1._q.size(); ++i)
         if (!(*bbvi1._q[i].get() == *bbvi2._q[i].get()))
             return false;
     return bbvi1._neg_posterior(bbvi1.current_parameters(), std::nullopt) ==
@@ -165,7 +165,7 @@ double BBVI::create_normal_logq(const Eigen::VectorXd& z) const {
 }
 
 Eigen::VectorXd BBVI::cv_gradient(const Eigen::MatrixXd& z, bool initial) const {
-    assert(z.cols() == _sims);
+    assert(static_cast<size_t>(z.cols()) == _sims);
     Eigen::MatrixXd z_t{z.transpose()};
     Eigen::MatrixXd log_q_res{normal_log_q(z_t, initial)};
     // Replace NAN with 0, inside log_q_res
@@ -225,7 +225,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales_from_q() 
     Eigen::VectorXd means = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_q.size()));
     Eigen::VectorXd scale = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_q.size()));
 
-    for (int64_t i{0}; i < static_cast<int64_t>(_q.size()); ++i) {
+    for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(_q.size()); ++i) {
         means[i] = dynamic_cast<Normal*>(_q[i].get())->get_mu0();
         scale[i] = dynamic_cast<Normal*>(_q[i].get())->get_sigma0();
     }
@@ -235,14 +235,15 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales_from_q() 
 
 std::pair<Eigen::VectorXd, Eigen::VectorXd> BBVI::get_means_and_scales() const {
     return std::pair{_optim->get_parameters()(Eigen::seq(0, Eigen::last, 2)),
-                               _optim->get_parameters()(Eigen::seq(1, Eigen::last, 2)).array().exp()};
+                     _optim->get_parameters()(Eigen::seq(1, Eigen::last, 2)).array().exp()};
 }
 
 Eigen::MatrixXd BBVI::grad_log_q(const Eigen::MatrixXd& z) const {
     Eigen::Index param_count{0};
-    Eigen::MatrixXd grad{Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(_approx_param_no.sum()), _sims)};
-    for (int64_t core_param{0}; core_param < static_cast<int64_t>(_q.size()); ++core_param) {
-        for (int64_t approx_param{0}; approx_param < _q[core_param]->get_param_no(); ++approx_param) {
+    Eigen::MatrixXd grad{
+            Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(_approx_param_no.sum()), static_cast<Eigen::Index>(_sims))};
+    for (Eigen::Index core_param{0}; core_param < static_cast<Eigen::Index>(_q.size()); ++core_param) {
+        for (size_t approx_param{0}; approx_param < _q[core_param]->get_param_no(); ++approx_param) {
             Eigen::VectorXd temp_z = z.row(core_param);
             grad.row(param_count)  = dynamic_cast<Normal*>(_q[core_param].get())->vi_score(temp_z, approx_param);
             param_count++;
@@ -264,10 +265,10 @@ Eigen::MatrixXd BBVI::normal_log_q(const Eigen::MatrixXd& z, bool initial) const
     return Mvn::logpdf(z, means_scales.first, means_scales.second).rowwise().sum();
 }
 
-void BBVI::print_progress(int64_t i, const Eigen::VectorXd& current_params) const {
+void BBVI::print_progress(size_t i, const Eigen::VectorXd& current_params) const {
     auto posterior{posterior::reverse_function_params(_neg_posterior)};
     for (int8_t split{1}; split < 11; ++split) {
-        if (i == static_cast<int64_t>(round(static_cast<double>(_iterations) / 10 * split)) - 1) {
+        if (i == static_cast<size_t>(round(static_cast<double>(_iterations) / 10 * split)) - 1) {
             double post   = -posterior(current_params);
             double approx = create_normal_logq(current_params);
             double diff   = post - approx;
@@ -289,7 +290,7 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(const Eigen
     gradient = gradient.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
     Eigen::VectorXd variance{pow(gradient.array(), 2)};
     Eigen::VectorXd final_parameters{current_parameters()};
-    int64_t final_samples{1};
+    size_t final_samples{1};
 
     // Create optimizer
     if (_optimizer == "ADAM")
@@ -298,16 +299,17 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(const Eigen
         _optim = std::make_unique<RMSProp>(final_parameters, variance, _learning_rate, 0.99);
 
     // Store updates
-    Eigen::MatrixXd stored_means{Eigen::MatrixXd::Zero(_iterations, final_parameters.size() / 2)};
-    Eigen::VectorXd stored_predictive_likelihood{Eigen::VectorXd::Zero(_iterations)};
+    Eigen::MatrixXd stored_means{
+            Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(_iterations), final_parameters.size() / 2)};
+    Eigen::VectorXd stored_predictive_likelihood{Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_iterations))};
 
     // Record elbo
     Eigen::VectorXd elbo_records;
     if (_record_elbo)
-        elbo_records = Eigen::VectorXd::Zero(_iterations);
+        elbo_records = Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_iterations));
 
     Eigen::MatrixXd x;
-    for (Eigen::Index i{0}; i < _iterations; ++i) {
+    for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(_iterations); ++i) {
         x        = draw_normal();
         gradient = cv_gradient(x, false);
         gradient = gradient.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
@@ -353,7 +355,7 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(const Eigen
         std::cout << "\nFinal model ELBO is " << -neg_posterior(final_means) - create_normal_logq(final_means) << "\n";
 
     std::vector<std::unique_ptr<Family>> temp_q(_q.size());
-    for (int64_t i{0}; i < static_cast<int64_t>(_q.size()); ++i)
+    for (size_t i{0}; i < _q.size(); ++i)
         temp_q[i] = _q[i]->clone();
     if (store) {
         return {std::move(temp_q), final_means, final_ses, elbo_records, stored_means, stored_predictive_likelihood};
@@ -365,9 +367,9 @@ BBVIReturnData BBVI::run(bool store) {
     return run_with(store, posterior::reverse_function_params(_neg_posterior));
 }
 
-CBBVI::CBBVI(const std::function<double(const Eigen::VectorXd&, std::optional<int64_t>)>& neg_posterior,
+CBBVI::CBBVI(const std::function<double(const Eigen::VectorXd&, std::optional<size_t>)>& neg_posterior,
              std::function<Eigen::VectorXd(const Eigen::VectorXd&)> log_p_blanket,
-             std::vector<std::unique_ptr<Family>>& q, int64_t sims, const std::string& optimizer, int64_t iterations,
+             std::vector<std::unique_ptr<Family>>& q, size_t sims, const std::string& optimizer, size_t iterations,
              double learning_rate, bool record_elbo, bool quiet_progress)
     : BBVI{neg_posterior, q, sims, optimizer, iterations, learning_rate, record_elbo, quiet_progress},
       _log_p_blanket{std::move(log_p_blanket)} {}
@@ -393,7 +395,7 @@ CBBVI& CBBVI::operator=(const CBBVI& cbbvi) {
     _approx_param_no = cbbvi._approx_param_no;
 
     _q.resize(cbbvi._q.size());
-    for (int64_t i{0}; i < static_cast<int64_t>(cbbvi._q.size()); ++i)
+    for (size_t i{0}; i < cbbvi._q.size(); ++i)
         _q[i] = cbbvi._q[i]->clone();
 
     if (cbbvi._optim != nullptr)
@@ -416,7 +418,7 @@ CBBVI& CBBVI::operator=(CBBVI&& cbbvi) noexcept {
     _approx_param_no = cbbvi._approx_param_no;
 
     _q.resize(cbbvi._q.size());
-    for (int64_t i{0}; i < static_cast<int64_t>(cbbvi._q.size()); ++i)
+    for (size_t i{0}; i < cbbvi._q.size(); ++i)
         _q[i] = cbbvi._q[i]->clone();
 
     if (cbbvi._optim != nullptr)
@@ -443,7 +445,7 @@ CBBVI& CBBVI::operator=(CBBVI&& cbbvi) noexcept {
 bool operator==(const CBBVI& cbbvi1, const CBBVI& cbbvi2) {
     if (cbbvi1._q.size() != cbbvi2._q.size())
         return false;
-    for (int64_t i{0}; i < static_cast<int64_t>(cbbvi1._q.size()); ++i)
+    for (size_t i{0}; i < cbbvi1._q.size(); ++i)
         if (!(*cbbvi1._q[i].get() == *cbbvi2._q[i].get()))
             return false;
     Eigen::VectorXd v = Eigen::Vector3d::Random();
@@ -473,7 +475,7 @@ Eigen::MatrixXd CBBVI::normal_log_q(const Eigen::MatrixXd& z, bool initial) cons
 }
 
 Eigen::VectorXd CBBVI::cv_gradient(const Eigen::MatrixXd& z, bool initial) const {
-    assert(z.cols() == _sims);
+    assert(static_cast<size_t>(z.cols()) == _sims);
     Eigen::MatrixXd z_t{z.transpose()};
     Eigen::MatrixXd log_q_res{normal_log_q(z_t, initial)};
     // Replace NAN with 0, inside log_q_res
@@ -485,8 +487,8 @@ Eigen::VectorXd CBBVI::cv_gradient(const Eigen::MatrixXd& z, bool initial) const
     Eigen::MatrixXd sub_log_t{(log_p_res - log_q_res).transpose()};
     Eigen::MatrixXd sub_log(z.rows() * 2, z.cols());
     // Simulation of np.repeat (x2) in Python
-    int64_t j{0};
-    for (int64_t i{0}; i < z.rows(); ++i) {
+    Eigen::Index j{0};
+    for (Eigen::Index i{0}; i < z.rows(); ++i) {
         sub_log.middleRows(j, 2) = sub_log_t.row(i).colwise().replicate(2);
         j += 2;
     }
@@ -509,10 +511,10 @@ Eigen::VectorXd CBBVI::cv_gradient(const Eigen::MatrixXd& z, bool initial) const
     return vectorized.rowwise().mean();
 }
 
-BBVIM::BBVIM(const std::function<double(const Eigen::VectorXd&, std::optional<int64_t>)>& neg_posterior,
+BBVIM::BBVIM(const std::function<double(const Eigen::VectorXd&, std::optional<size_t>)>& neg_posterior,
              std::function<double(const Eigen::VectorXd&)> full_neg_posterior,
-             const std::vector<std::unique_ptr<Family>>& q, int64_t sims, const std::string& optimizer,
-             int64_t iterations, double learning_rate, int64_t mini_batch, bool record_elbo, bool quiet_progress)
+             const std::vector<std::unique_ptr<Family>>& q, size_t sims, const std::string& optimizer,
+             size_t iterations, double learning_rate, size_t mini_batch, bool record_elbo, bool quiet_progress)
     : BBVI{neg_posterior, q, sims, optimizer, iterations, learning_rate, record_elbo, quiet_progress},
       _full_neg_posterior{std::move(full_neg_posterior)}, _mini_batch{mini_batch} {}
 
@@ -541,7 +543,7 @@ BBVIM& BBVIM::operator=(const BBVIM& bbvim) {
     _mini_batch         = bbvim._mini_batch;
 
     _q.resize(bbvim._q.size());
-    for (int64_t i{0}; i < static_cast<int64_t>(bbvim._q.size()); ++i)
+    for (size_t i{0}; i < bbvim._q.size(); ++i)
         _q[i] = bbvim._q[i]->clone();
 
     return *this;
@@ -561,7 +563,7 @@ BBVIM& BBVIM::operator=(BBVIM&& bbvim) noexcept {
     _mini_batch         = bbvim._mini_batch;
 
     _q.resize(bbvim._q.size());
-    for (int64_t i{0}; i < static_cast<int64_t>(bbvim._q.size()); ++i)
+    for (size_t i{0}; i < bbvim._q.size(); ++i)
         _q[i] = bbvim._q[i]->clone();
 
     bbvim._neg_posterior  = {};
@@ -583,7 +585,7 @@ BBVIM& BBVIM::operator=(BBVIM&& bbvim) noexcept {
 bool operator==(const BBVIM& bbvim1, const BBVIM& bbvim2) {
     if (bbvim1._q.size() != bbvim2._q.size())
         return false;
-    for (int64_t i{0}; i < static_cast<int64_t>(bbvim1._q.size()); ++i)
+    for (size_t i{0}; i < bbvim1._q.size(); ++i)
         if (!(*bbvim1._q[i].get() == *bbvim2._q[i].get()))
             return false;
     Eigen::VectorXd v = Eigen::Vector3d::Random();
@@ -605,9 +607,9 @@ double BBVIM::get_elbo(const Eigen::VectorXd& current_params) const {
     return _full_neg_posterior(current_params) - create_normal_logq(current_params);
 }
 
-void BBVIM::print_progress(int64_t i, const Eigen::VectorXd& current_params) const {
+void BBVIM::print_progress(size_t i, const Eigen::VectorXd& current_params) const {
     for (int split{1}; split < 11; ++split) {
-        if (i == static_cast<int64_t>(round(static_cast<double>(_iterations) / 10 * split)) - 1) {
+        if (i == static_cast<size_t>(round(static_cast<double>(_iterations) / 10 * split)) - 1) {
             double post   = -_full_neg_posterior(current_params);
             double approx = create_normal_logq(current_params);
             double diff   = post - approx;
