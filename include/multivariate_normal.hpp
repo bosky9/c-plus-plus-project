@@ -2,7 +2,7 @@
 
 #define _USE_MATH_DEFINES
 
-#include "Eigen/Core"
+#include "Eigen/Core" // Eigen::VectorXd, Eigen::MatrixXd
 
 /**
  * @class Mvn multivariate_normal.hpp

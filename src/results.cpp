@@ -13,10 +13,12 @@
 #include <iterator>   // std::ostream_iterator
 #include <list>       // std::list
 #include <map>        // std::map
+#include <memory>     // std::unique_ptr
 #include <optional>   // std::optional
 #include <ostream>    // std::ostream
 #include <string>     // std::string, std::to_string
 #include <tuple>      // std::tuple
+#include <utility>    // std::move
 #include <vector>     // std::vector
 
 Results::Results(std::vector<std::string> data_name, std::vector<std::string> X_names, std::string model_name,

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Eigen/Core"
+#include "Eigen/Core" // Eigen::VectorXd
 
-#include <functional>
+#include <functional> // std::function
 
 /**
  * @class OptimizerFunction optimizer_function.hpp

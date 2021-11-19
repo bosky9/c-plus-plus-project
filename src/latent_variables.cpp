@@ -1,27 +1,27 @@
 #include "latent_variables.hpp"
 
-#include "covariances.hpp"
-#include "Eigen/Core"
-#include "families/family.hpp"
-#include "families/normal.hpp"
-#include "matplotlibcpp.hpp"
-#include "multivariate_normal.hpp"
-#include "output/tableprinter.hpp"
-#include "utilities.hpp"
+#include "covariances.hpp"         // acf
+#include "Eigen/Core"              // Eigen::VectorXd, Eigen::Index
+#include "families/family.hpp"     // Family
+#include "families/normal.hpp"     // Normal
+#include "matplotlibcpp.hpp"       // plt::named_plot, plt::subplot, plt::figure_size, plt::xlabel, plt::ylabel, plt::title, plt::legend, plt::save, plt::show
+#include "multivariate_normal.hpp" // Mvn::pdf, Mvn::random
+#include "output/tableprinter.hpp" // TablePrinter
+#include "utilities.hpp"           // isinstance
 
-#include <algorithm>
-#include <functional>
-#include <list>
-#include <map>
-#include <cmath>
-#include <memory>
-#include <numeric>
-#include <optional>
-#include <ostream>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
+#include <algorithm>               // std::transform, std::find
+#include <cmath>                   // ceil
+#include <functional>              // std::function, std::multiplies, std::divides
+#include <list>                    // std::list
+#include <map>                     // std::map
+#include <memory>                  // std::unique_ptr
+#include <numeric>                 // std::accumulate, std::partial_sum, std::iota
+#include <optional>                // std::optional, std::nullopt
+#include <ostream>                 // std::ostream
+#include <string>                  // std::string, std::to_string
+#include <tuple>                   // std::tuple
+#include <utility>                 // std::pair, std::move
+#include <vector>                  // std::vector
 
 LatentVariable::LatentVariable(const std::string& name, const Family& prior, const Family& q)
     : _name{name}, _prior{prior.clone()}, _index{0},
@@ -33,12 +33,12 @@ LatentVariable::LatentVariable(const LatentVariable& lv)
       _value{lv.get_value()}, _std{lv.get_std()}, _sample{lv.get_sample()} {}
 
 LatentVariable::LatentVariable(LatentVariable&& lv) noexcept {
-    _name  = lv.get_name();
-    _index = lv._index;
-    _prior = (lv.get_prior());
-    _transform = lv._transform;
-    _start     = lv.get_start();
-    _q = (lv.get_q());
+    _name         = lv.get_name();
+    _index        = lv._index;
+    _prior        = lv.get_prior();
+    _transform    = lv._transform;
+    _start        = lv.get_start();
+    _q            = lv.get_q();
     _method       = lv.get_method();
     _value        = lv.get_value();
     _std          = lv.get_std();
@@ -58,30 +58,30 @@ LatentVariable::LatentVariable(LatentVariable&& lv) noexcept {
 LatentVariable& LatentVariable::operator=(const LatentVariable& lv) {
     if (this == &lv)
         return *this;
-    _name  = lv.get_name();
-    _index = lv._index;
+    _name      = lv.get_name();
+    _index     = lv._index;
     _prior.reset();
-    _prior = (lv.get_prior()->clone());
+    _prior     = lv.get_prior()->clone();
     _transform = lv._transform;
     _start     = lv.get_start();
     _q.reset();
-    _q = (lv.get_q()->clone());
-    _method = lv.get_method();
-    _value  = lv.get_value();
-    _std    = lv.get_std();
-    _sample = lv.get_sample();
+    _q         = lv.get_q()->clone();
+    _method    = lv.get_method();
+    _value     = lv.get_value();
+    _std       = lv.get_std();
+    _sample    = lv.get_sample();
     return *this;
 }
 
 LatentVariable& LatentVariable::operator=(LatentVariable&& lv) noexcept {
-    _name  = lv.get_name();
-    _index = lv._index;
+    _name         = lv.get_name();
+    _index        = lv._index;
     _prior.reset();
-    _prior = (lv.get_prior()->clone());
-    _transform = lv._transform;
-    _start     = lv.get_start();
+    _prior        = lv.get_prior()->clone();
+    _transform    = lv._transform;
+    _start        = lv.get_start();
     _q.reset();
-    _q = (lv.get_q()->clone());
+    _q            = lv.get_q()->clone();
     _method       = lv.get_method();
     _value        = lv.get_value();
     _std          = lv.get_std();
@@ -210,7 +210,7 @@ inline std::ostream& operator<<(std::ostream& stream, const LatentVariables& lvs
             {"V.I. Dist", "z_vardist", 10}, {"Transform", "z_transform", 10}};
 
     std::list<std::map<std::string, std::string>> z_row;
-    for (int64_t z{0}; z < lvs._z_list.size(); z++)
+    for (size_t z{0}; z < lvs._z_list.size(); z++)
         z_row.push_back({{"z_index", std::to_string(z)},
                          {"z_name", z_names[z]},
                          {"z_prior", prior_names[z]},
@@ -245,7 +245,7 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
         size_t divide_by      = span / current_dim;
         std::string separator = (d == dim.size() - 1) ? "," : ")";
         // append these fractions to each string of indices
-        for (int64_t indx{1}; indx < indices_dim; indx++) {
+        for (size_t indx{1}; indx < indices_dim; indx++) {
             indices[indx] += std::to_string(ceil(indx / divide_by)) + separator;
             if (indx >= span)
                 indx = 1;
@@ -258,8 +258,8 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
         add_z(name + " " + index, prior, q, false);
 }
 
-void LatentVariables::adjust_prior(const std::vector<int64_t>& index, const Family& prior) {
-    for (int64_t item : index) {
+void LatentVariables::adjust_prior(const std::vector<size_t>& index, const Family& prior) {
+    for (size_t item : index) {
         assert(item > _z_list.size() - 1);
         _z_list[item].set_prior(prior);
         if (prior.get_name() == "Normal") {
@@ -363,7 +363,7 @@ void LatentVariables::set_z_values(const Eigen::VectorXd& values, const std::str
                                    const std::optional<Eigen::VectorXd>& stds,
                                    const std::optional<Eigen::MatrixXd>& samples) {
     assert(values.size() == _z_list.size());
-    for (int64_t i{0}; i < _z_list.size(); ++i) {
+    for (size_t i{0}; i < _z_list.size(); ++i) {
         _z_list[i].set_method(method);
         _z_list[i].set_value(values[static_cast<Eigen::Index>(i)]);
         if (stds)
@@ -376,7 +376,7 @@ void LatentVariables::set_z_values(const Eigen::VectorXd& values, const std::str
 
 void LatentVariables::set_z_starting_values(const Eigen::VectorXd& values) {
     assert(values.size() == _z_list.size());
-    for (int64_t i{0}; i < _z_list.size(); ++i) {
+    for (size_t i{0}; i < _z_list.size(); ++i) {
         _z_list[i].set_start(values[static_cast<Eigen::Index>(i)]);
     }
 }
@@ -389,7 +389,7 @@ void LatentVariables::set_z_starting_value(size_t index, double value) {
 void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width, size_t height,
                              const std::string& loc) const {
     plt::figure_size(width, height);
-    for (int64_t z{0}; z < _z_list.size(); z++) {
+    for (size_t z{0}; z < _z_list.size(); z++) {
         assert(!_z_list[z].get_sample().has_value() ||
                !(_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value()) &&
                        "No information on latent variable to plot!");
@@ -436,10 +436,10 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
     std::vector<std::string> palette{"royalblue",    "mediumseagreen", "chocolate",
                                      "mediumpurple", "goldenrod",      "skyblue"};
 
-    for (int64_t i{0}; i < _z_list.size(); ++i) {
+    for (size_t i{0}; i < _z_list.size(); ++i) {
         Eigen::VectorXd chain{_z_list[i].get_sample().value()};
-        for (int64_t j{0}; j < 4; j++) {
-            int64_t iteration = i * 4 + j + 1;
+        for (size_t j{0}; j < 4; j++) {
+            size_t iteration = i * 4 + j + 1;
             plt::subplot(static_cast<long>(_z_list.size()), 4, static_cast<long>(iteration));
             if (iteration >= 1 && iteration <= _z_list.size() * 4 + 1) {
                 std::function<double(double)> transform = _z_list[i].get_prior()->get_transform();
@@ -471,7 +471,7 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
                     std::vector<double> x(9);
                     std::iota(x.begin(), x.end(), 1);
                     std::vector<double> y(9);
-                    for (int64_t lag{1}; lag < 10 && lag < chain.size();
+                    for (size_t lag{1}; lag < 10 && lag < chain.size();
                          lag++) { // Added lag < chain.size() to avoid index error in acf()
                         Eigen::VectorXd eigen_chain =
                                 Eigen::VectorXd::Map(chain.data(), static_cast<Eigen::Index>(chain.size()));

@@ -1,8 +1,11 @@
 #include "optimizer_function.hpp"
 
-#include "Eigen/Core"
+#include "Eigen/Core" // Eigen::Index, Eigen::VectorXd
 
-#include <functional>
+#include <cmath>      // std::cbrt
+#include <functional> // std::function
+#include <limits>     // std::numeric_limits
+#include <utility>    // std::move
 
 OptimizerFunction::OptimizerFunction(std::function<double(Eigen::VectorXd)> function)
     : _function{std::move(function)} {}
@@ -12,7 +15,7 @@ double OptimizerFunction::operator()(const Eigen::VectorXd& beta, Eigen::VectorX
     Eigen::VectorXd beta_temp_plus  = beta;
     Eigen::VectorXd beta_temp_minus = beta;
 
-    for (int64_t i{0}; i < beta.size(); ++i) {
+    for (Eigen::Index i{0}; i < beta.size(); ++i) {
         // Init h
         double h;
         if (beta[i] != 0) {

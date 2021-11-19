@@ -1,17 +1,17 @@
 #pragma once
 
-#include "Eigen/Core"
-#include "families/family.hpp"
-#include "matplotlibcpp.hpp"
+#include "Eigen/Core"          // Eigen::VectorXd, Eigen::MatrixXd
+#include "families/family.hpp" // Family
+#include "matplotlibcpp.hpp"   // matplotlibcpp
 
-#include <functional>
-#include <map>
-#include <memory>
-#include <optional>
-#include <ostream>
-#include <string>
-#include <utility>
-#include <vector>
+#include <functional>          // std::function
+#include <map>                 // std::map
+#include <memory>              // std::unique_ptr
+#include <optional>            // std::optional, std::nullopt
+#include <ostream>             // std::ostream
+#include <string>              // std::string
+#include <utility>             // std::pair
+#include <vector>              // std::vector
 
 namespace plt = matplotlibcpp;
 
@@ -267,7 +267,7 @@ public:
      * @param index Which latent variable index/indices to be altered
      * @param prior Which prior distribution? E.g. Normal(0,1)
      */
-    void adjust_prior(const std::vector<int64_t>& index, const Family& prior);
+    void adjust_prior(const std::vector<size_t>& index, const Family& prior);
 
     /**
      * @brief Returns list of LatentVariable objects

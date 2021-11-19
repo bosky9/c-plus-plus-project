@@ -300,7 +300,7 @@ void TSM::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width
     _latent_variables.plot_z(indices, width, height);
 }
 
-void TSM::adjust_prior(const std::vector<int64_t>& index, const Family& prior) {
+void TSM::adjust_prior(const std::vector<size_t>& index, const Family& prior) {
     _latent_variables.adjust_prior(index, prior);
 }
 
