@@ -329,7 +329,14 @@ template<typename Derived> class MatrixBase
     inline const PartialPivLU<PlainObject> lu() const;
 
     EIGEN_DEVICE_FUNC
-    inline const Inverse<Derived> inverse() const;
+    inline const Inverse<Derived> inverse() const
+    {
+        EIGEN_STATIC_ASSERT(!NumTraits<Scalar>::IsInteger,THIS_FUNCTION_IS_NOT_FOR_INTEGER_NUMERIC_TYPES)
+        eigen_assert(rows() == cols());
+        return Inverse<Derived>(derived());
+    };
+
+
 
     template<typename ResultType>
     inline void computeInverseAndDetWithCheck(
