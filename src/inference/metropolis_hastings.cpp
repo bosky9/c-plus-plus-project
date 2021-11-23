@@ -77,7 +77,8 @@ Sample MetropolisHastings::sample() {
     }
 
     // Remove warm-up and thin
-    _phi = _phi(Eigen::seq(_nsims / 2, Eigen::last), Eigen::all)(Eigen::seq(0, Eigen::last, _thinning), Eigen::all);
+    Eigen::MatrixXd new_phi{_phi(Eigen::seq(_nsims / 2, Eigen::last), Eigen::all)(Eigen::seq(0, Eigen::last, _thinning), Eigen::all)};
+    _phi = new_phi;
     Eigen::MatrixXd chain = _phi.transpose();
 
     Eigen::VectorXd mean_est = _phi.colwise().mean();
