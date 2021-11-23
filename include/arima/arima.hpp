@@ -311,7 +311,7 @@ public:
      *
      * @details The same as the other constructor,
      *          but multiple columns of data are passed as a DataFrame.
-     *          Only one columns is selected; which one? Decided by @param target.
+     *          Only one columns is selected; which one? Decided by target.
      */
     ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal(),
           const std::string& target = "");
