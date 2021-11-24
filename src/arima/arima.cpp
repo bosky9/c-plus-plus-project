@@ -188,7 +188,8 @@ void ARIMA::create_latent_variables() {
 }
 
 std::tuple<double, double, double> ARIMA::get_scale_and_shape(const Eigen::VectorXd& transformed_lvs) const {
-    double model_shape, model_scale, model_skewness{0};
+
+    double model_shape{0}, model_scale{0}, model_skewness{0};
 
     if (_scale) {
         if (_shape) {
