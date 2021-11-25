@@ -846,6 +846,7 @@ Eigen::MatrixXd ARIMA::sample(size_t nsims) const {
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(nsims); ++i) {
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         // Shape and skew are not used for Normal distributions
+        // TODO: Change Family::draw_variable() to accept shape and skew for other distributions
         data_draws.row(i) =
                 _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
     }
@@ -889,13 +890,15 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(nsims); ++i)
         mus.push_back(_model(lv_draws.col(i)).first);
 
+    auto scale_shape_skew{get_scale_and_shape_sim(lv_draws)};
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(nsims); ++i) {
-        auto scale_shape_skew{get_scale_and_shape(lv_draws.col(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
+        // Shape and skew are not used for Normal distributions
+        // TODO: Change Family::draw_variable() to accept shape and skew for other distributions
         data_draws.row(i) =
-                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
     }
 
     Eigen::Matrix sample_data{sample(nsims)};
