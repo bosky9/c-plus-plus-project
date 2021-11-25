@@ -1,7 +1,8 @@
 #pragma once
 
-#include "headers.hpp"
+#include "Eigen/Core"
 
+#include <functional>
 #include <optional>
 
 namespace posterior {

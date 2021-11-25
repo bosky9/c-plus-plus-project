@@ -1092,7 +1092,7 @@ bool scatter_colored(const std::vector<NumericX>& x, const std::vector<NumericY>
 
 template<typename NumericX, typename NumericY, typename NumericZ>
 bool scatter(const std::vector<NumericX>& x, const std::vector<NumericY>& y, const std::vector<NumericZ>& z,
-             const double s                                     = 1.0, // The marker size in points**2
+             [[maybe_unused]] const double s                    = 1.0, // The marker size in points**2
              const std::map<std::string, std::string>& keywords = {}, const long fig_number = 0) {
     detail::_interpreter::get();
 

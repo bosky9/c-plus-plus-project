@@ -1,12 +1,12 @@
 #pragma once
 
+#include "Eigen/Core"
+
 #include <algorithm>
 #include <cassert>
 #include <iterator>
 #include <numeric>
 #include <type_traits>
-
-#include "headers.hpp"
 
 /**
  * @brief Calculate the sample autocovariance of two arrays (stationarity assumed)

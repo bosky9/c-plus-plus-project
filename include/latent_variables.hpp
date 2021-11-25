@@ -16,7 +16,7 @@
 namespace plt = matplotlibcpp;
 
 /**
- * @class LatentVariable latent_variables.hpp
+ * @class LatentVariable latent_variables_plots.hpp
  * @brief Class that represents a latent variable
  *
  * @details Using a unique_pointer for _prior and _q
@@ -192,7 +192,7 @@ private:
 };
 
 /**
- * @class LatentVariables latent_variables.hpp
+ * @class LatentVariables latent_variables_plots.hpp
  * @brief Class that represents a list of latent variables.
  * Holds latent variable objects and contains method for latent variable manipulation. Latent variables are
  * referred to as z as shorthand. This is convention in much of the literature.

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Eigen/Core"
 #include "families/family.hpp"
-#include "headers.hpp"
 #include "hessian.hpp"
 #include "inference/bbvi.hpp"
 #include "inference/metropolis_hastings.hpp"
@@ -14,6 +14,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 /**
  * @brief Struct that represents the internal data of a time-series model
@@ -54,52 +55,53 @@ protected:
     std::string _model_type;  ///< The type of model (e.g. 'ARIMA', 'GARCH')
     bool _multivariate_model;
     std::function<double(const Eigen::VectorXd&)>
-            _neg_logposterior;                                                  /**<
-                                                                                 *  This function is the equivalent of the neg_loposterior(self, beta) function in
-                                                                                 * python.
-                                                                                 *
-                                                                                 *  This function is initialized with a lamba expression, which calls the
-                                                                                 *  double neg_logposterior(Eigen::VectorXd beta) c++ function.
-                                                                                 *
-                                                                                 *  This function is necessary for the following methods:
-                                                                                 *   - _bbvi_fit( ... ), used internally and passed as the first argument
-                                                                                 *   - _mcmc_fit( ... ), used internally
-                                                                                 *   - _optimize_fit( ... ), passed as the first argument
-                                                                                 *   - _laplace_fit( ... ), passed as the first argument
-                                                                                 *
-                                                                                 *   This function utilizes the _neg_loglik function.
-                                                                                 */
+            _neg_logposterior; /**<
+                                *  This function is the equivalent of the neg_loposterior(self, beta) function in
+                                * python.
+                                *
+                                *  This function is initialized with a lamba expression, which calls the
+                                *  double neg_logposterior(Eigen::VectorXd beta) c++ function.
+                                *
+                                *  This function is necessary for the following methods:
+                                *   - _bbvi_fit( ... ), used internally and passed as the first argument
+                                *   - _mcmc_fit( ... ), used internally
+                                *   - _optimize_fit( ... ), passed as the first argument
+                                *   - _laplace_fit( ... ), passed as the first argument
+                                *
+                                *   This function utilizes the _neg_loglik function.
+                                */
 
     std::function<double(const Eigen::VectorXd&, size_t)> _mb_neg_logposterior; ///< Similar to _neg_logposterior
     // std::function<double(Eigen::VectorXd)> _multivariate_neg_logposterior; // Only for VAR models
 
     std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&)>
-            _model;                                                             /**<
-                                                                                 *  This function is initialized in the ARIMA class.
-                                                                                 *  It is necessary for many of its functions.
-                                                                                 *
-                                                                                 *  It receives a vector as input; the size of this vector
-                                                                                 *  must be of a specific size, related to the _data_frame field.
-                                                                                 *  In fact, _model is only meant for internal usage.
-                                                                                 */
+            _model; /**<
+                     *  This function is initialized in the ARIMA class.
+                     *  It is necessary for many of its functions.
+                     *
+                     *  It receives a vector as input; the size of this vector
+                     *  must be of a specific size, related to the _data_frame field.
+                     *  In fact, _model is only meant for internal usage.
+                     */
 
-    std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&, size_t mb)> _mb_model; // Init in ARIMA
+    std::function<std::pair<Eigen::VectorXd, Eigen::VectorXd>(const Eigen::VectorXd&, size_t mb)>
+            _mb_model; // Init in ARIMA
     std::function<double(const Eigen::VectorXd&)>
-            _neg_loglik;                                                          /**<
-                                                                                  *  This function is the equivalent of the python neg_loglik( ... ) function,
-                                                                                  *  which is initialized in the ARIMA class.
-                                                                                  *
-                                                                                  *  This function is not initialized in the TSM constructor,
-                                                                                  *  following the python implementation. It will be instead initialized in ARIMA.
-                                                                                  *
-                                                                                  *  This function is necessary for the following methods:
-                                                                                  *   - _optimize_fit( ... ), passed as parameter and used internally
-                                                                                  *   - neg_logposterior(beta), used internally
-                                                                                  *
-                                                                                  *  It would also be used in the multivariate_neg_logposterior(beta) method,
-                                                                                  *  and the _ols_fit(...) one,
-                                                                                  *  but we did not implement VAR models.
-                                                                                  */
+            _neg_loglik; /**<
+                          *  This function is the equivalent of the python neg_loglik( ... ) function,
+                          *  which is initialized in the ARIMA class.
+                          *
+                          *  This function is not initialized in the TSM constructor,
+                          *  following the python implementation. It will be instead initialized in ARIMA.
+                          *
+                          *  This function is necessary for the following methods:
+                          *   - _optimize_fit( ... ), passed as parameter and used internally
+                          *   - neg_logposterior(beta), used internally
+                          *
+                          *  It would also be used in the multivariate_neg_logposterior(beta) method,
+                          *  and the _ols_fit(...) one,
+                          *  but we did not implement VAR models.
+                          */
 
     std::function<double(const Eigen::VectorXd&, size_t mb)> _mb_neg_loglik; ///< Similar to _neg_loglik
     bool _z_hide;
@@ -198,7 +200,7 @@ protected:
      * @return Negative log posterior
      *
      * @details This is the function called by _neg_logposterior.
-     *          It sums the logpdf of the prior of the latent_variables.
+     *          It sums the logpdf of the prior of the latent_variables_plots.
      *          It also employs _neg_loglik, to initialize the sum.
      */
     [[nodiscard]] double neg_logposterior(const Eigen::VectorXd& beta);

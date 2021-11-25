@@ -1,6 +1,5 @@
 #pragma once
 
-#include "headers.hpp"
 #include "tsm.hpp"
 #include "utilities.hpp"
 
@@ -8,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <numeric>
+#include <vector>
 
 /**
  * @brief Checks data type
@@ -34,7 +34,7 @@ inline SingleDataFrame data_check(const std::vector<double>& data) {
  *
  * @details Represents the Python case where a pd.DataFrame is passed to the function.
  */
-inline SingleDataFrame data_check(const DataFrame& data_frame, const std::string& target = "") {
+inline SingleDataFrame data_check(const utils::DataFrame& data_frame, const std::string& target = "") {
     assert(data_frame.data_name.size() == data_frame.data.size());
 
     SingleDataFrame checked_data;
@@ -65,8 +65,8 @@ inline SingleDataFrame data_check(const DataFrame& data_frame, const std::string
  *
  * @details Represents the Python case where a np.array is passed to the function.
  */
-inline DataFrame mv_data_check(const std::vector<std::vector<double>>& data) {
-    DataFrame checked_data;
+inline utils::DataFrame mv_data_check(const std::vector<std::vector<double>>& data) {
+    utils::DataFrame checked_data;
     checked_data.data = data;
     checked_data.index.resize(data.at(0).size());
     std::iota(checked_data.index.begin(), checked_data.index.end(), 0);
@@ -82,8 +82,8 @@ inline DataFrame mv_data_check(const std::vector<std::vector<double>>& data) {
  * @param data Field to specify the time series data that will be used
  * @return A struct containing the transformed data, relative name and indices
  *
- * @details Represents the Python case where a pd.DataFrame is passed to the function.
+ * @details Represents the Python case where a pd.utils::DataFrame is passed to the function.
  */
-inline DataFrame mv_data_check(const DataFrame& data_frame) {
-    return std::move(DataFrame(data_frame));
+inline utils::DataFrame mv_data_check(const utils::DataFrame& data_frame) {
+    return {data_frame};
 }

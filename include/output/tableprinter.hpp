@@ -1,10 +1,12 @@
 #pragma once
-#include "../headers.hpp"
+
 #include <cstdio>
 #include <iomanip>
+#include <list>
 #include <map>
 #include <sstream>
 #include <tuple>
+#include <vector>
 
 //@Todo: find a better way to implement key
 

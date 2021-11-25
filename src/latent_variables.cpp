@@ -128,7 +128,7 @@ void LatentVariable::plot_z(size_t width, size_t height) const {
     }
     plt::xlabel("Value");
     plt::legend();
-    plt::save("../data/latent_variables/plot_z_single.png");
+    plt::save("../data/latent_variables_plots/plot_z_single.png");
     // plt::show();
 }
 
@@ -194,12 +194,12 @@ void LatentVariable::set_q(const Family& q) {
 }
 
 void LatentVariable::set_mu0_q(double mu0) {
-    if (isinstance<Normal>(_q.get()))
+    if (utils::isinstance<Normal>(_q.get()))
         dynamic_cast<Normal*>(_q.get())->set_mu0(mu0);
 }
 
 void LatentVariable::set_sigma0_q(double sigma0) {
-    if (isinstance<Normal>(_q.get()))
+    if (utils::isinstance<Normal>(_q.get()))
         dynamic_cast<Normal*>(_q.get())->set_sigma0(sigma0);
 }
 
@@ -354,7 +354,8 @@ std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
     std::vector<std::unique_ptr<Family>> approx_dists = get_z_approx_dist();
     std::vector<std::string> q_list(approx_dists.size());
     for (auto& approx : approx_dists)
-        q_list.emplace_back((isinstance<Normal>(approx.get())) ? "Normal" : "Approximate distribution not detected");
+        q_list.emplace_back((utils::isinstance<Normal>(approx.get())) ? "Normal"
+                                                                      : "Approximate distribution not detected");
     return q_list;
 }
 
@@ -450,7 +451,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
     plt::ylabel("Frequency");
     plt::title("Latent Variable Plot");
     plt::legend(std::map<std::string, std::string>{{"loc", loc}});
-    plt::save("../data/latent_variables/plot_z.png");
+    plt::save("../data/latent_variables_plots/plot_z.png");
     // plt::show();
 }
 
@@ -509,6 +510,6 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
             }
         }
     }
-    plt::save("../data/latent_variables/trace_plot.png");
+    plt::save("../data/latent_variables_plots/trace_plot.png");
     // plt::show();
 }

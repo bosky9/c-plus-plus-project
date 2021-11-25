@@ -351,7 +351,7 @@ void BBVIResults::plot_elbo(size_t width, size_t height) const {
     plt::plot(elbo_records);
     plt::xlabel("Iterations");
     plt::ylabel("ELBO");
-    plt::save("../data/BBVIResults_plot_elbo.png");
+    plt::save("../data/BBVIResults_plots/plot_elbo.png");
     // plt::show();
 }
 
@@ -482,7 +482,7 @@ void BBVISSResults::plot_elbo(size_t width, size_t height) const {
     plt::plot(elbo_records);
     plt::xlabel("Iterations");
     plt::ylabel("ELBO");
-    plt::save("../data/BBVISSResults_plot_elbo.png");
+    plt::save("../data/BBVISSResults_plots/plot_elbo.png");
     // plt::show();
 }
 

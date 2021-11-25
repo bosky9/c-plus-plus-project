@@ -1,9 +1,9 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include "utilities.hpp"
 
+#include <catch2/catch_test_macros.hpp>
+
 TEST_CASE("Get DataFrame from CSV file with 'time' and 'value' columns", "[parse_csv]") {
-    DataFrame df = parse_csv("../sunspot.year.csv");
+    utils::DataFrame df = utils::parse_csv("../data/sunspot.year.csv");
     if (df.data.empty())
         assert(df.index.empty());
     else

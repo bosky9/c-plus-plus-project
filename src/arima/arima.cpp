@@ -28,7 +28,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
-        _data_frame.data = diff(_data_frame.data);
+        _data_frame.data = utils::diff(_data_frame.data);
     _data_frame.data_name = "Differenced " + _data_frame.data_name;
     _data_length          = _data_frame.data.size();
 
@@ -81,7 +81,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     }
 }
 
-ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, const Family& family,
+ARIMA::ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t integ, const Family& family,
              const std::string& target)
     : TSM{"ARIMA"} {
     // Latent Variable information
@@ -104,7 +104,7 @@ ARIMA::ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ, co
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
-        _data_frame.data = diff(_data_frame.data);
+        _data_frame.data = utils::diff(_data_frame.data);
     _data_frame.data_name = "Differenced " + _data_frame.data_name;
     _data_length          = _data_frame.data.size();
 
@@ -207,7 +207,9 @@ std::tuple<double, double, double> ARIMA::get_scale_and_shape(const Eigen::Vecto
 
 std::tuple<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>
 ARIMA::get_scale_and_shape_sim(const Eigen::MatrixXd& transformed_lvs) const {
-    Eigen::VectorXd model_shape{Eigen::VectorXd::Zero(transformed_lvs.cols())}, model_scale{Eigen::VectorXd::Zero(transformed_lvs.cols())}, model_skewness{Eigen::VectorXd::Zero(transformed_lvs.cols())};
+    Eigen::VectorXd model_shape{Eigen::VectorXd::Zero(transformed_lvs.cols())},
+            model_scale{Eigen::VectorXd::Zero(transformed_lvs.cols())},
+            model_skewness{Eigen::VectorXd::Zero(transformed_lvs.cols())};
 
     if (_scale) {
         if (_shape) {
@@ -561,7 +563,7 @@ ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::Ma
     for (size_t pre{5}; pre < 100; pre += 5) {
         error_bars.push_back(mean_values[static_cast<Eigen::Index>(-h - 1)]);
         for (Eigen::Index i{0}; i < sim_vector.rows(); ++i)
-            error_bars.push_back(percentile(sim_vector.row(i), pre));
+            error_bars.push_back(utils::percentile(sim_vector.row(i), pre));
     }
 
     std::vector<double> mv(&mean_values[0], mean_values.data() + mean_values.size());
@@ -569,7 +571,7 @@ ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::Ma
     if (_latent_variables.get_estimation_method() == "M-H") {
         forecasted_values.push_back(mean_values[static_cast<Eigen::Index>(-h - 1)]);
         for (Eigen::Index i{0}; i < sim_vector.rows(); ++i)
-            forecasted_values.push_back(mean(sim_vector.row(i)));
+            forecasted_values.push_back(utils::mean(sim_vector.row(i)));
     } else
         std::copy(mv.end() - static_cast<long>(h + 1), mv.end(), std::back_inserter(forecasted_values));
 
@@ -612,7 +614,7 @@ void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) 
     plt::named_plot("ARIMA model", date_index, values_to_plot, "k");
     plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
     plt::legend({{"loc", "2"}});
-    plt::save("../data/arima/plot_fit.png");
+    plt::save("../data/arima_plots/plot_fit.png");
     // plt::show();
 }
 
@@ -634,12 +636,12 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
         for (size_t pre{5}; pre < 100; pre += 5) {
             error_bars.push_back(Y.back());
             for (Eigen::Index i{0}; i < sim_vector.rows(); ++i)
-                error_bars.push_back(percentile(sim_vector.row(i), pre));
+                error_bars.push_back(utils::percentile(sim_vector.row(i), pre));
         }
 
         forecasted_values.push_back(Y.back());
         for (Eigen::Index i{0}; i < sim_vector.rows(); ++i)
-            forecasted_values.push_back(mean(sim_vector.row(i)));
+            forecasted_values.push_back(utils::mean(sim_vector.row(i)));
 
         std::copy(Y.end() - 1 - static_cast<long>(past_values), Y.end() - 2, std::back_inserter(plot_values));
         plot_values.insert(plot_values.end(), forecasted_values.begin(), forecasted_values.end());
@@ -694,14 +696,14 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
                    std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
         plt::xlabel("Time");
         plt::ylabel(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
-        plt::save("../data/arima/plot_predict.png");
+        plt::save("../data/arima_plots/plot_predict.png");
         // plt::show();
     }
 }
 
 
-DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool intervals) const {
-    DataFrame predictions;
+utils::DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_method, bool intervals) const {
+    utils::DataFrame predictions;
     LatentVariables saved_lvs{""};
 
     std::vector<std::string> names{
@@ -709,7 +711,7 @@ DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& fit_meth
             "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval", "99% Prediction Interval"};
 
     std::vector<double> data_original_t, index;
-    DataFrame new_prediction;
+    utils::DataFrame new_prediction;
     for (Eigen::Index t{0}; t < static_cast<Eigen::Index>(h); t++) {
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
@@ -756,27 +758,27 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
         plt::named_plot("Predictions", predictions.index, predictions.data[i], "k");
     plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
     plt::legend({{"loc", "2"}});
-    plt::save("../data/arima/plot_predict_is.png");
+    plt::save("../data/arima_plots/plot_predict_is.png");
     // plt::show();
 }
 
-DataFrame ARIMA::predict(size_t h, bool intervals) const {
+utils::DataFrame ARIMA::predict(size_t h, bool intervals) const {
     assert(_latent_variables.is_estimated() && "No latent variables estimated!");
 
     auto mu_Y{_model(_latent_variables.get_z_values())};
     std::vector<double> date_index{shift_dates(h)};
 
     Eigen::MatrixXd sim_values;
-    DataFrame result;
+    utils::DataFrame result;
     std::vector<double> forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
     if (_latent_variables.get_estimation_method() == "M-H") {
         sim_values = sim_prediction_bayes(h, 15000);
         for (Eigen::Index i{0}; i < sim_values.rows(); ++i) {
-            forecasted_values.push_back(mean(sim_values.row(i)));
-            prediction_01.push_back(percentile(sim_values.row(i), 1));
-            prediction_05.push_back(percentile(sim_values.row(i), 5));
-            prediction_95.push_back(percentile(sim_values.row(i), 95));
-            prediction_99.push_back(percentile(sim_values.row(i), 99));
+            forecasted_values.push_back(utils::mean(sim_values.row(i)));
+            prediction_01.push_back(utils::percentile(sim_values.row(i), 1));
+            prediction_05.push_back(utils::percentile(sim_values.row(i), 5));
+            prediction_95.push_back(utils::percentile(sim_values.row(i), 95));
+            prediction_99.push_back(utils::percentile(sim_values.row(i), 99));
         }
     } else {
         Eigen::VectorXd t_z{transform_z()};
@@ -808,10 +810,10 @@ DataFrame ARIMA::predict(size_t h, bool intervals) const {
         if (_latent_variables.get_estimation_method() != "M-H") {
             // sim_values = sim_prediction(mu_Y.first, mu_Y.second, 5, t_z, 15000);
             for (Eigen::Index i{0}; i < sim_values.rows(); ++i) {
-                prediction_01.push_back(percentile(sim_values.row(i), 1));
-                prediction_05.push_back(percentile(sim_values.row(i), 5));
-                prediction_95.push_back(percentile(sim_values.row(i), 95));
-                prediction_99.push_back(percentile(sim_values.row(i), 99));
+                prediction_01.push_back(utils::percentile(sim_values.row(i), 1));
+                prediction_05.push_back(utils::percentile(sim_values.row(i), 5));
+                prediction_95.push_back(utils::percentile(sim_values.row(i), 95));
+                prediction_99.push_back(utils::percentile(sim_values.row(i), 99));
             }
         }
         result.data_name.push_back(
@@ -876,7 +878,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
                         std::vector<double>(&mu_Y.second[0], mu_Y.second.data() + mu_Y.second.size()),
                         "sk"); // FIXME: alpha = 0.5 parameter only in hist method
     plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
-    plt::save("../data/arima/plot_sample.png");
+    plt::save("../data/arima_plots/plot_sample.png");
     // plt::show();
 }
 
@@ -944,8 +946,8 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     double T_actual{T(Eigen::VectorXd(_data_frame.data.size(), _data_frame.data.size()))};
 
     std::string description;
-    if (T_name == "mean")
-        description = " of the mean";
+    if (T_name == "utils::mean")
+        description = " of the utils::mean";
     else if (T_name == "max")
         description = " of the maximum";
     else if (T_name == "min")
@@ -960,6 +962,6 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     plt::title("Posterior predictive" + description);
     plt::xlabel("T(x)");
     plt::ylabel("Frequency");
-    plt::save("../data/arima/plot_ppc.png");
+    plt::save("../data/arima_plots/plot_ppc.png");
     // plt::show();
 }

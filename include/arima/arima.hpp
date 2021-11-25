@@ -1,10 +1,10 @@
 #pragma once
 
+#include "Eigen/Core"
 #include "arima/arima_recursion.hpp"
 #include "data_check.hpp"
 #include "families/family.hpp"
 #include "families/normal.hpp"
-#include "headers.hpp"
 #include "matplotlibcpp.hpp"
 #include "multivariate_normal.hpp"
 #include "output/tableprinter.hpp"
@@ -12,48 +12,9 @@
 #include "tsm.hpp"
 #include "utilities.hpp"
 
-#include <map>
-#include <type_traits>
 #include <vector>
 
 namespace plt = matplotlibcpp;
-
-/**
- * @brief Mean function applied to a vector
- * @param v Vector of double
- * @return Mean of values inside the vector
- */
-inline double mean(Eigen::VectorXd v) {
-    return std::accumulate(v.begin(), v.end(), 0.0) / static_cast<double>(v.size());
-}
-
-inline double median(Eigen::VectorXd v) {
-    Eigen::Index n{v.size() / 2};
-    std::nth_element(v.begin(), v.begin() + n, v.end());
-    return v[n];
-}
-
-inline double max(Eigen::VectorXd v) {
-    return *std::max_element(v.begin(), v.end());
-}
-
-
-inline double min(Eigen::VectorXd v) {
-    return *std::min_element(v.begin(), v.end());
-}
-
-inline std::vector<double> diff(const std::vector<double>& v) {
-    std::vector<double> new_v(v.size() - 1);
-    for (size_t i{0}; i < new_v.size(); ++i)
-        new_v.at(i) = v.at(i + 1) - v.at(i);
-    return new_v;
-}
-
-inline double percentile(Eigen::VectorXd v, uint8_t p) {
-    std::sort(v.begin(), v.end());
-    size_t index{static_cast<size_t>(std::ceil(p * 0.01 * v.size()))};
-    return v(index - 1);
-}
 
 /**
  * @class ARIMA arima.hpp
@@ -65,8 +26,6 @@ private:
     size_t _ar;    ///< How many AR lags the model will have
     size_t _ma;    ///< How many MA lags the model will have
     size_t _integ; ///< How many times to difference the time series (default 0)
-    std::vector<double> _data_original;
-    size_t _data_length;
     Eigen::MatrixXd _x;
     std::unique_ptr<Family> _family; ///< E.g. Normal()
     std::function<double(double)> _link;
@@ -76,6 +35,8 @@ private:
     std::function<double(double)> _mean_transform; ///< A function which transforms the location parameter
     std::string _model_name2;
     size_t _family_z_no;
+    std::vector<double> _data_original;
+    size_t _data_length;
 
     /**
      * @brief Creates the Autoregressive Matrix for the model
@@ -292,15 +253,6 @@ public:
     ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
 
     /**
-     * @brief Calculates the negative log-likelihood of the model for non-Normal family
-     * @param beta Contains untransformed starting values for latent variables
-     * @return The negative logliklihood of the model
-     */
-    [[nodiscard]] double non_normal_neg_loglik(const Eigen::VectorXd& beta) const;
-
-    [[nodiscard]] double normal_neg_loglik(const Eigen::VectorXd& beta) const;
-
-    /**
      * @brief Constructor for ARIMA object
      * @param data_frame The input data for the model
      * @param ar How many AR lags the model will have
@@ -313,8 +265,27 @@ public:
      *          but multiple columns of data are passed as a DataFrame.
      *          Only one columns is selected; which one? Decided by target.
      */
-    ARIMA(const DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal(),
+    ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal(),
           const std::string& target = "");
+
+
+    /**
+     * @brief Delegate constructor for ARIMA
+     * @param ar How many AR lags the model will have
+     * @param ma How many MA lags the model will have
+     * @param integ How many times to difference the time series (default 0)
+     * @param family E.g. Normal() (default). It must be moved from the caller.
+     */
+    ARIMA(size_t ar, size_t ma, size_t integ, const Family& family);
+
+    /**
+     * @brief Calculates the negative log-likelihood of the model for non-Normal family
+     * @param beta Contains untransformed starting values for latent variables
+     * @return The negative logliklihood of the model
+     */
+    [[nodiscard]] double non_normal_neg_loglik(const Eigen::VectorXd& beta) const;
+
+    [[nodiscard]] double normal_neg_loglik(const Eigen::VectorXd& beta) const;
 
     /**
      * @brief Plots the fit of the model against the data
@@ -342,8 +313,8 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    [[nodiscard]] DataFrame predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
-                                       bool intervals = false) const;
+    [[nodiscard]] utils::DataFrame predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
+                                              bool intervals = false) const;
 
     /**
      * @brief Plots forecasts with the estimated model against data
@@ -362,7 +333,7 @@ public:
      * @param intervals Whether to return prediction intervals
      * @return Vector with predicted values
      */
-    [[nodiscard]] DataFrame predict(size_t h = 5, bool intervals = false) const;
+    [[nodiscard]] utils::DataFrame predict(size_t h = 5, bool intervals = false) const;
 
     /**
      * @brief Samples from the posterior predictive distribution
@@ -387,7 +358,7 @@ public:
      * @param T A discrepancy measure - e.g. mean, std or max
      * @return Posterior predictive p-value
      */
-    double ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = mean) const;
+    double ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = utils::mean) const;
 
     /**
      * @brief Plots histogram of the discrepancy from draws of the posterior
@@ -396,7 +367,7 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = mean,
+    void plot_ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = utils::mean,
                   const std::string& T_name = "mean", std::optional<size_t> width = 10,
                   std::optional<size_t> height = 7) const;
 };
