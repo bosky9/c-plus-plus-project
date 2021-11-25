@@ -464,35 +464,44 @@ Eigen::MatrixXd ARIMA::sim_prediction(const Eigen::VectorXd& mu, const Eigen::Ve
 
             if (_ar != 0) {
                 for (Eigen::Index i{1}; i <= static_cast<Eigen::Index>(_ar); ++i)
-                    new_value += t_params[i] * Y_exp(Eigen::last - i);
+                    new_value += t_params[i] * Y_exp(Eigen::last - i + 1);
             }
 
             if (_ma != 0) {
                 for (Eigen::Index i{1}; i <= static_cast<Eigen::Index>(_ma); ++i) {
                     if (i - 1 >= t)
                         new_value += t_params[i + static_cast<Eigen::Index>(_ar)] *
-                                     (Y_exp(Eigen::last - i) - mu_exp(Eigen::last - i));
+                                     (Y_exp(Eigen::last - i + 1) - mu_exp(Eigen::last - i + 1));
                 }
             }
 
-            std::vector<double> Y_exp_v(&Y_exp[0], Y_exp.data() + Y_exp.size());
+            //std::vector<double> Y_exp_v(&Y_exp[0], Y_exp.data() + Y_exp.size());
+            double rnd_value;
             if (_model_name2 == "Exponential")
-                Y_exp_v.push_back(_family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), 1)[0]);
+                rnd_value = _family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), 1)[0];
+                //Y_exp_v.push_back(_family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), 1)[0]);
             else
-                Y_exp_v.push_back(_family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), 1)[0]);
+                rnd_value = _family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), 1)[0];
+                //Y_exp_v.push_back(_family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), 1)[0]);
 
-            std::vector<double> mu_exp_v(&mu_exp[0], mu_exp.data() + mu_exp.size());
-            mu_exp_v.push_back(0.0);
-            mu_exp = Eigen::VectorXd::Map(mu_exp_v.data(), static_cast<Eigen::Index>(mu_exp_v.size()));
+            // Append rnd_value to Y_exp
+            Eigen::VectorXd new_Y_exp(Y_exp.size() + 1);
+            new_Y_exp << Y_exp, rnd_value;
+            Y_exp = new_Y_exp;
 
-            // For indexing consistency
-            std::vector<double> Y_exp_h;
-            std::copy(Y_exp_v.end() - static_cast<long>(h), Y_exp_v.end(), std::back_inserter(Y_exp_h));
-            sim_vector.row(n) = Eigen::VectorXd::Map(Y_exp_h.data(), static_cast<Eigen::Index>(Y_exp_h.size()));
+            // Append 0.0 to mu_exp (for indexing consistency)
+            Eigen::VectorXd new_mu_exp(mu_exp.size() + 1);
+            new_mu_exp << mu_exp, 0.0;
+            mu_exp = new_mu_exp;
+            //std::vector<double> mu_exp_v(&mu_exp[0], mu_exp.data() + mu_exp.size());
+            //mu_exp_v.push_back(0.0);
+            //mu_exp = Eigen::VectorXd::Map(mu_exp_v.data(), static_cast<Eigen::Index>(mu_exp_v.size()));
+
+            sim_vector.row(n) = Y_exp(Eigen::lastN(static_cast<Eigen::Index>(h)));
+            //std::vector<double> Y_exp_h;
+            //std::copy(Y_exp_v.end() - static_cast<long>(h), Y_exp_v.end(), std::back_inserter(Y_exp_h));
+            //sim_vector.row(n) = Eigen::VectorXd::Map(Y_exp_h.data(), static_cast<Eigen::Index>(Y_exp_h.size()));
         }
-
-        Y_exp  = Eigen::VectorXd::Zero(Y_exp.size());
-        mu_exp = Eigen::VectorXd::Zero(mu_exp.size());
     }
 
     return sim_vector.transpose();
