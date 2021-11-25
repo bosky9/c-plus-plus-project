@@ -6,6 +6,7 @@
 #include "utilities.hpp"
 
 #include <chrono>
+#include <cmath> // std::exp
 #include <random>
 
 constexpr unsigned int str2int(const char* str, int h = 0) {
@@ -29,7 +30,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
                                 : _latent_variables.get_z_starting_values()}; // If user supplied
 
     Eigen::VectorXd start_loc;
-    if ((_model_type != "GPNARX" || _model_type != "GPR" || _model_type != "GP" || _model_type != "GASRank") &&
+    if (_model_type != "GPNARX" && _model_type != "GPR" && _model_type != "GP" && _model_type != "GASRank" && map_start &&
         !mini_batch.has_value()) {
         // Optimize using L-BFGS
         // Set up parameters
@@ -47,23 +48,18 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         start_loc = phi;
     Eigen::VectorXd start_ses{};
 
-    std::unique_ptr<Family> approx_dist;
-    for (size_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
-        approx_dist.reset();
-        approx_dist = _latent_variables.get_z_list()[i].get_q();
-        if (isinstance<Normal>(approx_dist.get())) {
-            _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
+    std::vector<LatentVariable> z_list = _latent_variables.get_z_list();
+    for (size_t i{0}; i < z_list.size(); ++i) {
+        if (isinstance<Normal>(z_list.at(i).get_q().get())) {
+            _latent_variables.set_mu0_q(i, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
-                _latent_variables.get_z_list()[i].get_q()->vi_change_param(1, std::exp(-3.0));
+                _latent_variables.set_sigma0_q(i, std::exp(-3.0));
             else
-                _latent_variables.get_z_list()[i].get_q()->vi_change_param(1, start_ses[static_cast<Eigen::Index>(i)]);
+                _latent_variables.set_sigma0_q(i, start_ses[static_cast<Eigen::Index>(i)]);
         }
     }
 
-    std::vector<std::unique_ptr<Family>> q_list;
-    for (size_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
-        q_list.push_back(_latent_variables.get_z_list()[i].get_q()->clone());
-    }
+    std::vector<std::unique_ptr<Family>> q_list = _latent_variables.get_z_approx_dist();
 
     BBVI* bbvi_obj; // TODO: Trovare un modo per eliminare il puntatore senza che crei segmentation fault!
     if (!mini_batch.has_value())
@@ -78,11 +74,11 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
     // Apply exp() to q_ses, in python this is done in a single line
     std::transform(data.final_ses.begin(), data.final_ses.end(), data.final_ses.begin(),
-                   [](double x) { return exp(x); });
+                   [](double x) { return std::exp(x); });
     _latent_variables.set_z_values(data.final_means, "BBVI", data.final_ses);
 
-    for (size_t i{0}; i < _latent_variables.get_z_list().size(); i++)
-        _latent_variables.get_z_list()[i].set_q(*data.q[i]);
+    // Set all _q distributions (of the LatentVariable objects in _z_list)
+    _latent_variables.set_z_qs(data.q);
 
     _latent_variables.set_estimation_method("BBVI");
 

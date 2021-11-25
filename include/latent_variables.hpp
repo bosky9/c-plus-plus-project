@@ -165,6 +165,18 @@ public:
      */
     void set_q(const Family& q);
 
+    /**
+     * @brief If _q is a Normal distribution, set its mean param
+     * @param mu0 Mean value to set
+     */
+    void set_mu0_q(double mu0);
+
+    /**
+     * @brief If _q is a Normal distribution, set its sigma param
+     * @param sigma0 Sigma value to set
+     */
+    void set_sigma0_q(double sigma0);
+
 private:
     std::string _name;                        ///< Name of the latent variable
     size_t _index;                            ///< Index of the latent variable
@@ -372,6 +384,26 @@ public:
      * @param value Starting value to set
      */
     void set_z_starting_value(size_t index, double value);
+
+    /**
+     * @brief If the LatentVariable in position index has a Normal distribution _q, set its mean param
+     * @param index Index of the LatentVariable in the _z_list vector
+     * @param mu0 Mean value to set
+     */
+    void set_mu0_q(size_t index, double mu0);
+
+    /**
+     * @brief If the LatentVariable in position index has a Normal distribution _q, set its sigma param
+     * @param index Index of the LatentVariable in the _z_list vector
+     * @param sigma0 Sigma value to set
+     */
+    void set_sigma0_q(size_t index, double sigma0);
+
+    /**
+     * @brief Set all _q distributions of LatentVariable objects into the _z_list vector
+     * @param qs Distributions to set
+     */
+    void set_z_qs(const std::vector<std::unique_ptr<Family>>& qs);
 
     /**
      * @brief Plots the latent variables

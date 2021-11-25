@@ -193,6 +193,16 @@ void LatentVariable::set_q(const Family& q) {
     _q = (q.clone());
 }
 
+void LatentVariable::set_mu0_q(double mu0) {
+    if (isinstance<Normal>(_q.get()))
+        dynamic_cast<Normal*>(_q.get())->set_mu0(mu0);
+}
+
+void LatentVariable::set_sigma0_q(double sigma0) {
+    if (isinstance<Normal>(_q.get()))
+        dynamic_cast<Normal*>(_q.get())->set_sigma0(sigma0);
+}
+
 LatentVariables::LatentVariables(std::string model_name)
     : _model_name{std::move(model_name)}, _z_list{}, _z_indices{} {}
 
@@ -385,6 +395,20 @@ void LatentVariables::set_z_starting_values(const Eigen::VectorXd& values) {
 void LatentVariables::set_z_starting_value(size_t index, double value) {
     assert(index < _z_list.size());
     _z_list.at(index).set_start(value);
+}
+
+void LatentVariables::set_mu0_q(size_t index, double mu0) {
+    _z_list.at(index).set_mu0_q(mu0);
+}
+
+void LatentVariables::set_sigma0_q(size_t index, double sigma0) {
+    _z_list.at(index).set_sigma0_q(sigma0);
+}
+
+void LatentVariables::set_z_qs(const std::vector<std::unique_ptr<Family>>& qs) {
+    assert(_z_list.size() == qs.size());
+    for (size_t i{0}; i < _z_list.size(); i++)
+        _z_list.at(i).set_q(*qs.at(i));
 }
 
 void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, size_t width, size_t height,

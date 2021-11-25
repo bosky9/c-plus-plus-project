@@ -82,7 +82,7 @@ void Normal::vi_change_param(uint8_t index, double value) {
     if (index == 0)
         _mu0 = value;
     else if (index == 1)
-        _sigma0 = exp(value);
+        _sigma0 = std::exp(value);
 }
 
 double Normal::vi_return_param(uint8_t index) const {
@@ -158,6 +158,16 @@ double Normal::get_sigma0() const {
 std::string Normal::get_z_name() const {
     return "mu0: " + std::to_string(round(_mu0 * 10000) / 10000) +
            ", sigma0: " + std::to_string(round(_sigma0 * 10000) / 10000);
+}
+
+// Get methods ----------------------------------------------------------------------------------------------------
+
+void Normal::set_mu0(double mu0) {
+    _mu0 = mu0;
+}
+
+void Normal::set_sigma0(double sigma0) {
+    _sigma0 = sigma0;
 }
 
 // Clone function

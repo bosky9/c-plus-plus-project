@@ -241,6 +241,20 @@ public:
      */
     [[nodiscard]] std::string get_z_name() const override;
 
+    // Get methods -----------------------------------------------------------------------------------------------------
+
+    /**
+     * @brief Set the mean param of the normal distribution
+     * @param mu0 Mean value to set
+     */
+    void set_mu0(double mu0);
+
+    /**
+     * @brief Set the sigma param of the normal distribution
+     * @param sigma0 Sigma value to set
+     */
+    void set_sigma0(double sigma0);
+
     // Clone function --------------------------------------------------------------------------------------------------
 
     /**
