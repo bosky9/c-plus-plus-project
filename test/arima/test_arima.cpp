@@ -27,7 +27,6 @@ void check_intervals_order(std::vector<std::vector<double>> predictions) {
 } // namespace catch_utilities
 
 TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
-    std::cout << "Test started";
     // std::random_device rnd;
     std::default_random_engine generator{};
     std::normal_distribution<double> distribution(0, 1);
