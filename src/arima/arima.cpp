@@ -207,7 +207,7 @@ std::tuple<double, double, double> ARIMA::get_scale_and_shape(const Eigen::Vecto
 
 std::tuple<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>
 ARIMA::get_scale_and_shape_sim(const Eigen::MatrixXd& transformed_lvs) const {
-    Eigen::VectorXd model_shape, model_scale, model_skewness{Eigen::VectorXd::Zero(transformed_lvs.cols())};
+    Eigen::VectorXd model_shape{Eigen::VectorXd::Zero(transformed_lvs.cols())}, model_scale{Eigen::VectorXd::Zero(transformed_lvs.cols())}, model_skewness{Eigen::VectorXd::Zero(transformed_lvs.cols())};
 
     if (_scale) {
         if (_shape) {
@@ -216,16 +216,22 @@ ARIMA::get_scale_and_shape_sim(const Eigen::MatrixXd& transformed_lvs) const {
             std::transform(model_shape.begin(), model_shape.end(), model_shape.begin(), [this](double n) {
                 return _latent_variables.get_z_list().back().get_prior()->get_transform()(n);
             });
+            // Second last row for scale
+            model_scale = transformed_lvs(Eigen::last - 1, Eigen::all);
+            std::transform(model_scale.begin(), model_scale.end(), model_scale.begin(), [this](double n) {
+                return _latent_variables.get_z_list().at(-2).get_prior()->get_transform()(n);
+            });
+        } else {
+            // Last row for scale
+            model_scale = transformed_lvs(Eigen::last, Eigen::all);
+            std::transform(model_scale.begin(), model_scale.end(), model_scale.begin(), [this](double n) {
+                return _latent_variables.get_z_list().back().get_prior()->get_transform()(n);
+            });
         }
-
-        model_scale = transformed_lvs(Eigen::last - 1, Eigen::all);
-        std::transform(model_scale.begin(), model_scale.end(), model_scale.begin(), [this](double n) {
-            return _latent_variables.get_z_list().at(-2).get_prior()->get_transform()(n);
-        });
     }
 
     if (_skewness) {
-        model_skewness = transformed_lvs(-2, Eigen::all);
+        model_skewness = transformed_lvs(Eigen::last - 2, Eigen::all);
         std::transform(model_skewness.begin(), model_skewness.end(), model_skewness.begin(), [this](double n) {
             return _latent_variables.get_z_list().at(-3).get_prior()->get_transform()(n);
         });
@@ -834,13 +840,14 @@ Eigen::MatrixXd ARIMA::sample(size_t nsims) const {
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(nsims); ++i)
         mus.push_back(_model(lv_draws.col(i)).first);
 
+    auto scale_shape_skew{get_scale_and_shape_sim(lv_draws)};
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(nsims); ++i) {
-        auto scale_shape_skew{get_scale_and_shape(lv_draws.col(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
+        // Shape and skew are not used for Normal distributions
         data_draws.row(i) =
-                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
     }
 
     return data_draws;
