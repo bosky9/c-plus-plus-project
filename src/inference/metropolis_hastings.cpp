@@ -20,11 +20,13 @@ MetropolisHastings::MetropolisHastings(std::function<double(const Eigen::VectorX
       _quiet_progress{quiet_progress} {
 
     _phi        = Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(_nsims), static_cast<Eigen::Index>(_param_no));
-    _phi.row(0) = _initials;
+    _phi.row(0) = _initials; //point from which to start the Metropolis-Hasting algorithm
 
     _cov_matrix = cov_matrix.value_or(
-            Eigen::MatrixXd::Identity(static_cast<Eigen::Index>(_param_no), static_cast<Eigen::Index>(_param_no)));
-    _cov_matrix.array().colwise() *= _initials.cwiseAbs().array();
+            Eigen::MatrixXd::Identity(static_cast<Eigen::Index>(_param_no),
+                                      static_cast<Eigen::Index>(_param_no)).array().colwise() *
+                                      _initials.cwiseAbs().array()
+            );
 }
 
 double MetropolisHastings::tune_scale(double acceptance, double scale) {
@@ -80,8 +82,9 @@ Sample MetropolisHastings::sample() {
     Eigen::MatrixXd new_phi{_phi(Eigen::seq(_nsims / 2, Eigen::last), Eigen::all)(Eigen::seq(0, Eigen::last, _thinning), Eigen::all)};
     _phi = new_phi;
     Eigen::MatrixXd chain = _phi.transpose();
+    chain = chain(Eigen::seq(0, _param_no-1), Eigen::all);
 
-    Eigen::VectorXd mean_est = _phi.colwise().mean();
+    Eigen::VectorXd mean_est = _phi(Eigen::seq(0, _param_no-1), Eigen::all).colwise().mean();
 
     std::vector<double> median_est{}, upper_95_est{}, lower_5_est{};
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(_param_no); ++i) {
