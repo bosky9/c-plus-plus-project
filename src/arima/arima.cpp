@@ -255,6 +255,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::Vec
     // Constant and AR terms
     Eigen::VectorXd mu;
     if (_ar != 0)
+        // We are not adding one to the eigen index because seq includes the last element
         mu = _x.transpose() * z(Eigen::seq(0, Eigen::last - static_cast<Eigen::Index>(_family_z_no + _ma)));
     else
         mu = Eigen::VectorXd::Zero(Y.size()) * z[0];
@@ -280,6 +281,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(const Eigen:
     // Constant and AR terms
     Eigen::VectorXd mu;
     if (_ar != 0)
+        // We are not adding one to the eigen index because seq includes the last element
         mu = _x.transpose() * z(Eigen::seq(0, Eigen::last - static_cast<Eigen::Index>(_family_z_no + _ma)));
     else
         mu = Eigen::VectorXd::Zero(Y.size()) * z[0];
@@ -320,6 +322,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(const Eigen::
     // Constant and AR terms
     Eigen::VectorXd mu;
     if (_ar != 0)
+        // We are not adding one to the eigen index because seq includes the last element
         mu = _x.transpose() * z(Eigen::seq(0, Eigen::last - static_cast<Eigen::Index>(_family_z_no + _ma)));
     else
         mu = Eigen::VectorXd::Zero(Y.size()) * z[0];
@@ -357,6 +360,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eig
     // Constant and AR terms
     Eigen::VectorXd mu;
     if (_ar != 0)
+        // We are not adding one to the eigen index because seq includes the last element
         mu = _x.transpose() * z(Eigen::seq(0, Eigen::last - static_cast<Eigen::Index>(_family_z_no + _ma)));
     else
         mu = Eigen::VectorXd::Zero(Y.size()) * z[0];
@@ -417,14 +421,14 @@ Eigen::VectorXd ARIMA::mean_prediction(const Eigen::VectorXd& mu, const Eigen::V
 
         if (_ar != 0) {
             for (Eigen::Index i{1}; i <= static_cast<Eigen::Index>(_ar); ++i)
-                new_value += t_z[i] * Y_exp(Eigen::last - i);
+                new_value += t_z[i] * Y_exp(Eigen::last - i + 1);
         }
 
         if (_ma != 0) {
             for (Eigen::Index i{1}; i <= static_cast<Eigen::Index>(_ma); ++i) {
                 if (i - 1 >= static_cast<Eigen::Index>(t))
                     new_value += t_z[i + static_cast<Eigen::Index>(_ar)] *
-                                 (Y_exp(Eigen::last - i) - _link(mu_exp(Eigen::last - i)));
+                                 (Y_exp(Eigen::last - i) - _link(mu_exp(Eigen::last - i + 1)));
             }
         }
 
@@ -529,14 +533,14 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
 
             if (_ar != 0) {
                 for (Eigen::Index i{1}; i <= static_cast<Eigen::Index>(_ar); ++i)
-                    new_value += t_z[i] * Y_exp(Eigen::last - i);
+                    new_value += t_z[i] * Y_exp(Eigen::last - i + 1);
             }
 
             if (_ma != 0) {
                 for (Eigen::Index i{1}; i <= static_cast<Eigen::Index>(_ma); ++i) {
                     if (i - 1 >= t)
                         new_value += t_z[i + static_cast<Eigen::Index>(_ar)] *
-                                     (Y_exp(Eigen::last - i) - mu_exp(Eigen::last - i));
+                                     (Y_exp(Eigen::last - i) - mu_exp(Eigen::last - i + 1));
                 }
             }
 
@@ -659,7 +663,7 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
     } else {
         Eigen::VectorXd t_z{transform_z()};
         Eigen::VectorXd mean_values{mean_prediction(mu_Y.first, mu_Y.second, h, t_z)};
-        Eigen::VectorXd fv = mean_values(Eigen::seq(Eigen::last - static_cast<Eigen::Index>(h), Eigen::last));
+        Eigen::VectorXd fv = mean_values(Eigen::seq(Eigen::last - static_cast<Eigen::Index>(h) + 1, Eigen::last));
         std::copy(mean_values.end() - static_cast<long>(h), mean_values.end(), std::back_inserter(forecasted_values));
 
         if (_model_name2 == "Skewt") {
