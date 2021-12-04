@@ -241,7 +241,7 @@ public:
      */
     [[nodiscard]] std::string get_z_name() const override;
 
-    // Get methods -----------------------------------------------------------------------------------------------------
+    // Set methods -----------------------------------------------------------------------------------------------------
 
     /**
      * @brief Set the mean param of the normal distribution

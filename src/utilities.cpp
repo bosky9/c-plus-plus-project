@@ -1,5 +1,6 @@
 #include "utilities.hpp"
 
+#include <fstream> // std::ifstream
 #include <sstream>
 
 utils::DataFrame utils::parse_csv(const std::string& filename) {

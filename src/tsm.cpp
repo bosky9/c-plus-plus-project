@@ -128,7 +128,7 @@ LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& 
 }
 
 MCMCResults* TSM::_mcmc_fit(double scale, size_t nsims, const std::string& method,
-                            std::optional<Eigen::MatrixXd>& cov_matrix, bool map_start, bool quiet_progress) {
+                            std::optional<Eigen::MatrixXd> cov_matrix, bool map_start, bool quiet_progress) {
     scale = 2.38 / std::sqrt(_z_no);
 
     // Get Mode and Inverse Hessian information
@@ -227,7 +227,7 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
                           output.states_var);
 }
 
-Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd>& cov_matrix, std::optional<size_t> iterations,
+Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd> cov_matrix, std::optional<size_t> iterations,
                   std::optional<size_t> nsims, const std::optional<std::string>& optimizer,
                   std::optional<size_t> batch_size, std::optional<size_t> mini_batch, std::optional<bool> map_start,
                   std::optional<double> learning_rate, std::optional<bool> record_elbo,

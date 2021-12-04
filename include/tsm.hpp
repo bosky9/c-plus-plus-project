@@ -176,7 +176,7 @@ protected:
      *          upper_95_est, lower_95_est} python data.
      */
     MCMCResults* _mcmc_fit(double scale = 1.0, size_t nsims = 10000, const std::string& method = "M-H",
-                           std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
+                           std::optional<Eigen::MatrixXd> cov_matrix = std::nullopt,
                            bool map_start = true, bool quiet_progress = false);
 
     /**
@@ -238,7 +238,7 @@ public:
      *          es. "class MLEResults : public Results {...}".
      */
     Results* fit(std::string method                         = "",
-                 std::optional<Eigen::MatrixXd>& cov_matrix = (std::optional<Eigen::MatrixXd>&) std::nullopt,
+                 std::optional<Eigen::MatrixXd> cov_matrix = std::nullopt,
                  std::optional<size_t> iterations = 1000, std::optional<size_t> nsims = 1000,
                  const std::optional<std::string>& optimizer = "RMSProp", std::optional<size_t> batch_size = 12,
                  std::optional<size_t> mini_batch = std::nullopt, std::optional<bool> map_start = true,
