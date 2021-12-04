@@ -428,7 +428,7 @@ Eigen::VectorXd ARIMA::mean_prediction(const Eigen::VectorXd& mu, const Eigen::V
             for (Eigen::Index i{1}; i <= static_cast<Eigen::Index>(_ma); ++i) {
                 if (i - 1 >= static_cast<Eigen::Index>(t))
                     new_value += t_z[i + static_cast<Eigen::Index>(_ar)] *
-                                 (Y_exp(Eigen::last - i) - _link(mu_exp(Eigen::last - i + 1)));
+                                 (Y_exp(Eigen::last - i + 1) - _link(mu_exp(Eigen::last - i + 1)));
             }
         }
 
@@ -540,7 +540,7 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
                 for (Eigen::Index i{1}; i <= static_cast<Eigen::Index>(_ma); ++i) {
                     if (i - 1 >= t)
                         new_value += t_z[i + static_cast<Eigen::Index>(_ar)] *
-                                     (Y_exp(Eigen::last - i) - mu_exp(Eigen::last - i + 1));
+                                     (Y_exp(Eigen::last - i + 1) - mu_exp(Eigen::last - i + 1));
                 }
             }
 
