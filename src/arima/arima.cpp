@@ -2,10 +2,28 @@
 
 #include "arima/arima.hpp"
 
-#include "multivariate_normal.hpp"
+#include "arima/arima_recursion.hpp" // arima_recursion, arima_recursion_normal
+#include "data_check.hpp"            // data_check
+#include "Eigen/Core"                // Eigen::VectorXd, Eigen::MatrixXd, Eigen::Index, Eigen::last, Eigen::all, Eigen::seq
+#include "families/family.hpp"       // Family, FamilyAttributes, lv_to_build
+#include "families/normal.hpp"       // Normal
+#include "latent_variables.hpp"      // LatentVariables
+#include "matplotlibcpp.hpp"         // plt::figure_size, plt::plot, plt::subplot, plt::named_plot, plt::title, plt::xlabel, plt::ylabel, plt::legend, plt::save, plt::fill_between, plt::axvline, plt::show
+#include "multivariate_normal.hpp"   // Mvn::logpdf
+#include "results.hpp"               // Results
+#include "tsm.hpp"                   // TSM, SingleDataFrame, draw_latent_variables
+#include <utilities.hpp>             // utils::diff, utils::DataFrame, utils::percentile, utils::mean
 
-#include <cmath>
-#include <random>
+#include <algorithm>                 // std::max, std::copy, std::transform
+#include <cmath>                     // std::sqrt, std::tgamma, M_PI
+#include <iterator>                  // std::back_inserter
+#include <numeric>                   // std::reduce, std::iota, std::accumulate
+#include <optional>                  // std::optional
+#include <random>                    // std::random_device, std::default_random_engine, std::uniform_int_distribution
+#include <string>                    // std::string, std::to_string
+#include <tuple>                     // std::get, std::tuple, std::make_tuple
+#include <utility>                   // std::pair, std::move
+#include <vector>                    // std::vector
 
 ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, const Family& family) : TSM{"ARIMA"} {
     // Latent Variable information
@@ -479,14 +497,11 @@ Eigen::MatrixXd ARIMA::sim_prediction(const Eigen::VectorXd& mu, const Eigen::Ve
                 }
             }
 
-            //std::vector<double> Y_exp_v(&Y_exp[0], Y_exp.data() + Y_exp.size());
             double rnd_value;
             if (_model_name2 == "Exponential")
                 rnd_value = _family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), 1)[0];
-                //Y_exp_v.push_back(_family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), 1)[0]);
             else
                 rnd_value = _family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), 1)[0];
-                //Y_exp_v.push_back(_family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), 1)[0]);
 
             // Append rnd_value to Y_exp
             Eigen::VectorXd new_Y_exp(Y_exp.size() + 1);
@@ -497,14 +512,8 @@ Eigen::MatrixXd ARIMA::sim_prediction(const Eigen::VectorXd& mu, const Eigen::Ve
             Eigen::VectorXd new_mu_exp(mu_exp.size() + 1);
             new_mu_exp << mu_exp, 0.0;
             mu_exp = new_mu_exp;
-            //std::vector<double> mu_exp_v(&mu_exp[0], mu_exp.data() + mu_exp.size());
-            //mu_exp_v.push_back(0.0);
-            //mu_exp = Eigen::VectorXd::Map(mu_exp_v.data(), static_cast<Eigen::Index>(mu_exp_v.size()));
 
             sim_vector.row(n) = Y_exp(Eigen::lastN(static_cast<Eigen::Index>(h)));
-            //std::vector<double> Y_exp_h;
-            //std::copy(Y_exp_v.end() - static_cast<long>(h), Y_exp_v.end(), std::back_inserter(Y_exp_h));
-            //sim_vector.row(n) = Eigen::VectorXd::Map(Y_exp_h.data(), static_cast<Eigen::Index>(Y_exp_h.size()));
         }
     }
 

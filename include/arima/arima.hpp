@@ -1,18 +1,19 @@
 #pragma once
 
-#include "Eigen/Core"
-#include "arima/arima_recursion.hpp"
-#include "data_check.hpp"
-#include "families/family.hpp"
-#include "families/normal.hpp"
-#include "matplotlibcpp.hpp"
-#include "multivariate_normal.hpp"
-#include "output/tableprinter.hpp"
-#include "tests/nhst.hpp"
-#include "tsm.hpp"
-#include "utilities.hpp"
+#include "Eigen/Core"                // Eigen::VectorXd, Eigen::MatrixXd
+#include "families/family.hpp"       // Family
+#include "families/normal.hpp"       // Normal
+#include "matplotlibcpp.hpp"         // matplotlibcpp
+#include "tsm.hpp"                   // TSM
+#include "utilities.hpp"             // utils::DataFrame, utils::mean
 
-#include <vector>
+#include <functional>                // std::function
+#include <memory>                    // std::unique_ptr
+#include <optional>                  // std::optional
+#include <string>                    // std::string
+#include <tuple>                     // std::tuple
+#include <utility>                   // std::pair
+#include <vector>                    // std::vector
 
 namespace plt = matplotlibcpp;
 
