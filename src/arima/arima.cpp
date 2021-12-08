@@ -12,11 +12,12 @@
 #include "multivariate_normal.hpp"   // Mvn::logpdf
 #include "results.hpp"               // Results
 #include "tsm.hpp"                   // TSM, SingleDataFrame, draw_latent_variables
-#include <utilities.hpp>             // utils::diff, utils::DataFrame, utils::percentile, utils::mean
+#include "utilities.hpp"             // utils::diff, utils::DataFrame, utils::percentile, utils::mean
 
 #include <algorithm>                 // std::max, std::copy, std::transform
 #include <cmath>                     // std::sqrt, std::tgamma, M_PI
 #include <iterator>                  // std::back_inserter
+#include <limits>                    // std::numeric_limits
 #include <numeric>                   // std::reduce, std::iota, std::accumulate
 #include <optional>                  // std::optional
 #include <random>                    // std::random_device, std::default_random_engine, std::uniform_int_distribution
@@ -215,6 +216,9 @@ std::tuple<double, double, double> ARIMA::get_scale_and_shape(const Eigen::Vecto
             model_scale = transformed_lvs(Eigen::last - 1);
         } else
             model_scale = transformed_lvs(Eigen::last);
+        // if std::exp approximated the scale to zero we have to change it
+        if (model_scale <= 0)
+            model_scale = std::numeric_limits<double>::min();
     }
 
     if (_skewness)
