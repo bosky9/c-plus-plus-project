@@ -55,8 +55,7 @@ std::string TablePrinter::row(const T& data) {
              temp_str = (static_cast<int>((data.at(kw.first).size())) > kw.second ) ?
                 data.at(kw.first).substr(0, kw.second) : data.at(kw.first);
 
-        ss  << std::setfill(' ') << std::setw(kw.second) << temp_str << " ";
-        auto x = ss.str();
+        ss << std::setfill(' ') << std::setw(kw.second) << std::left << temp_str << " ";
     }
     return ss.str();
 }
