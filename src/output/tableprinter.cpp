@@ -8,11 +8,11 @@ TablePrinter::TablePrinter(const std::vector<std::tuple<std::string, std::string
         _fmt.append(ss.str());
 
         // try_emplace should append a new key:value pair. If key already exists, no insert
-        std::stringstream sshe;
-        sshe << std::get<0>(f);
-        for (int i = 1; i < std::get<2>(f); ++i)
-            sshe << " ";
-        _head.try_emplace(std::get<1>(f), sshe.str());
+        //std::stringstream sshe;
+        //sshe << std::get<0>(f);
+        //for (int i = 1; i < std::get<2>(f); ++i)
+         //   sshe << " ";
+         _head.try_emplace(std::get<1>(f), std::get<0>(f));
 
 
         if (!ul.empty()) {
@@ -46,17 +46,19 @@ std::string TablePrinter::row(const T& data) {
 
 template<typename T, std::enable_if_t<is_map_str_str<T>::value, int>>
 std::string TablePrinter::row(const T& data) {
-    std::string str_to_return;
     std::stringstream ss;
 
-    // I want to append every value of data map
-    // I get the value from the _width key
-    // I append it to the returned string, with width given by _width value
-    for (auto const& w : _width)
-        ss << std::setfill(' ') << data.at(w.first) << " ";
-    str_to_return.append(ss.str());
+    for(auto const& kw : _width){
+        std::string temp_str{};
 
-    return str_to_return;
+        if(data.find(kw.first) != data.end())
+             temp_str = (static_cast<int>((data.at(kw.first).size())) > kw.second ) ?
+                data.at(kw.first).substr(0, kw.second) : data.at(kw.first);
+
+        ss  << std::setfill(' ') << std::setw(kw.second) << temp_str << " ";
+        auto x = ss.str();
+    }
+    return ss.str();
 }
 
 std::string TablePrinter::operator()(const std::list<std::map<std::string /*key*/, std::string>>& dataList) {
