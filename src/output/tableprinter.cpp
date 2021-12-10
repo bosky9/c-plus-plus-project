@@ -38,7 +38,7 @@ std::string TablePrinter::row(const T& data) {
     // I append it to the returned string, with width given by _width value
     // setfill + setw create (w.second) empty spaces
     for (auto const& w : _width)
-        ss << std::setfill(' ') << std::setw(w.second) << data.at(w.first) << " ";
+        ss << std::left << std::setw(w.second) << data.at(w.first) << " ";
     str_to_return.append(ss.str());
 
     return str_to_return;
@@ -55,7 +55,7 @@ std::string TablePrinter::row(const T& data) {
              temp_str = (static_cast<int>((data.at(kw.first).size())) > kw.second ) ?
                 data.at(kw.first).substr(0, kw.second) : data.at(kw.first);
 
-        ss  << std::setfill(' ') << std::setw(kw.second) << temp_str << " ";
+        ss  << std::left << std::setw(kw.second) << temp_str << " ";
         auto x = ss.str();
     }
     return ss.str();
