@@ -639,7 +639,7 @@ void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) 
     plt::named_plot("Data", date_index, Y);
     plt::named_plot("ARIMA model", date_index, values_to_plot, "k");
     plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
-    plt::legend({{"loc", "2"}});
+    //plt::legend(std::map<std::string, std::string>{{"loc", "2"}});
     plt::save("../data/arima_plots/plot_fit.png");
     // plt::show();
 }
@@ -783,9 +783,9 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     for (size_t i{0}; i < predictions.data_name.size(); ++i)
         plt::named_plot("Predictions", predictions.index, predictions.data[i], "k");
     plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
-    plt::legend({{"loc", "2"}});
+    //plt::legend(std::map<std::string, std::string>{{"loc", "2"}});
     plt::save("../data/arima_plots/plot_predict_is.png");
-    // plt::show();
+    //plt::show();
 }
 
 utils::DataFrame ARIMA::predict(size_t h, bool intervals) const {

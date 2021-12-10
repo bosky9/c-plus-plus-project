@@ -16,12 +16,8 @@ find_program(CTEST_MEMORYCHECK_COMMAND NAMES valgrind)
 include(Dart)
 set(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --show-leak-kinds=all --track-fds=yes --track-origins=yes")
 
-# Fetch Eigen library
-#find_package(Eigen3 3.4 REQUIRED NO_MODULE)
-
-# Fetch Python (required by matplotlibcpp.hpp)
-find_package(Python3 COMPONENTS Interpreter Development)
-include_directories(${Python3_INCLUDE_DIRS})
+# Include headers and external libraries
+include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/third_party)
 
 # Fetch Catch2 library for tests
 include(FetchContent)
@@ -32,15 +28,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-# Include headers and external libraries
-include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/third_party)
+# Fetch Python (required by matplotlibcpp.hpp)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 # Perform tests
 add_executable(tests)
 file(GLOB_RECURSE SRCS_LIST ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE TESTS_LIST ${PROJECT_SOURCE_DIR}/test/*.cpp)
 target_sources(tests PRIVATE ${SRCS_LIST} ${TESTS_LIST})
-target_link_libraries(tests PRIVATE Python3::Python Catch2::Catch2WithMain)
+
+target_link_libraries(tests PRIVATE Python3::Python Python3::Module Catch2::Catch2WithMain)
 
 include(CTest)
 add_test(NAME AllTests
