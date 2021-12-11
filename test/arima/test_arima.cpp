@@ -367,6 +367,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
         ARIMA model{data, 1, 1, 1};
         Results* x{model.fit()};
         REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
+        model.plot_fit(600, 400);
 
         std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
         int64_t nan{std::count_if(lvs.begin(), lvs.end(),
@@ -382,6 +383,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
     SECTION("Test prediction length", "[predict]") {
         ARIMA model{data, 2, 2};
         Results* x{model.fit()};
+        model.plot_fit(600, 400);
 
         REQUIRE(model.predict(5).data.at(0).size() == 5);
 
@@ -463,6 +465,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict(10, true);
         catch_utilities::check_intervals_order(predictions.data);
+        //model.plot_predict(10, 5, true, 600, 400);
 
         delete x;
     }
@@ -476,6 +479,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
+        model.plot_predict_is(10, true, "MLE", 600, 400);
 
         delete x;
     }
@@ -506,6 +510,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
+        model.plot_predict_is(10, true, "MLE", 600, 400);
 
         delete x;
     }
@@ -537,6 +542,63 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
+        model.plot_predict_is(10, true, "MLE", 600, 400);
+
+        delete x;
+    }
+
+    SECTION("Test prediction intervals are ordered correctly using PML", "[predict]") {
+        ARIMA model{data, 2, 2};
+        std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
+        Results* x{model.fit("PML", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03, std::nullopt,
+                             true)};
+
+        utils::DataFrame predictions = model.predict(10, true);
+        catch_utilities::check_intervals_order(predictions.data);
+
+        delete x;
+    }
+
+    /**
+     * @brief Tests that in-sample prediction intervals are ordered correctly using Metropolis-Hastings method
+     */
+    SECTION("Test prediction IS intervals are ordered correctly using PML", "[predict_is]") {
+        ARIMA model{data, 2, 2};
+        std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
+        Results* x{model.fit("PML", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03, std::nullopt,
+                             true)};
+
+        utils::DataFrame predictions = model.predict_is(10, true, "MLE", true);
+        catch_utilities::check_intervals_order(predictions.data);
+        model.plot_predict_is(10, true, "MLE", 600, 400);
+
+        delete x;
+    }
+
+    SECTION("Test prediction intervals are ordered correctly using Laplace", "[predict]") {
+        ARIMA model{data, 2, 2};
+        std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
+        Results* x{model.fit("Laplace", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03, std::nullopt,
+                             true)};
+
+        utils::DataFrame predictions = model.predict(10, true);
+        catch_utilities::check_intervals_order(predictions.data);
+
+        delete x;
+    }
+
+    /**
+     * @brief Tests that in-sample prediction intervals are ordered correctly using Metropolis-Hastings method
+     */
+    SECTION("Test prediction IS intervals are ordered correctly using Laplace", "[predict_is]") {
+        ARIMA model{data, 2, 2};
+        std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
+        Results* x{model.fit("Laplace", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03, std::nullopt,
+                             true)};
+
+        utils::DataFrame predictions = model.predict_is(10, true, "MLE", true);
+        catch_utilities::check_intervals_order(predictions.data);
+        model.plot_predict_is(10, true, "MLE", 600, 400);
 
         delete x;
     }
@@ -553,6 +615,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
         Eigen::MatrixXd sample = model.sample(100);
         REQUIRE(sample.rows() == 100);
         REQUIRE(static_cast<size_t>(sample.cols()) == data.index.size() - 2);
+        model.plot_sample(100, true, 600, 400);
 
         delete x;
     }
@@ -569,6 +632,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
         double p_value = model.ppc();
         REQUIRE(p_value >= 0.0);
         REQUIRE(p_value <= 1.0);
+        model.plot_ppc(1000, utils::mean, "mean", 600, 400);
 
         delete x;
     }

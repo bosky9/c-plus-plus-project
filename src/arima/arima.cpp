@@ -587,7 +587,7 @@ ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::Ma
                              const std::vector<double>& date_index, size_t h, size_t past_values) const {
     std::vector<double> error_bars;
     for (size_t pre{5}; pre < 100; pre += 5) {
-        error_bars.push_back(mean_values[static_cast<Eigen::Index>(-h - 1)]);
+        error_bars.push_back(mean_values(Eigen::last - static_cast<Eigen::Index>(h + 1)));
         for (Eigen::Index i{0}; i < sim_vector.rows(); ++i)
             error_bars.push_back(utils::percentile(sim_vector.row(i), pre));
     }
@@ -606,7 +606,7 @@ ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::Ma
     std::vector<double> plot_index;
     std::copy(date_index.end() - static_cast<long>(h + past_values), date_index.end(), std::back_inserter(plot_index));
 
-    return {std::move(error_bars), std::move(forecasted_values), std::move(plot_values), std::move(plot_index)};
+    return {error_bars, forecasted_values, plot_values, plot_index};
 }
 
 void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) const {
@@ -903,7 +903,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
         plt::named_plot("Data", date_index,
                         std::vector<double>(&mu_Y.second[0], mu_Y.second.data() + mu_Y.second.size()),
                         "sk"); // FIXME: alpha = 0.5 parameter only in hist method
-    plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
+    plt::title(_data_frame.data_name);
     plt::save("../data/arima_plots/plot_sample.png");
     // plt::show();
 }

@@ -578,6 +578,10 @@ LaplaceResults::LaplaceResults(std::vector<std::string> data_name, std::vector<s
     _upper_95_est                                 = samp.upper_95_est;
     _lower_5_est                                  = samp.lower_95_est;
     _t_chain                                      = _chain;
+    _t_mean_est = Eigen::VectorXd(_mean_est.size());
+    _t_median_est = Eigen::VectorXd(_median_est.size());
+    _t_upper_95_est = Eigen::VectorXd(_upper_95_est.size());
+    _t_lower_5_est = Eigen::VectorXd(_lower_5_est.size());
     std::vector<std::unique_ptr<Family>> z_priors = _z.get_z_priors();
     for (Eigen::Index k{0}; k < _mean_est.size(); k++) {
         //_t_chain(k) = z_priors[k]->get_transform()(_chain(k));

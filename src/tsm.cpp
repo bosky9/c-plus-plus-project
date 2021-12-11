@@ -123,7 +123,7 @@ LaplaceResults* TSM::_laplace_fit(const std::function<double(Eigen::VectorXd)>& 
 
     return new LaplaceResults({_data_frame.data_name}, output.X_names.value_or(std::vector<std::string>{}), _model_name,
                               _model_type, _latent_variables, output.Y, _data_frame.index, _multivariate_model,
-                              obj_type, "Laplace", _z_hide, _max_lag, y->get_ihessian(), output.theta, output.scores,
+                              obj_type, "Laplace", _z_hide, _max_lag, ihessian, output.theta, output.scores,
                               output.states, output.states_var);
 }
 
