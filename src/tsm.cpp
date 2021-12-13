@@ -51,19 +51,19 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
     std::unique_ptr<Family> approx_dist;
     for (size_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
         approx_dist.reset();
-        approx_dist = _latent_variables.get_z_list()[i].get_q();
+        approx_dist = _latent_variables.get_z_list()[i].get_q_clone();
         if (utils::isinstance<Normal>(approx_dist.get())) {
-            _latent_variables.get_z_list()[i].get_q()->vi_change_param(0, start_loc[static_cast<Eigen::Index>(i)]);
+            _latent_variables.update_z_list_q(i, 0, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
-                _latent_variables.get_z_list()[i].get_q()->vi_change_param(1, std::exp(-3.0));
+                _latent_variables.update_z_list_q(i, 1, std::exp(-3.0));
             else
-                _latent_variables.get_z_list()[i].get_q()->vi_change_param(1, start_ses[static_cast<Eigen::Index>(i)]);
+                _latent_variables.update_z_list_q(i, 1, start_ses[static_cast<Eigen::Index>(i)]);
         }
     }
 
     std::vector<std::unique_ptr<Family>> q_list;
     for (size_t i{0}; i < _latent_variables.get_z_list().size(); ++i) {
-        q_list.push_back(_latent_variables.get_z_list()[i].get_q()->clone());
+        q_list.push_back(_latent_variables.get_z_list()[i].get_q_clone());
     }
 
     BBVI* bbvi_obj; // TODO: Trovare un modo per eliminare il puntatore senza che crei segmentation fault!

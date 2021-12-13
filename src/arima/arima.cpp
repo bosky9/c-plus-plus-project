@@ -780,7 +780,7 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     std::vector<double> data;
     std::copy(_data_frame.data.end() - static_cast<long>(h), _data_frame.data.end(), std::back_inserter(data));
     plt::named_plot("Data", predictions.index, data);
-    for (size_t i{0}; i < predictions.data_name.size(); ++i)
+    for (size_t i{0}; i < predictions.data.size(); ++i)
         plt::named_plot("Predictions", predictions.index, predictions.data[i], "k");
     plt::title(std::accumulate(_data_frame.data_name.begin(), _data_frame.data_name.end(), std::string{}));
     //plt::legend(std::map<std::string, std::string>{{"loc", "2"}});

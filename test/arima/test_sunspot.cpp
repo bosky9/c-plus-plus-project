@@ -15,12 +15,12 @@ TEST_CASE("Test sunspot data", "[]") {
     ARIMA model{df, 2, 2};
 
     std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
-    Results* x{model.fit("BBVI", opt_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt,
+    Results* x{model.fit("MLE", opt_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt,
                          true)};
     x->summary(false);
 
     //utils::DataFrame predictions{model.predict_is(10, true, "MLE", true)};
-    model.plot_predict_is(10, true, "MLE", 600, 400);
+    model.plot_predict_is(50, true, "MLE", 800, 400);
     //model.plot_predict(5, 1, true, 600, 400); // Controllare valori per past_values
 
     delete x;

@@ -121,7 +121,9 @@ public:
      * @brief Returns the variational distribution for the latent variable
      * @return Variational distribution
      */
-    [[nodiscard]] std::unique_ptr<Family> get_q() const;
+    [[nodiscard]] std::unique_ptr<Family> get_q_clone() const;
+
+    void change_q_param(uint8_t index, double value);
 
     /**
      * @brief Set prior for the latent variable
@@ -189,6 +191,8 @@ private:
     std::optional<double> _value           = std::nullopt;
     std::optional<double> _std             = std::nullopt;
     std::optional<Eigen::VectorXd> _sample = std::nullopt;
+
+    friend class TSM;
 };
 
 /**
@@ -286,6 +290,9 @@ public:
      * @return List of LatentVariable objects
      */
     [[nodiscard]] std::vector<LatentVariable> get_z_list() const;
+
+    void update_z_list_q(size_t position, uint8_t index, double value);
+
 
     /**
      * @brief Returns latent variables' names

@@ -17,8 +17,8 @@ TEST_CASE("LatentVariable creation", "[LatentVariable]") {
         REQUIRE(lv.get_start() == 0.0);
         REQUIRE(lv.get_prior()->get_name() == "Normal");
         REQUIRE(lv.get_prior()->vi_return_param(0) == 0.0);
-        REQUIRE(lv.get_q()->get_name() == "Normal");
-        REQUIRE(lv.get_q()->vi_return_param(0) == 0.0);
+        REQUIRE(lv.get_q_clone()->get_name() == "Normal");
+        REQUIRE(lv.get_q_clone()->vi_return_param(0) == 0.0);
         REQUIRE(lv.get_method().empty());
         REQUIRE(!lv.get_sample());
         REQUIRE(!lv.get_value());
