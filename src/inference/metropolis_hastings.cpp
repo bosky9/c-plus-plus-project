@@ -75,7 +75,7 @@ Sample MetropolisHastings::sample() {
         acceptance = a_rate.sum() / static_cast<double>(a_rate.size());
         _scale     = tune_scale(acceptance, _scale);
         if (!_quiet_progress) {
-            std::cout << "Acceptance rate of Metropolis-Hastings is " << acceptance;
+            std::cout << "\nAcceptance rate of Metropolis-Hastings is " << acceptance;
         }
     }
 

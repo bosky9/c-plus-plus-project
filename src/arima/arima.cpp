@@ -794,7 +794,7 @@ utils::DataFrame ARIMA::predict(size_t h, bool intervals) const {
     auto mu_Y{_model(_latent_variables.get_z_values())};
     std::vector<double> date_index{shift_dates(h)};
 
-    Eigen::MatrixXd sim_values;
+    Eigen::MatrixXd sim_values{};
     utils::DataFrame result;
     std::vector<double> forecasted_values, prediction_01, prediction_05, prediction_95, prediction_99;
     if (_latent_variables.get_estimation_method() == "M-H") {
