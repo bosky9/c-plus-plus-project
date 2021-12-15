@@ -49,22 +49,23 @@ Sample MetropolisHastings::sample() {
     double acceptance{1.0};
     bool finish{true};
 
-    while (acceptance < 0.234 || acceptance > 0.4 || finish) {
+    while ((acceptance < 0.234 || acceptance > 0.4) || finish) {
         // If acceptance is in range, proceed to sample, else continue tuning
-        size_t sims_to_do;
+        size_t sims_to_do{_nsims};
         if (!(acceptance < 0.234 || acceptance > 0.4)) {
             finish = false;
             if (!_quiet_progress) {
                 std::cout << "\nTuning complete! Now sampling.";
             }
-            sims_to_do = _nsims;
         } else {
             sims_to_do = _nsims / 2;
         }
 
         // Holds data on acceptance rates and uniform random numbers
         Eigen::VectorXd a_rate{Eigen::VectorXd::Zero(static_cast<Eigen::Index>(sims_to_do))};
-        Eigen::VectorXd crit{Eigen::VectorXd::Random(static_cast<Eigen::Index>(sims_to_do))};
+        // Numbers are uniformly spread through their whole definition range for integer types,
+        // and in the [-1:1] range for floating point scalar types.
+        Eigen::VectorXd crit{Eigen::VectorXd::Random(static_cast<Eigen::Index>(sims_to_do)).cwiseAbs()};
         Mvn post{Eigen::VectorXd::Zero(static_cast<Eigen::Index>(_param_no)), _cov_matrix};
         Eigen::MatrixXd rnums(sims_to_do, _param_no);
         for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(sims_to_do); ++i) {

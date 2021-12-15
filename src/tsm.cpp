@@ -139,7 +139,8 @@ MCMCResults* TSM::_mcmc_fit(double scale, size_t nsims, const std::string& metho
 
         Eigen::VectorXd ses{y->get_ihessian().diagonal().cwiseAbs()}; // equivalent of np.abs(np.diag(y.ihessian))
         ses.unaryExpr([](double v) { return std::isnan(v) ? 1.0 : v; });
-        cov_matrix.emplace(ses.asDiagonal()); // equivalent of np.fill_diagonal(cov_matrix, ses)
+        cov_matrix = Eigen::MatrixXd(ses.size(), ses.size());
+        cov_matrix = (ses.asDiagonal()); // equivalent of np.fill_diagonal(cov_matrix, ses)
         delete y;
     } else
         starting_values = _latent_variables.get_z_starting_values();
