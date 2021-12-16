@@ -37,9 +37,7 @@ utils::DataFrame data = utils::parse_csv("../data/sunspot.year.csv");
 // Define a new ARIMA object
 ARIMA model{data, 1, 1, 0, Normal(0, 3)};
 // Fit the model using BBVI method 
-std::optional<Eigen::MatrixXd> opt_matrix{std::nullopt};
-Results* x{model.fit("BBVI", opt_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt,
-                             true)};
+Results* x{model.fit("BBVI")};
 // Predict values from the model 
 utils::DataFrame predictions = model.predict(10, true);
 ```
@@ -67,8 +65,27 @@ All the libraries mentioned above are already inside the project in the *third_p
 
 Finally we also used [Catch2](https://github.com/catchorg/Catch2) to write test for every class, that can be seen in the *test* folder. 
 
-```
-Examples should be included
+A test example done using Catch2 and the data from `sunspot.year.csv` is the following:
+
+```c++
+TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
+    utils::DataFrame data = utils::parse_csv("../data/sunspot.year.csv");
+
+    // Tests on ARIMA model with 1 AR and 1 MA term that the latent variable list length is correct 
+    // and that the estimated latent variables are not nan
+    SECTION("Test an ARIMA model with 1 AR and 1 MA term", "[fit]") {
+        ARIMA model{data, 1, 1, 0, Normal(0, 3)};
+        Results* x{model.fit()};
+        REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
+
+        std::vector<LatentVariable> lvs{model.get_latent_variables().get_z_list()};
+        int64_t nan{std::count_if(lvs.begin(), lvs.end(),
+                                  [](const LatentVariable& lv) { return !lv.get_value().has_value(); })};
+        REQUIRE(nan == 0);
+
+        delete x;
+    }
+
 ```
 
 ### Getting the Source
@@ -102,59 +119,34 @@ For formatting [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html) with 
 
 ### Installation
 
-Instructions for how to install your project's build artifacts
+*Instructions for how to install your project's build artifacts*
 
 ```
-Examples should be included
+make install -C build
 ```
-
-### Usage
-
-Instructions for using your project. Ways to run the program, how to include it in another project, etc.
-
-```
-Examples should be included
-```
-
-If your project provides an API, either provide details for usage in this document or link to the appropriate API reference documents
 
 **[Back to top](#table-of-contents)**
 
 ## Release Process
 
-Talk about the release process. How are releases made? What cadence? How to get new releases?
+The project was started in August 2021 and finished in December 2021. 
 
 ### Versioning
-
-This project uses [Semantic Versioning](http://semver.org/). For a list of available versions, see the [repository tag list](https://github.com/your/project/tags).
-
-### Payload
+Currently only the first and current 1.0.0 version is available.
 
 **[Back to top](#table-of-contents)**
-
-## How to Get Help
-
-Provide any instructions or contact information for users who need to get further help with your project.
-
-## Contributing
-
-Provide details about how people can contribute to your project. If you have a contributing guide, mention it here. e.g.:
-
-We encourage public contributions! Please review [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on our code of conduct and development process.
 
 **[Back to top](#table-of-contents)**
 
 ## Further Reading
 
-Provide links to other relevant documentation here
+[Here]()'s a link the full report regarding this project.
 
 **[Back to top](#table-of-contents)**
 
 ## License
 
-Copyright (c) 2021 Embedded Artistry LLC
-
-This project is licensed under the XXXXXX License - see [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) file for details.
 
 **[Back to top](#table-of-contents)**
 
@@ -168,6 +160,6 @@ This project is licensed under the XXXXXX License - see [LICENSE.md](LICENSE.md)
 
 ## Acknowledgments
 
-Provide proper credits, shout-outs, and honorable mentions here. Also provide links to relevant repositories, blog posts, or contributors worth mentioning.
+All the credits goes to the [PyFlux](https://github.com/RJT1990/pyflux) project. 
 
 **[Back to top](#table-of-contents)**

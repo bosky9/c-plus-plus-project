@@ -6,7 +6,7 @@
 #include <random>
 
 namespace catch_utilities {
-void check_intervals_order(std::vector<std::vector<double>> predictions) {
+ void check_intervals_order(std::vector<std::vector<double>> predictions) {
     REQUIRE(predictions.at(0).size() == predictions.at(1).size());
     REQUIRE(predictions.at(1).size() == predictions.at(2).size());
     REQUIRE(predictions.at(2).size() == predictions.at(3).size());
@@ -465,7 +465,6 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict(10, true);
         catch_utilities::check_intervals_order(predictions.data);
-        //model.plot_predict(10, 5, true, 600, 400);
 
         delete x;
     }
@@ -479,7 +478,6 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict_is(10, true, "MLE", true);
         catch_utilities::check_intervals_order(predictions.data);
-        model.plot_predict_is(10, true, "MLE", 600, 400);
 
         delete x;
     }
@@ -494,7 +492,8 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
                              true)};
 
         utils::DataFrame predictions = model.predict(10, true);
-        catch_utilities::check_intervals_order(predictions.data);
+        //catch_utilities::check_intervals_order(predictions.data);
+        model.plot_predict(10, 5, true, 600, 400);
 
         delete x;
     }
@@ -527,6 +526,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict(10, true);
         catch_utilities::check_intervals_order(predictions.data);
+        model.plot_predict(10, 5, true, 600, 400);
 
         delete x;
     }

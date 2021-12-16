@@ -219,7 +219,8 @@ private:
      * @param past_values How many past observations to include in the forecast plot
      * @return Tuple of vectors: error bars, forecasted values, values and indices to plot
      */
-    [[nodiscard]] std::tuple<std::vector<double>, std::vector<double>, std::vector<double>, std::vector<double>>
+    [[nodiscard]] std::tuple<std::vector<std::vector<double>>, std::vector<double>, std::vector<double>,
+                             std::vector<double>>
     summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::MatrixXd& sim_vector,
                           const std::vector<double>& date_index, size_t h, size_t past_values) const;
 
