@@ -902,7 +902,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
                         std::vector<double>(&mu_Y.second[0], mu_Y.second.data() + mu_Y.second.size()),
                         "sk"); // FIXME: alpha = 0.5 parameter only in hist method
     //plt::title(_data_frame.data_name);
-    plt::save("../data/arima_plots/plot_sample.pg");
+    plt::save("../data/arima_plots/plot_sample.png");
     // plt::show();
 }
 
@@ -957,7 +957,7 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(nsims); ++i) {
-        auto scale_shape_skew{get_scale_and_shape(lv_draws.row(i))};
+        auto scale_shape_skew{get_scale_and_shape(lv_draws.col(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         data_draws.row(i) =
                 _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
@@ -967,7 +967,7 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     std::vector<double> T_sims;
     for (Eigen::Index i{0}; i < sample_data.cols(); ++i)
         T_sims.push_back(T(sample_data.col(i)));
-    double T_actual{T(Eigen::VectorXd(_data_frame.data.size(), _data_frame.data.size()))};
+    double T_actual{T(Eigen::VectorXd::Map(_data_frame.data.data(), _data_frame.data.size()))};
 
     std::string description;
     if (T_name == "utils::mean")
@@ -980,7 +980,7 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
         description = " of the median";
 
     plt::figure_size(width.value(), height.value());
-    plt::subplot(uint8_t{1}, uint8_t{1}, uint8_t{1});
+    plt::subplot(1, 1, 1);
     plt::axvline(T_actual);
     plt::plot(T_sims);
     plt::title("Posterior predictive" + description);

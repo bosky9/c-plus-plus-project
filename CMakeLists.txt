@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(G++_FLAGS "-g --coverage")
-set(CMAKE_CXX_FLAGS "${G++_FLAGS} -O3 -Wall -Wextra -Wpedantic -Werror -fsanitize=undefined -fno-omit-frame-pointer")
+set(CMAKE_CXX_FLAGS "${G++_FLAGS} -std=c++17 -O3 -Wall -Wextra -Wpedantic -Werror -fsanitize=undefined -fno-omit-frame-pointer -DWITHOUT_NUMPY")
 set(DCMAKE_BUILD_TYPE "Debug")
 
 # Set Valgrind
@@ -36,7 +36,7 @@ file(GLOB_RECURSE SRCS_LIST ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE TESTS_LIST ${PROJECT_SOURCE_DIR}/test/*.cpp)
 target_sources(tests PRIVATE ${SRCS_LIST} ${TESTS_LIST})
 
-target_link_libraries(tests PRIVATE Python3::Python Python3::Module Catch2::Catch2WithMain INTERFACE WITHOUT_NUMPY)
+target_link_libraries(tests PRIVATE Python3::Python Python3::Module Catch2::Catch2WithMain)
 
 include(CTest)
 add_test(NAME AllTests

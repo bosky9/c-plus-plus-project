@@ -329,7 +329,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         Eigen::MatrixXd chain(lvs.size(), cols);
         for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(lvs.size()); ++i) {
             // Check that the samples exists (since they are optional)
-            assert(lvs.at(i).get_sample());
+            assert(lvs.at(i).get_sample().has_value());
             // Check that the samples have the same size
             assert(static_cast<size_t>(lvs.at(i).get_sample().value().size()) == cols);
             chain.row(i) = lvs.at(i).get_sample().value();
@@ -339,7 +339,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine generator(seed);
         std::uniform_int_distribution<size_t> distribution{0, cols};
-        for (size_t n{0}; n < nsims; n++)
+        for (size_t n{0}; n < nsims; ++n)
             ind.push_back(distribution(generator));
         // Copy elision should work just fine
         return chain(Eigen::all, ind);
