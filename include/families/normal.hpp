@@ -78,9 +78,9 @@ public:
      *
      * @details Parameters shape and skewness were present but not actually used
      */
-    [[nodiscard]] Eigen::VectorXd draw_variable(double loc, double scale, size_t nsims) const override;
+    [[nodiscard]] Eigen::VectorXd draw_variable(double loc, double scale, double shape, double skew, size_t nsims) const override;
 
-    [[nodiscard]] Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, size_t nsims) const override;
+    [[nodiscard]] Eigen::VectorXd draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skew, size_t nsims) const override;
 
     /**
      * @brief Wrapper function for changing latent variables for variational inference

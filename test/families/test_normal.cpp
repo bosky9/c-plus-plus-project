@@ -44,7 +44,7 @@ TEST_CASE("Draw variable", "[draw_variable][draw_variable_local]") {
     Eigen::VectorXd variable;
 
     SECTION("Draw variable", "[draw_variable]") {
-        variable = normal.draw_variable(0.0, 1.0, 5);
+        variable = normal.draw_variable(0.0, 1.0, 1.0, 1.0, 5);
     }
 
     SECTION("Draw variable with local mean and variance", "[draw_variable_local") {

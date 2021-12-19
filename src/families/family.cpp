@@ -59,11 +59,13 @@ std::unique_ptr<Family> Family::clone() const {
 }
 
 Eigen::VectorXd Family::draw_variable([[maybe_unused]] double loc, [[maybe_unused]] double scale,
+                                      [[maybe_unused]] double shape, [[maybe_unused]] double skew,
                                       [[maybe_unused]] size_t nsims) const {
     return {};
 }
 
 Eigen::VectorXd Family::draw_variable([[maybe_unused]] const Eigen::VectorXd& loc, [[maybe_unused]] double scale,
+                                      [[maybe_unused]] double shape, [[maybe_unused]] double skew,
                                       [[maybe_unused]] size_t nsims) const {
     return {};
 }

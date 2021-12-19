@@ -22,7 +22,7 @@ namespace plt = matplotlibcpp;
  * @brief AutoRegressive Integrated Moving Average (ARIMA) models
  * (inherits time series methods from the TSM parent class)
  */
-class ARIMA : public TSM {
+class ARIMA final : public TSM {
 private:
     size_t _ar;    ///< How many AR lags the model will have
     size_t _ma;    ///< How many MA lags the model will have
@@ -52,7 +52,7 @@ private:
      *          Creating the matrix before starting the iterations
      *          simplifies greatly the translation.
      */
-    Eigen::MatrixXd ar_matrix();
+    [[nodiscard]] Eigen::MatrixXd ar_matrix() const;
 
     /**
      * @brief Return output data of the model
@@ -182,7 +182,7 @@ private:
      * @return h-length vector of mean predictions
      */
     [[nodiscard]] Eigen::VectorXd mean_prediction(const Eigen::VectorXd& mu, const Eigen::VectorXd& Y, size_t h,
-                                                  Eigen::VectorXd t_z) const;
+                                                  const Eigen::VectorXd& t_z) const;
 
     /**
      * @brief Simulates a h-step ahead mean prediction

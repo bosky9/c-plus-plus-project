@@ -175,7 +175,7 @@ ARIMA::ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t in
     }
 }
 
-Eigen::MatrixXd ARIMA::ar_matrix() {
+Eigen::MatrixXd ARIMA::ar_matrix() const {
     Eigen::MatrixXd X{Eigen::MatrixXd::Ones(static_cast<Eigen::Index>(_ar + 1),
                                             static_cast<Eigen::Index>(_data_length - _max_lag))};
 
@@ -432,7 +432,7 @@ double ARIMA::non_normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_
 }
 
 Eigen::VectorXd ARIMA::mean_prediction(const Eigen::VectorXd& mu, const Eigen::VectorXd& Y, size_t h,
-                                       Eigen::VectorXd t_z) const {
+                                       const Eigen::VectorXd& t_z) const {
     // Create arrays to iterate over
     Eigen::VectorXd Y_exp{Y};
     Eigen::VectorXd mu_exp{mu};
@@ -503,9 +503,9 @@ Eigen::MatrixXd ARIMA::sim_prediction(const Eigen::VectorXd& mu, const Eigen::Ve
 
             double rnd_value;
             if (_model_name2 == "Exponential")
-                rnd_value = _family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), 1)[0];
+                rnd_value = _family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), 1)[0];
             else
-                rnd_value = _family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), 1)[0];
+                rnd_value = _family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), 1)[0];
 
             // Append rnd_value to Y_exp
             Eigen::VectorXd new_Y_exp(Y_exp.size() + 1);
@@ -559,9 +559,9 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
 
             std::vector<double> Y_exp_v(&Y_exp[0], Y_exp.data() + Y_exp.size());
             if (_model_name2 == "Exponential")
-                Y_exp_v.push_back(_family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), 1)[0]);
+                Y_exp_v.push_back(_family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), 1)[0]);
             else
-                Y_exp_v.push_back(_family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), 1)[0]);
+                Y_exp_v.push_back(_family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), 1)[0]);
 
             std::vector<double> mu_exp_v(&mu_exp[0], mu_exp.data() + mu_exp.size());
             mu_exp_v.push_back(0.0);
@@ -872,9 +872,8 @@ Eigen::MatrixXd ARIMA::sample(size_t nsims) const {
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(nsims); ++i) {
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         // Shape and skew are not used for Normal distributions
-        // TODO: Change Family::draw_variable() to accept shape and skew for other distributions
         data_draws.row(i) =
-                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), std::get<1>(scale_shape_skew)(i), std::get<2>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
     }
 
     return data_draws;
@@ -922,9 +921,8 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(nsims); ++i) {
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         // Shape and skew are not used for Normal distributions
-        // TODO: Change Family::draw_variable() to accept shape and skew for other distributions
         data_draws.row(i) =
-                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), std::get<1>(scale_shape_skew)(i), std::get<2>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
     }
 
     Eigen::Matrix sample_data{sample(nsims)};
@@ -960,7 +958,7 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
         auto scale_shape_skew{get_scale_and_shape(lv_draws.col(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         data_draws.row(i) =
-                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
     }
 
     Eigen::Matrix sample_data{sample(nsims)};
