@@ -144,6 +144,11 @@ std::unique_ptr<Family> LatentVariable::get_prior() const {
     return (_prior->clone());
 }
 
+std::function<double(double)> LatentVariable::get_prior_transform() const {
+    return _prior->get_transform();
+}
+
+
 std::optional<Eigen::VectorXd> LatentVariable::get_sample() const {
     return _sample;
 }

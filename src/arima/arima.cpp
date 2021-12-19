@@ -532,7 +532,7 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
         Eigen::VectorXd t_z{draw_latent_variables(1).transpose().row(0)};
         auto mu_Y{_model(t_z)};
         for (Eigen::Index i{0}; i < t_z.size(); ++i)
-            t_z[i] = _latent_variables.get_z_list()[i].get_prior()->get_transform()(t_z[i]);
+            t_z[i] = _latent_variables.get_z_list()[i].get_prior_transform()(t_z[i]);
 
         auto scale_shape_skew{get_scale_and_shape(t_z)};
 

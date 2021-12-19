@@ -94,6 +94,12 @@ public:
     [[nodiscard]] std::unique_ptr<Family> get_prior() const;
 
     /**
+     * @brief Returns the prior's trasformation function
+     * @return Trasfrom function of prior
+     */
+    [[nodiscard]] std::function<double(double)> get_prior_transform() const;
+
+    /**
      * @brief Returns the sample (optional)
      * @return Sample
      */
