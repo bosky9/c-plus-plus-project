@@ -9,8 +9,10 @@
 #include "Eigen/Core"          // Eigen::VectorXd, Eigen::MatrixXd
 #include "families/family.hpp" // Family, FamilyAttributes, lv_to_build
 
-#include <cassert> // static_assert(), assert()
-#include <memory>  // std::unique_ptr
+#include <memory>              // std::unique_ptr
+#include <string>              // std::string
+#include <utility>             // std::pair
+#include <vector>              // std::vector
 
 /**
  * @class Normal normal.hpp

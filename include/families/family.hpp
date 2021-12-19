@@ -11,6 +11,7 @@
 #include <functional> // std::function
 #include <memory>     // std::unique_ptr
 #include <string>     // std::string
+#include <vector>     // std::vector
 
 /**
  * @struct FamilyAttributes family.hpp

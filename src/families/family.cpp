@@ -6,6 +6,14 @@
 
 #include "families/family.hpp"
 
+#include "Eigen/Core" // Eigen::VectorXd
+
+#include <cmath>      // log, exp, tanh, atanh
+#include <functional> // std::function
+#include <memory>     // std::unique_ptr, std::make_unique
+#include <string>     // std::string
+#include <vector>     // std::vector
+
 const std::string Family::TRANSFORM_EXP    = "exp";
 const std::string Family::TRANSFORM_TANH   = "tanh";
 const std::string Family::TRANSFORM_LOGIT  = "logit";

@@ -8,7 +8,8 @@
 
 #include "families/family.hpp" // Family
 
-#include <memory> // std::unique_ptr
+#include <memory>              // std::unique_ptr
+#include <string>              // std::string
 
 /**
  * @class Flat flat.hpp

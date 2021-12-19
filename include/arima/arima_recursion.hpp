@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Eigen/Core"
+#include "Eigen/Core" // Eigen::VectorXd
 
 /**
  * @brief Max function between two doubles
@@ -34,13 +34,8 @@
  * @param ma_terms
  * @return
  */
-Eigen::VectorXd arima_recursion(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd link_mu,
-                                Eigen::VectorXd Y, size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
-
-// Poisson families were not implemented.
-[[maybe_unused]] Eigen::VectorXd arima_recursion_poisson(Eigen::VectorXd parameters, Eigen::VectorXd mu,
-                                                         Eigen::VectorXd link_mu, Eigen::VectorXd Y, size_t max_lag,
-                                                         size_t Y_len, size_t ar_terms, size_t ma_terms);
+Eigen::VectorXd arima_recursion(const Eigen::VectorXd& parameters, Eigen::VectorXd mu, const Eigen::VectorXd& link_mu,
+                                const Eigen::VectorXd& Y, size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
 
 /**
  * @brief Moving average recursion for ARIMA model class - Gaussian errors
@@ -54,9 +49,5 @@ Eigen::VectorXd arima_recursion(Eigen::VectorXd parameters, Eigen::VectorXd mu, 
  * @param ma_terms
  * @return
  */
-Eigen::VectorXd arima_recursion_normal(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd Y,
+Eigen::VectorXd arima_recursion_normal(const Eigen::VectorXd& parameters, Eigen::VectorXd mu, const Eigen::VectorXd& Y,
                                        size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
-
-// ARIMAX class has not been implemented
-[[maybe_unused]] Eigen::VectorXd arimax_recursion(Eigen::VectorXd parameters, Eigen::VectorXd mu, Eigen::VectorXd Y,
-                                                  size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);

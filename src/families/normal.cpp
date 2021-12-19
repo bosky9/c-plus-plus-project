@@ -6,8 +6,18 @@
 
 #include "families/normal.hpp"
 
+#include "Eigen/Core"              // Eigen::VectorXd, Eigen::MatrixXd, Eigen::Index
+#include "families/family.hpp"     // Family, FamilyAttributes, lv_to_build
 #include "families/flat.hpp"       // Flat
-#include "multivariate_normal.hpp" // Mvn::random()
+#include "multivariate_normal.hpp" // Mvn::random, Mvn::logpdf
+
+#include <cassert>                 // static_assert, assert
+#include <cmath>                   // log, pow, exp, round
+#include <memory>                  // std::unique_ptr, std::make_unique
+#include <string>                  // std::string, std::to_string
+#include <type_traits>             // std::is_same_v
+#include <utility>                 // std::pair
+#include <vector>                  // std::vector
 
 Normal::Normal(double mu, double sigma, const std::string& transform)
     : Family{transform}, _mu0{mu}, _sigma0{sigma}, _param_no{2}, _covariance_prior{false} {}
@@ -55,7 +65,7 @@ Eigen::VectorXd Normal::draw_variable_local(size_t size) const {
 double Normal::logpdf(double mu) const {
     if (!_transform_name.empty())
         mu = _transform(mu);
-    return -log(_sigma0) - (0.5 * std::pow(mu - _mu0, 2)) / std::pow(_sigma0, 2);
+    return -log(_sigma0) - (0.5 * pow(mu - _mu0, 2)) / pow(_sigma0, 2);
 }
 
 Eigen::VectorXd Normal::markov_blanket(const Eigen::VectorXd& y, const Eigen::VectorXd& mean, double scale) {
@@ -74,7 +84,7 @@ double Normal::neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd
 double Normal::pdf(double mu) {
     if (!_transform_name.empty()) // We need to transform mu if transform != ""
         mu = _transform(mu);
-    return (1.0 / _sigma0) * exp(-((0.5 * std::pow(mu - _mu0, 2)) / std::pow(_sigma0, 2)));
+    return (1.0 / _sigma0) * exp(-((0.5 * pow(mu - _mu0, 2)) / pow(_sigma0, 2)));
 }
 
 void Normal::vi_change_param(uint8_t index, double value) {
@@ -82,7 +92,7 @@ void Normal::vi_change_param(uint8_t index, double value) {
     if (index == 0)
         _mu0 = value;
     else if (index == 1)
-        _sigma0 = std::exp(value);
+        _sigma0 = exp(value);
 }
 
 double Normal::vi_return_param(uint8_t index) const {

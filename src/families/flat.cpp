@@ -6,6 +6,11 @@
 
 #include "families/flat.hpp"
 
+#include "families/family.hpp" // Family
+
+#include <memory>              // std::unique_ptr, std::make_unique
+#include <string>              // std::string
+
 Flat::Flat(const std::string& transform) : Family{transform}, _covariance_prior{false} {}
 
 bool operator==(const Flat& flat1, const Flat& flat2) {

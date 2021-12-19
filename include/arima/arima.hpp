@@ -23,6 +23,155 @@ namespace plt = matplotlibcpp;
  * (inherits time series methods from the TSM parent class)
  */
 class ARIMA final : public TSM {
+public:
+    /**
+     * @brief Constructor for ARIMA object
+     * @param data The univariate time series data that will be used
+     * @param index The times of the input data (years, days or seconds)
+     * @param ar How many AR lags the model will have
+     * @param ma How many MA lags the model will have
+     * @param integ How many times to difference the time series (default 0)
+     * @param family E.g. Normal() (default). It must be moved from the caller.
+     *
+     * @details Notes:
+     *
+     *              The info about the data is kept inside a SingleDataFrame struct,
+     *              called _data_frame, which yields the "data", "data_name", "index"
+     *              python variables.
+     *
+     *              In order to assign a subclass to the unique pointer to Family (which is abstract),
+     *              the method clone creates a deep copy of the passed family (which is a const reference); the unique
+     * ptr is then reset to the new one.
+     *
+     *              The _neg_loglik and _mb_neg_loglik functions are defined here,
+     *              returning the results of (non_)normal_neg_loglik() and (non_)normal_mb_neg_loglik(),
+     *              [which are defined in ARIMA].
+     *
+     *              The same applies to _model, _mb_model,
+     *              returning (non_)normal_model(), (non_)mb_normal_model(),
+     *              [which are defined in ARIMA].
+     */
+    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
+
+    /**
+     * @brief Constructor for ARIMA object
+     * @param data_frame The input data for the model
+     * @param ar How many AR lags the model will have
+     * @param ma How many MA lags the model will have
+     * @param integ How many times to difference the time series (default 0)
+     * @param family E.g. Normal() (default)
+     * @param target Which array index to use
+     *
+     * @details The same as the other constructor,
+     *          but multiple columns of data are passed as a DataFrame.
+     *          Only one columns is selected; which one? Decided by target.
+     */
+    ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal(),
+          const std::string& target = "");
+
+
+    /**
+     * @brief Delegate constructor for ARIMA
+     * @param ar How many AR lags the model will have
+     * @param ma How many MA lags the model will have
+     * @param integ How many times to difference the time series (default 0)
+     * @param family E.g. Normal() (default). It must be moved from the caller.
+     */
+    ARIMA(size_t ar, size_t ma, size_t integ, const Family& family);
+
+    /**
+     * @brief Calculates the negative log-likelihood of the model for non-Normal family
+     * @param beta Contains untransformed starting values for latent variables
+     * @return The negative logliklihood of the model
+     */
+    [[nodiscard]] double non_normal_neg_loglik(const Eigen::VectorXd& beta) const;
+
+    [[nodiscard]] double normal_neg_loglik(const Eigen::VectorXd& beta) const;
+
+    /**
+     * @brief Plots the fit of the model against the data
+     * @param width Width of the figure
+     * @param height Height of the figure
+     */
+    void plot_fit(std::optional<size_t> width = 10, std::optional<size_t> height = 7) const;
+
+    /**
+     * @brief Plots forecasts with the estimated model
+     * @param h How many steps ahead would you like to forecast
+     * @param past_values How many past observations to show on the forecast graph
+     * @param intervals Would you like to show prediction intervals for the forecast?
+     * @param width Width of the figure
+     * @param height Height of the figure
+     */
+    void plot_predict(size_t h = 5, size_t past_values = 20, bool intervals = true, std::optional<size_t> width = 10,
+                      std::optional<size_t> height = 7) const;
+
+    /**
+     * @brief Makes dynamic out-of-sample predictions with the estimated model on in-sample data
+     * @param h How many steps would you like to forecast
+     * @param fit_once Fits only once before the in-sample prediction; if False, fits after every new datapoint
+     * @param fit_method Which method to fit the model with
+     * @param intervals Whether to return prediction intervals
+     * @return Vector with predicted values
+     */
+    [[nodiscard]] utils::DataFrame predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
+                                              bool intervals = false) const;
+
+    /**
+     * @brief Plots forecasts with the estimated model against data
+     * @param h How many steps would you like to forecast
+     * @param fit_once Fits only once before the in-sample prediction; if False, fits after every new datapoint
+     * @param fit_method Which method to fit the model with
+     * @param width Width of the figure
+     * @param height Height of the figure
+     */
+    void plot_predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
+                         std::optional<size_t> width = 10, std::optional<size_t> height = 7) const;
+
+    /**
+     * @brief Makes forecast with the estimated model
+     * @param h How many steps would you like to forecast
+     * @param intervals Whether to return prediction intervals
+     * @return Vector with predicted values
+     */
+    [[nodiscard]] utils::DataFrame predict(size_t h = 5, bool intervals = false) const;
+
+    /**
+     * @brief Samples from the posterior predictive distribution
+     * @param nsims How many draws from the posterior predictive distribution
+     * @return Array of draws from the data
+     */
+    [[nodiscard]] Eigen::MatrixXd sample(size_t nsims = 1000) const;
+
+    /**
+     * @brief Plots draws from the posterior predictive density against the data
+     * @param nsims How many draws from the posterior predictive distribution
+     * @param plot_data Whether to plot the data or not
+     * @param width Width of the figure
+     * @param height Height of the figure
+     */
+    void plot_sample(size_t nsims = 10, bool plot_data = true, std::optional<size_t> width = 10,
+                     std::optional<size_t> height = 7) const;
+
+    /**
+     * @brief Computes posterior predictive p-value
+     * @param nsims How many draws for the PPC
+     * @param T A discrepancy measure - e.g. mean, std or max
+     * @return Posterior predictive p-value
+     */
+    double ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = utils::mean) const;
+
+    /**
+     * @brief Plots histogram of the discrepancy from draws of the posterior
+     * @param nsims How many draws for the PPC
+     * @param T A discrepancy measure - e.g. mean, std or max
+     * @param width Width of the figure
+     * @param height Height of the figure
+     */
+    void plot_ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = utils::mean,
+                  const std::string& T_name = "mean", std::optional<size_t> width = 10,
+                  std::optional<size_t> height = 7) const;
+
 private:
     size_t _ar;    ///< How many AR lags the model will have
     size_t _ma;    ///< How many MA lags the model will have
@@ -220,156 +369,7 @@ private:
      * @return Tuple of vectors: error bars, forecasted values, values and indices to plot
      */
     [[nodiscard]] std::tuple<std::vector<std::vector<double>>, std::vector<double>, std::vector<double>,
-                             std::vector<double>>
+    std::vector<double>>
     summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::MatrixXd& sim_vector,
                           const std::vector<double>& date_index, size_t h, size_t past_values) const;
-
-public:
-    /**
-     * @brief Constructor for ARIMA object
-     * @param data The univariate time series data that will be used
-     * @param index The times of the input data (years, days or seconds)
-     * @param ar How many AR lags the model will have
-     * @param ma How many MA lags the model will have
-     * @param integ How many times to difference the time series (default 0)
-     * @param family E.g. Normal() (default). It must be moved from the caller.
-     *
-     * @details Notes:
-     *
-     *              The info about the data is kept inside a SingleDataFrame struct,
-     *              called _data_frame, which yields the "data", "data_name", "index"
-     *              python variables.
-     *
-     *              In order to assign a subclass to the unique pointer to Family (which is abstract),
-     *              the method clone creates a deep copy of the passed family (which is a const reference); the unique
-     * ptr is then reset to the new one.
-     *
-     *              The _neg_loglik and _mb_neg_loglik functions are defined here,
-     *              returning the results of (non_)normal_neg_loglik() and (non_)normal_mb_neg_loglik(),
-     *              [which are defined in ARIMA].
-     *
-     *              The same applies to _model, _mb_model,
-     *              returning (non_)normal_model(), (non_)mb_normal_model(),
-     *              [which are defined in ARIMA].
-     */
-    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
-
-    /**
-     * @brief Constructor for ARIMA object
-     * @param data_frame The input data for the model
-     * @param ar How many AR lags the model will have
-     * @param ma How many MA lags the model will have
-     * @param integ How many times to difference the time series (default 0)
-     * @param family E.g. Normal() (default)
-     * @param target Which array index to use
-     *
-     * @details The same as the other constructor,
-     *          but multiple columns of data are passed as a DataFrame.
-     *          Only one columns is selected; which one? Decided by target.
-     */
-    ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal(),
-          const std::string& target = "");
-
-
-    /**
-     * @brief Delegate constructor for ARIMA
-     * @param ar How many AR lags the model will have
-     * @param ma How many MA lags the model will have
-     * @param integ How many times to difference the time series (default 0)
-     * @param family E.g. Normal() (default). It must be moved from the caller.
-     */
-    ARIMA(size_t ar, size_t ma, size_t integ, const Family& family);
-
-    /**
-     * @brief Calculates the negative log-likelihood of the model for non-Normal family
-     * @param beta Contains untransformed starting values for latent variables
-     * @return The negative logliklihood of the model
-     */
-    [[nodiscard]] double non_normal_neg_loglik(const Eigen::VectorXd& beta) const;
-
-    [[nodiscard]] double normal_neg_loglik(const Eigen::VectorXd& beta) const;
-
-    /**
-     * @brief Plots the fit of the model against the data
-     * @param width Width of the figure
-     * @param height Height of the figure
-     */
-    void plot_fit(std::optional<size_t> width = 10, std::optional<size_t> height = 7) const;
-
-    /**
-     * @brief Plots forecasts with the estimated model
-     * @param h How many steps ahead would you like to forecast
-     * @param past_values How many past observations to show on the forecast graph
-     * @param intervals Would you like to show prediction intervals for the forecast?
-     * @param width Width of the figure
-     * @param height Height of the figure
-     */
-    void plot_predict(size_t h = 5, size_t past_values = 20, bool intervals = true, std::optional<size_t> width = 10,
-                      std::optional<size_t> height = 7) const;
-
-    /**
-     * @brief Makes dynamic out-of-sample predictions with the estimated model on in-sample data
-     * @param h How many steps would you like to forecast
-     * @param fit_once Fits only once before the in-sample prediction; if False, fits after every new datapoint
-     * @param fit_method Which method to fit the model with
-     * @param intervals Whether to return prediction intervals
-     * @return Vector with predicted values
-     */
-    [[nodiscard]] utils::DataFrame predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
-                                              bool intervals = false) const;
-
-    /**
-     * @brief Plots forecasts with the estimated model against data
-     * @param h How many steps would you like to forecast
-     * @param fit_once Fits only once before the in-sample prediction; if False, fits after every new datapoint
-     * @param fit_method Which method to fit the model with
-     * @param width Width of the figure
-     * @param height Height of the figure
-     */
-    void plot_predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
-                         std::optional<size_t> width = 10, std::optional<size_t> height = 7) const;
-
-    /**
-     * @brief Makes forecast with the estimated model
-     * @param h How many steps would you like to forecast
-     * @param intervals Whether to return prediction intervals
-     * @return Vector with predicted values
-     */
-    [[nodiscard]] utils::DataFrame predict(size_t h = 5, bool intervals = false) const;
-
-    /**
-     * @brief Samples from the posterior predictive distribution
-     * @param nsims How many draws from the posterior predictive distribution
-     * @return Array of draws from the data
-     */
-    [[nodiscard]] Eigen::MatrixXd sample(size_t nsims = 1000) const;
-
-    /**
-     * @brief Plots draws from the posterior predictive density against the data
-     * @param nsims How many draws from the posterior predictive distribution
-     * @param plot_data Whether to plot the data or not
-     * @param width Width of the figure
-     * @param height Height of the figure
-     */
-    void plot_sample(size_t nsims = 10, bool plot_data = true, std::optional<size_t> width = 10,
-                     std::optional<size_t> height = 7) const;
-
-    /**
-     * @brief Computes posterior predictive p-value
-     * @param nsims How many draws for the PPC
-     * @param T A discrepancy measure - e.g. mean, std or max
-     * @return Posterior predictive p-value
-     */
-    double ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = utils::mean) const;
-
-    /**
-     * @brief Plots histogram of the discrepancy from draws of the posterior
-     * @param nsims How many draws for the PPC
-     * @param T A discrepancy measure - e.g. mean, std or max
-     * @param width Width of the figure
-     * @param height Height of the figure
-     */
-    void plot_ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = utils::mean,
-                  const std::string& T_name = "mean", std::optional<size_t> width = 10,
-                  std::optional<size_t> height = 7) const;
 };
