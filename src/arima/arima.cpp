@@ -238,18 +238,18 @@ ARIMA::get_scale_and_shape_sim(const Eigen::MatrixXd& transformed_lvs) const {
             // Apply trasform() to every element inside the matrix last row
             model_shape = transformed_lvs(Eigen::last, Eigen::all);
             std::transform(model_shape.begin(), model_shape.end(), model_shape.begin(), [this](double n) {
-                return _latent_variables.get_z_list().back().get_prior()->get_transform()(n);
+                return _latent_variables.get_z_list().back().get_prior_transform()(n);
             });
             // Second last row for scale
             model_scale = transformed_lvs(Eigen::last - 1, Eigen::all);
             std::transform(model_scale.begin(), model_scale.end(), model_scale.begin(), [this](double n) {
-                return _latent_variables.get_z_list().at(-2).get_prior()->get_transform()(n);
+                return _latent_variables.get_z_list().at(-2).get_prior_transform()(n);
             });
         } else {
             // Last row for scale
             model_scale = transformed_lvs(Eigen::last, Eigen::all);
             std::transform(model_scale.begin(), model_scale.end(), model_scale.begin(), [this](double n) {
-                return _latent_variables.get_z_list().back().get_prior()->get_transform()(n);
+                return _latent_variables.get_z_list().back().get_prior_transform()(n);
             });
         }
     }
@@ -257,7 +257,7 @@ ARIMA::get_scale_and_shape_sim(const Eigen::MatrixXd& transformed_lvs) const {
     if (_skewness) {
         model_skewness = transformed_lvs(Eigen::last - 2, Eigen::all);
         std::transform(model_skewness.begin(), model_skewness.end(), model_skewness.begin(), [this](double n) {
-            return _latent_variables.get_z_list().at(-3).get_prior()->get_transform()(n);
+            return _latent_variables.get_z_list().at(-3).get_prior_transform()(n);
         });
     }
 
@@ -271,7 +271,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::Vec
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
-        z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
+        z[i] = _latent_variables.get_z_list().at(i).get_prior_transform()(beta[i]);
     }
 
     // Constant and AR terms
@@ -297,7 +297,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(const Eigen:
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
-        z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
+        z[i] = _latent_variables.get_z_list().at(i).get_prior_transform()(beta[i]);
     }
 
     // Constant and AR terms
@@ -338,7 +338,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(const Eigen::
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
-        z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
+        z[i] = _latent_variables.get_z_list().at(i).get_prior_transform()(beta[i]);
     }
 
     // Constant and AR terms
@@ -376,7 +376,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eig
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
-        z[i] = _latent_variables.get_z_list().at(i).get_prior()->get_transform()(beta[i]);
+        z[i] = _latent_variables.get_z_list().at(i).get_prior_transform()(beta[i]);
     }
 
     // Constant and AR terms

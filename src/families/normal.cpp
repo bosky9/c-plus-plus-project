@@ -48,11 +48,11 @@ std::vector<lv_to_build> Normal::build_latent_variables() const {
     return lvs_to_build;
 }
 
-Eigen::VectorXd Normal::draw_variable(double loc, double scale, double shape, double skew, size_t nsims) const {
+Eigen::VectorXd Normal::draw_variable(double loc, double scale, [[maybe_unused]] double shape, [[maybe_unused]] double skew, size_t nsims) const {
     return Mvn::random(loc, scale, nsims);
 }
 
-Eigen::VectorXd Normal::draw_variable(const Eigen::VectorXd& loc, double scale, double shape, double skew, size_t nsims) const {
+Eigen::VectorXd Normal::draw_variable(const Eigen::VectorXd& loc, double scale, [[maybe_unused]] double shape, [[maybe_unused]] double skew, size_t nsims) const {
     assert(static_cast<size_t>(loc.size()) == nsims &&
            "Vector of locations must be as long as the number of simulations");
     return Mvn::random(loc, scale, nsims);
