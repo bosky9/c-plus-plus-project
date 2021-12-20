@@ -316,8 +316,8 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         std::vector<std::unique_ptr<Family>> q_vec = _latent_variables.get_z_approx_dist();
         Eigen::MatrixXd output(q_vec.size(), nsims);
         Eigen::Index r = 0;
-        for (auto& f : q_vec) {
-            output.row(r) = f->draw_variable_local(nsims);
+        for (auto& q : q_vec) {
+            output.row(r) = q->draw_variable_local(nsims);
             r++;
         }
         return output;

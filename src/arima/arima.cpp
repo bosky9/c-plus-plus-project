@@ -280,11 +280,11 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::Vec
         // We are not adding one to the eigen index because seq includes the last element
         mu = _x.transpose() * z(Eigen::seq(0, Eigen::last - static_cast<Eigen::Index>(_family_z_no + _ma)));
     else
-        mu = Eigen::VectorXd::Zero(Y.size()) * z[0];
+        mu = Eigen::VectorXd::Ones(Y.size()) * z[0];
 
     // MA terms
     if (_ma != 0)
-        mu = arima_recursion_normal(z, mu, Y, _max_lag, Y.size(), _ar, _ma);
+        arima_recursion_normal(z, mu, Y, _max_lag, Y.size(), _ar, _ma);
 
     return {mu, Y};
 }
@@ -312,7 +312,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(const Eigen:
     if (_ma != 0) {
         Eigen::VectorXd link_mu(mu.size());
         std::transform(mu.begin(), mu.end(), link_mu.begin(), _link);
-        mu = arima_recursion(z, mu, link_mu, Y, _max_lag, Y.size(), _ar, _ma);
+        arima_recursion(z, mu, link_mu, Y, _max_lag, Y.size(), _ar, _ma);
     }
 
     return {mu, Y};
@@ -351,7 +351,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(const Eigen::
 
     // MA terms
     if (_ma != 0)
-        mu = arima_recursion_normal(z, mu, Y, _max_lag, Y.size(), _ar, _ma);
+        arima_recursion_normal(z, mu, Y, _max_lag, Y.size(), _ar, _ma);
 
     return {mu, Y};
 }
@@ -391,7 +391,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eig
     if (_ma != 0) {
         Eigen::VectorXd link_mu(mu.size());
         std::transform(mu.begin(), mu.end(), link_mu.begin(), _link);
-        mu = arima_recursion(z, mu, link_mu, Y, _max_lag, Y.size(), _ar, _ma);
+        arima_recursion(z, mu, link_mu, Y, _max_lag, Y.size(), _ar, _ma);
     }
 
     return {mu, Y};

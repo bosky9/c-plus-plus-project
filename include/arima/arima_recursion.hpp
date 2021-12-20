@@ -34,7 +34,7 @@
  * @param ma_terms
  * @return
  */
-Eigen::VectorXd arima_recursion(const Eigen::VectorXd& parameters, Eigen::VectorXd mu, const Eigen::VectorXd& link_mu,
+void arima_recursion(const Eigen::VectorXd& parameters, Eigen::VectorXd& mu, const Eigen::VectorXd& link_mu,
                                 const Eigen::VectorXd& Y, size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
 
 /**
@@ -49,5 +49,5 @@ Eigen::VectorXd arima_recursion(const Eigen::VectorXd& parameters, Eigen::Vector
  * @param ma_terms
  * @return
  */
-Eigen::VectorXd arima_recursion_normal(const Eigen::VectorXd& parameters, Eigen::VectorXd mu, const Eigen::VectorXd& Y,
+void arima_recursion_normal(const Eigen::VectorXd& parameters, Eigen::VectorXd& mu, const Eigen::VectorXd& Y,
                                        size_t max_lag, size_t Y_len, size_t ar_terms, size_t ma_terms);
