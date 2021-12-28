@@ -64,7 +64,12 @@ utils::DataFrame utils::parse_csv(const std::string& filename) {
 }
 
 double utils::mean(Eigen::VectorXd v) {
-    return std::accumulate(v.begin(), v.end(), 0.0) / static_cast<double>(v.size());
+    std::vector<double> vec(v.data(), v.data() + v.size());
+    vec.erase(std::remove_if(std::begin(vec),
+                             std::end(vec),
+                           [](const auto& value) { return std::isnan(value); }),
+              std::end(vec));
+    return std::accumulate(vec.begin(), vec.end(), 0.0) / static_cast<double>(v.size());
 }
 
 double utils::median(Eigen::VectorXd v) {
