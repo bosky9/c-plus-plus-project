@@ -736,9 +736,10 @@ utils::DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& f
     std::vector<std::string> names{_data_frame.data_name,
             "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval", "99% Prediction Interval"};
 
-    std::vector<double> data_original_t, index;
+    std::vector<double> index;
     utils::DataFrame new_prediction;
     for (Eigen::Index t{0}; t < static_cast<Eigen::Index>(h); t++) {
+        std::vector<double> data_original_t{};
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
         std::iota(index.begin(), index.end(), 0);

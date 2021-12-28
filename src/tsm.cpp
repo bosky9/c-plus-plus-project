@@ -55,7 +55,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         if (utils::isinstance<Normal>(approx_dist.get())) {
             _latent_variables.update_z_list_q(i, 0, start_loc[static_cast<Eigen::Index>(i)]);
             if (start_ses.size() == 0)
-                _latent_variables.update_z_list_q(i, 1, std::exp(-3.0));
+                _latent_variables.update_z_list_q(i, 1, -3.0); // exp already done in vi_change_param
             else
                 _latent_variables.update_z_list_q(i, 1, start_ses[static_cast<Eigen::Index>(i)]);
         }
