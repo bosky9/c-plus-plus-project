@@ -31,7 +31,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
     Eigen::VectorXd start_loc;
     if ((_model_type != "GPNARX" || _model_type != "GPR" || _model_type != "GP" || _model_type != "GASRank") &&
-        !mini_batch.has_value()) {
+        map_start && !mini_batch.has_value()) {
         // Optimize using L-BFGS
         // Set up parameters
         LBFGSpp::LBFGSParam<double> param;
@@ -57,7 +57,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
             if (start_ses.size() == 0)
                 _latent_variables.update_z_list_q(i, 1, -3.0); // exp already done in vi_change_param
             else
-                _latent_variables.update_z_list_q(i, 1, start_ses[static_cast<Eigen::Index>(i)]);
+                _latent_variables.update_z_list_q(i, 1, log(start_ses[static_cast<Eigen::Index>(i)]));
         }
     }
 
@@ -79,11 +79,10 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
 
     // Apply exp() to q_ses, in python this is done in a single line
     std::transform(data.final_ses.begin(), data.final_ses.end(), data.final_ses.begin(),
-                   [](double x) { return exp(x); });
+                   [](double x) { return std::exp(x); });
     _latent_variables.set_z_values(data.final_means, "BBVI", data.final_ses);
 
-    for (size_t i{0}; i < _latent_variables.get_z_list().size(); i++)
-        _latent_variables.get_z_list()[i].set_q(*data.q[i]);
+    _latent_variables.set_z_qs(data.q);
 
     _latent_variables.set_estimation_method("BBVI");
 

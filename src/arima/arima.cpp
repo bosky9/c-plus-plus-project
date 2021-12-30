@@ -2,29 +2,29 @@
 
 #include "arima/arima.hpp"
 
+#include "Eigen/Core" // Eigen::VectorXd, Eigen::MatrixXd, Eigen::Index, Eigen::last, Eigen::all, Eigen::seq
 #include "arima/arima_recursion.hpp" // arima_recursion, arima_recursion_normal
 #include "data_check.hpp"            // data_check
-#include "Eigen/Core"                // Eigen::VectorXd, Eigen::MatrixXd, Eigen::Index, Eigen::last, Eigen::all, Eigen::seq
 #include "families/family.hpp"       // Family, FamilyAttributes, lv_to_build
 #include "families/normal.hpp"       // Normal
 #include "latent_variables.hpp"      // LatentVariables
-#include "matplotlibcpp.hpp"         // plt::figure_size, plt::plot, plt::subplot, plt::named_plot, plt::title, plt::xlabel, plt::ylabel, plt::legend, plt::save, plt::fill_between, plt::axvline, plt::show
-#include "multivariate_normal.hpp"   // Mvn::logpdf
-#include "results.hpp"               // Results
-#include "tsm.hpp"                   // TSM, SingleDataFrame, draw_latent_variables
-#include "utilities.hpp"             // utils::diff, utils::DataFrame, utils::percentile, utils::mean
+#include "matplotlibcpp.hpp" // plt::figure_size, plt::plot, plt::subplot, plt::named_plot, plt::title, plt::xlabel, plt::ylabel, plt::legend, plt::save, plt::fill_between, plt::axvline, plt::show
+#include "multivariate_normal.hpp" // Mvn::logpdf
+#include "results.hpp"             // Results
+#include "tsm.hpp"                 // TSM, SingleDataFrame, draw_latent_variables
+#include "utilities.hpp"           // utils::diff, utils::DataFrame, utils::percentile, utils::mean
 
-#include <algorithm>                 // std::max, std::copy, std::transform
-#include <cmath>                     // std::sqrt, std::tgamma, M_PI
-#include <iterator>                  // std::back_inserter
-#include <limits>                    // std::numeric_limits
-#include <numeric>                   // std::reduce, std::iota
-#include <optional>                  // std::optional
-#include <random>                    // std::random_device, std::default_random_engine, std::uniform_int_distribution
-#include <string>                    // std::string, std::to_string
-#include <tuple>                     // std::get, std::tuple, std::make_tuple
-#include <utility>                   // std::pair, std::move
-#include <vector>                    // std::vector
+#include <algorithm> // std::max, std::copy, std::transform
+#include <cmath>     // std::sqrt, std::tgamma, M_PI
+#include <iterator>  // std::back_inserter
+#include <limits>    // std::numeric_limits
+#include <numeric>   // std::reduce, std::iota
+#include <optional>  // std::optional
+#include <random>    // std::random_device, std::default_random_engine, std::uniform_int_distribution
+#include <string>    // std::string, std::to_string
+#include <tuple>     // std::get, std::tuple, std::make_tuple
+#include <utility>   // std::pair, std::move
+#include <vector>    // std::vector
 
 ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, const Family& family) : TSM{"ARIMA"} {
     // Latent Variable information
@@ -100,8 +100,8 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     }
 }
 
-ARIMA::ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t integ, const Family& family,
-             const std::string& target)
+ARIMA::ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t integ, const std::string& target,
+             const Family& family)
     : TSM{"ARIMA"} {
     // Latent Variable information
     _ar                 = ar;
@@ -237,28 +237,24 @@ ARIMA::get_scale_and_shape_sim(const Eigen::MatrixXd& transformed_lvs) const {
         if (_shape) {
             // Apply trasform() to every element inside the matrix last row
             model_shape = transformed_lvs(Eigen::last, Eigen::all);
-            std::transform(model_shape.begin(), model_shape.end(), model_shape.begin(), [this](double n) {
-                return _latent_variables.get_z_list().back().get_prior_transform()(n);
-            });
+            std::transform(model_shape.begin(), model_shape.end(), model_shape.begin(),
+                           [this](double n) { return _latent_variables.get_z_list().back().get_prior_transform()(n); });
             // Second last row for scale
             model_scale = transformed_lvs(Eigen::last - 1, Eigen::all);
-            std::transform(model_scale.begin(), model_scale.end(), model_scale.begin(), [this](double n) {
-                return _latent_variables.get_z_list().at(-2).get_prior_transform()(n);
-            });
+            std::transform(model_scale.begin(), model_scale.end(), model_scale.begin(),
+                           [this](double n) { return _latent_variables.get_z_list().at(-2).get_prior_transform()(n); });
         } else {
             // Last row for scale
             model_scale = transformed_lvs(Eigen::last, Eigen::all);
-            std::transform(model_scale.begin(), model_scale.end(), model_scale.begin(), [this](double n) {
-                return _latent_variables.get_z_list().back().get_prior_transform()(n);
-            });
+            std::transform(model_scale.begin(), model_scale.end(), model_scale.begin(),
+                           [this](double n) { return _latent_variables.get_z_list().back().get_prior_transform()(n); });
         }
     }
 
     if (_skewness) {
         model_skewness = transformed_lvs(Eigen::last - 2, Eigen::all);
-        std::transform(model_skewness.begin(), model_skewness.end(), model_skewness.begin(), [this](double n) {
-            return _latent_variables.get_z_list().at(-3).get_prior_transform()(n);
-        });
+        std::transform(model_skewness.begin(), model_skewness.end(), model_skewness.begin(),
+                       [this](double n) { return _latent_variables.get_z_list().at(-3).get_prior_transform()(n); });
     }
 
     return std::make_tuple(model_scale, model_shape, model_skewness);
@@ -276,10 +272,10 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::Vec
 
     // Constant and AR terms
     Eigen::VectorXd mu;
-    if (_ar != 0)
-        // We are not adding one to the eigen index because seq includes the last element
+    if (_ar != 0) {
+        // We are not adding one to the Eigen index because seq includes the last element
         mu = _x.transpose() * z(Eigen::seq(0, Eigen::last - static_cast<Eigen::Index>(_family_z_no + _ma)));
-    else
+    } else
         mu = Eigen::VectorXd::Ones(Y.size()) * z[0];
 
     // MA terms
@@ -438,12 +434,13 @@ Eigen::VectorXd ARIMA::mean_prediction(const Eigen::VectorXd& mu, const Eigen::V
     Eigen::VectorXd mu_exp{mu};
 
     // Loop over h time periods
-    for (size_t t{0}; t < h; t++) {
+    for (size_t t{0}; t < h; ++t) {
         double new_value = t_z[0];
 
         if (_ar != 0) {
-            for (Eigen::Index i{1}; i <= static_cast<Eigen::Index>(_ar); ++i)
+            for (Eigen::Index i{1}; i <= static_cast<Eigen::Index>(_ar); ++i) {
                 new_value += t_z[i] * Y_exp(Eigen::last - i + 1);
+            }
         }
 
         if (_ma != 0) {
@@ -503,9 +500,11 @@ Eigen::MatrixXd ARIMA::sim_prediction(const Eigen::VectorXd& mu, const Eigen::Ve
 
             double rnd_value;
             if (_model_name2 == "Exponential")
-                rnd_value = _family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), 1)[0];
+                rnd_value = _family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew),
+                                                   std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), 1)[0];
             else
-                rnd_value = _family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), 1)[0];
+                rnd_value = _family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew),
+                                                   std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), 1)[0];
 
             // Append rnd_value to Y_exp
             Eigen::VectorXd new_Y_exp(Y_exp.size() + 1);
@@ -559,9 +558,13 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
 
             std::vector<double> Y_exp_v(&Y_exp[0], Y_exp.data() + Y_exp.size());
             if (_model_name2 == "Exponential")
-                Y_exp_v.push_back(_family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), 1)[0]);
+                Y_exp_v.push_back(_family->draw_variable(1.0 / _link(new_value), std::get<0>(scale_shape_skew),
+                                                         std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew),
+                                                         1)[0]);
             else
-                Y_exp_v.push_back(_family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), 1)[0]);
+                Y_exp_v.push_back(_family->draw_variable(_link(new_value), std::get<0>(scale_shape_skew),
+                                                         std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew),
+                                                         1)[0]);
 
             std::vector<double> mu_exp_v(&mu_exp[0], mu_exp.data() + mu_exp.size());
             mu_exp_v.push_back(0.0);
@@ -587,7 +590,7 @@ ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::Ma
                              const std::vector<double>& date_index, size_t h, size_t past_values) const {
     std::vector<std::vector<double>> error_bars;
     for (size_t pre{5}; pre < 100; pre += 5) {
-        std::vector error_bars_row{mean_values(Eigen::last - static_cast<Eigen::Index>(h + 1))};
+        std::vector error_bars_row{mean_values(Eigen::last - static_cast<Eigen::Index>(h))};
         for (Eigen::Index i{0}; i < sim_vector.rows(); ++i)
             error_bars_row.push_back(utils::percentile(sim_vector.row(i), pre));
         error_bars.push_back(error_bars_row);
@@ -640,9 +643,9 @@ void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) 
     plt::named_plot("Data", date_index, Y);
     plt::named_plot("ARIMA model", date_index, values_to_plot, "k");
     plt::title(_data_frame.data_name);
-    //plt::legend(std::map<std::string, std::string>{{"loc", "2"}});
+    // plt::legend(std::map<std::string, std::string>{{"loc", "2"}});
     plt::save("../data/arima_plots/plot_fit.png");
-    // plt::show();
+    plt::show();
 }
 
 void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::optional<size_t> width,
@@ -709,22 +712,22 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
 
     plt::figure_size(width.value(), height.value());
     if (intervals) {
-        /*std::vector<double> alpha;
+        std::vector<double> alpha;
         for (size_t i{50}; i > 12; i -= 2)
             alpha.push_back(0.15 * static_cast<double>(i) * 0.01);
         for (size_t i{0}; i < error_bars.size(); ++i) {
             std::vector<double> date_index_h;
             std::copy(date_index.end() - static_cast<long>(h) - 1, date_index.end(), std::back_inserter(date_index_h));
-            plt::fill_between(date_index_h, std::vector<double>{error_bars[i]}, std::vector<double>{error_bars[-i - 1]},
+            plt::fill_between(date_index_h, error_bars[i], error_bars[error_bars.size() - i - 2],
                               {{"alpha", std::to_string(alpha[i])}});
-        }*/
+        }
 
         plt::plot(plot_index, plot_values);
-        //plt::title("Forecast for " +_data_frame.data_name);
-        //plt::xlabel("Time");
-        //plt::ylabel(_data_frame.data_name);
+        plt::title("Forecast for " + _data_frame.data_name);
+        plt::xlabel("Time");
+        plt::ylabel(_data_frame.data_name);
         plt::save("../data/arima_plots/plot_predict.png");
-        // plt::show();
+        plt::show();
     }
 }
 
@@ -733,8 +736,8 @@ utils::DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& f
     utils::DataFrame predictions;
     LatentVariables saved_lvs{""};
 
-    std::vector<std::string> names{_data_frame.data_name,
-            "1% Prediction Interval", "5% Prediction Interval", "95% Prediction Interval", "99% Prediction Interval"};
+    std::vector<std::string> names{_data_frame.data_name, "1% Prediction Interval", "5% Prediction Interval",
+                                   "95% Prediction Interval", "99% Prediction Interval"};
 
     std::vector<double> index;
     utils::DataFrame new_prediction;
@@ -784,9 +787,9 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     for (size_t i{0}; i < predictions.data.size(); ++i)
         plt::named_plot("Predictions", predictions.index, predictions.data[i], "k");
     plt::title(_data_frame.data_name);
-    //plt::legend(std::map<std::string, std::string>{{"loc", "2"}});
+    // plt::legend(std::map<std::string, std::string>{{"loc", "2"}});
     plt::save("../data/arima_plots/plot_predict_is.png");
-    //plt::show();
+    plt::show();
 }
 
 utils::DataFrame ARIMA::predict(size_t h, bool intervals) const {
@@ -831,7 +834,7 @@ utils::DataFrame ARIMA::predict(size_t h, bool intervals) const {
     }
     if (!intervals) {
         result.data.emplace_back(forecasted_values);
-        result.data_name.push_back( _data_frame.data_name);
+        result.data_name.push_back(_data_frame.data_name);
     } else {
         if (_latent_variables.get_estimation_method() != "M-H") {
             // sim_values = sim_prediction(mu_Y.first, mu_Y.second, 5, t_z, 15000);
@@ -874,7 +877,8 @@ Eigen::MatrixXd ARIMA::sample(size_t nsims) const {
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         // Shape and skew are not used for Normal distributions
         data_draws.row(i) =
-                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), std::get<1>(scale_shape_skew)(i), std::get<2>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), std::get<1>(scale_shape_skew)(i),
+                                       std::get<2>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
     }
 
     return data_draws;
@@ -901,9 +905,9 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
         plt::named_plot("Data", date_index,
                         std::vector<double>(&mu_Y.second[0], mu_Y.second.data() + mu_Y.second.size()),
                         "sk"); // FIXME: alpha = 0.5 parameter only in hist method
-    //plt::title(_data_frame.data_name);
+    // plt::title(static_cast<std::string>(_data_frame.data_name));
     plt::save("../data/arima_plots/plot_sample.png");
-    // plt::show();
+    plt::show();
 }
 
 double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T) const {
@@ -923,7 +927,8 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         // Shape and skew are not used for Normal distributions
         data_draws.row(i) =
-                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), std::get<1>(scale_shape_skew)(i), std::get<2>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)(i), std::get<1>(scale_shape_skew)(i),
+                                       std::get<2>(scale_shape_skew)(i), static_cast<int>(mus.at(i).size()));
     }
 
     Eigen::Matrix sample_data{sample(nsims)};
@@ -959,7 +964,8 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
         auto scale_shape_skew{get_scale_and_shape(lv_draws.col(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         data_draws.row(i) =
-                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew), std::get<2>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew),
+                                       std::get<2>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
     }
 
     Eigen::Matrix sample_data{sample(nsims)};
@@ -986,5 +992,5 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     plt::xlabel("T(x)");
     plt::ylabel("Frequency");
     plt::save("../data/arima_plots/plot_ppc.png");
-    // plt::show();
+    plt::show();
 }

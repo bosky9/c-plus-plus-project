@@ -316,29 +316,27 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(const Eigen
 
         Eigen::VectorXd optim_parameters{_optim->update(gradient)};
         change_parameters(optim_parameters);
-        optim_parameters = _optim->get_parameters()(Eigen::seq(0, Eigen::last, 2));
+        Eigen::VectorXd optim_parameters_2 = _optim->get_parameters()(Eigen::seq(0, Eigen::last, 2));
 
         if (store) {
-            stored_means.row(i)             = optim_parameters;
+            stored_means.row(i)             = optim_parameters_2;
             stored_predictive_likelihood[i] = neg_posterior(stored_means.row(i));
         }
 
         if (_printer)
-            print_progress(i, optim_parameters);
+            print_progress(i, optim_parameters_2);
 
         // Construct final parameters using final 10% of samples
         if (static_cast<double>(i) > static_cast<double>(_iterations) - round(static_cast<double>(_iterations) / 10)) {
             ++final_samples;
-            final_parameters += _optim->get_parameters();
+            final_parameters += optim_parameters;
         }
 
-        if (_record_elbo) {
-            Eigen::VectorXd parameters{_optim->get_parameters()(Eigen::seq(0, 1))};
-            elbo_records[i] = get_elbo(parameters);
-        }
+        if (_record_elbo)
+            elbo_records[i] = get_elbo(optim_parameters_2);
     }
 
-    final_parameters = final_parameters / static_cast<double>(final_samples);
+    final_parameters /= static_cast<double>(final_samples);
     change_parameters(final_parameters);
 
     std::vector<double> means, ses;
@@ -357,9 +355,11 @@ BBVIReturnData BBVI::run_with(bool store, const std::function<double(const Eigen
     std::vector<std::unique_ptr<Family>> temp_q(_q.size());
     for (size_t i{0}; i < _q.size(); ++i)
         temp_q[i] = _q[i]->clone();
+
     if (store) {
         return {std::move(temp_q), final_means, final_ses, elbo_records, stored_means, stored_predictive_likelihood};
     }
+
     return {std::move(temp_q), final_means, final_ses, elbo_records, {}, {}};
 }
 

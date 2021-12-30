@@ -129,7 +129,7 @@ void LatentVariable::plot_z(size_t width, size_t height) const {
     plt::xlabel("Value");
     plt::legend();
     plt::save("../data/latent_variables_plots/plot_z_single.png");
-    // plt::show();
+    plt::show();
 }
 
 std::string LatentVariable::get_method() const {
@@ -294,7 +294,7 @@ std::vector<LatentVariable> LatentVariables::get_z_list() const {
     return _z_list;
 }
 
-void LatentVariables::update_z_list_q(size_t position, uint8_t index, double value){
+void LatentVariables::update_z_list_q(size_t position, uint8_t index, double value) {
     _z_list[position].change_q_param(index, value);
 }
 
@@ -353,7 +353,10 @@ Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(_z_list.size()); ++i) {
         assert(_z_list[i].get_value().has_value());
         values(i) = transformed ? transforms[i](_z_list[i].get_value().value()) : _z_list[i].get_value().value();
+        // std::cout << _z_list[i].get_value().value() << " vs " << transforms[i](_z_list[i].get_value().value()) <<
+        // "\n";
     }
+    // std::cout << "------------\n\n";
     return values;
 }
 
@@ -392,7 +395,7 @@ void LatentVariables::set_z_values(const Eigen::VectorXd& values, const std::str
     for (size_t i{0}; i < _z_list.size(); ++i) {
         _z_list[i].set_method(method);
         _z_list[i].set_value(values[static_cast<Eigen::Index>(i)]);
-        if (stds)
+        if (stds.has_value())
             _z_list[i].set_std(stds.value()[static_cast<Eigen::Index>(i)]);
         if (samples.has_value())
             _z_list[i].set_sample(samples.value().row(static_cast<Eigen::Index>(i)));
@@ -466,7 +469,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
     plt::title("Latent Variable Plot");
     plt::legend(std::map<std::string, std::string>{{"loc", loc}});
     plt::save("../data/latent_variables_plots/plot_z.png");
-    // plt::show();
+    plt::show();
 }
 
 void LatentVariables::trace_plot(size_t width, size_t height) {
@@ -525,5 +528,5 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
         }
     }
     plt::save("../data/latent_variables_plots/trace_plot.png");
-    // plt::show();
+    plt::show();
 }

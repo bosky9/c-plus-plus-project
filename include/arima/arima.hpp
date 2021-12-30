@@ -1,19 +1,19 @@
 #pragma once
 
-#include "Eigen/Core"                // Eigen::VectorXd, Eigen::MatrixXd
-#include "families/family.hpp"       // Family
-#include "families/normal.hpp"       // Normal
-#include "matplotlibcpp.hpp"         // matplotlibcpp
-#include "tsm.hpp"                   // TSM
-#include "utilities.hpp"             // utils::DataFrame, utils::mean
+#include "Eigen/Core"          // Eigen::VectorXd, Eigen::MatrixXd
+#include "families/family.hpp" // Family
+#include "families/normal.hpp" // Normal
+#include "matplotlibcpp.hpp"   // matplotlibcpp
+#include "tsm.hpp"             // TSM
+#include "utilities.hpp"       // utils::DataFrame, utils::mean
 
-#include <functional>                // std::function
-#include <memory>                    // std::unique_ptr
-#include <optional>                  // std::optional
-#include <string>                    // std::string
-#include <tuple>                     // std::tuple
-#include <utility>                   // std::pair
-#include <vector>                    // std::vector
+#include <functional> // std::function
+#include <memory>     // std::unique_ptr
+#include <optional>   // std::optional
+#include <string>     // std::string
+#include <tuple>      // std::tuple
+#include <utility>    // std::pair
+#include <vector>     // std::vector
 
 namespace plt = matplotlibcpp;
 
@@ -66,8 +66,8 @@ public:
      *          but multiple columns of data are passed as a DataFrame.
      *          Only one columns is selected; which one? Decided by target.
      */
-    ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal(),
-          const std::string& target = "");
+    ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, const std::string& target = "",
+          const Family& family = Normal());
 
 
     /**
@@ -369,7 +369,7 @@ private:
      * @return Tuple of vectors: error bars, forecasted values, values and indices to plot
      */
     [[nodiscard]] std::tuple<std::vector<std::vector<double>>, std::vector<double>, std::vector<double>,
-    std::vector<double>>
+                             std::vector<double>>
     summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::MatrixXd& sim_vector,
                           const std::vector<double>& date_index, size_t h, size_t past_values) const;
 };
