@@ -267,13 +267,13 @@ Eigen::MatrixXd BBVI::normal_log_q(const Eigen::MatrixXd& z, bool initial) const
 
 void BBVI::print_progress(size_t i, const Eigen::VectorXd& current_params) const {
     auto posterior{posterior::reverse_function_params(_neg_posterior)};
-    for (int8_t split{1}; split < 11; ++split) {
+    for (uint8_t split{1}; split < 11; ++split) {
         if (i == static_cast<size_t>(round(static_cast<double>(_iterations) / 10 * split)) - 1) {
             double post   = -posterior(current_params);
             double approx = create_normal_logq(current_params);
             double diff   = post - approx;
             if (!_quiet_progress) {
-                std::cout << split << "0% done : ELBO is " << diff << ", p(y,z) is " << post << ", q(z) is " << approx;
+                std::cout << "\n" << static_cast<uint16_t>(split) << "0% done : ELBO is " << diff << ", p(y,z) is " << post << ", q(z) is " << approx;
             }
         }
     }
@@ -614,7 +614,7 @@ void BBVIM::print_progress(size_t i, const Eigen::VectorXd& current_params) cons
             double approx = create_normal_logq(current_params);
             double diff   = post - approx;
             if (!_quiet_progress) {
-                std::cout << split << "0% done : ELBO is " << diff << ", p(y,z) is " << post << ", q(z) is " << approx;
+                std::cout << "\n" << split << "0% done : ELBO is " << diff << ", p(y,z) is " << post << ", q(z) is " << approx;
             }
         }
     }
