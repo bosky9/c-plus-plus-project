@@ -6,7 +6,7 @@
 
 #include "inference/stoch_optim.hpp"
 
-double StochOptim::_epsilon = pow(10, -8);
+double StochOptim::_epsilon = pow(10.0, -8);
 
 StochOptim::StochOptim(Eigen::VectorXd starting_parameters, Eigen::VectorXd starting_variances, double learning_rate)
     : _parameters{std::move(starting_parameters)}, _variances{std::move(starting_variances)}, _learning_rate{
@@ -28,8 +28,8 @@ Eigen::VectorXd RMSProp::update(Eigen::VectorXd& gradient) {
     _variances = _ewma * _variances.array() + (1 - _ewma) * pow(gradient.array(), 2);
     if (_t > 5) {
         _parameters =
-                _parameters.array() + _learning_rate +
-                (_learning_rate * 15.0 * (pow(0.99, _t))) * (gradient.array() / sqrt(_variances.array() + _epsilon));
+                _parameters.array() + (_learning_rate +
+                (_learning_rate * 15.0 * (pow(0.99, _t)))) * (gradient.array() / sqrt(_variances.array() + _epsilon));
     }
     _t += 1;
     return _parameters;
@@ -46,8 +46,8 @@ Eigen::VectorXd ADAM::update(Eigen::VectorXd& gradient) {
     _variances                     = _ewma_2 * _variances.array() + (1 - _ewma_2) * pow(gradient.array(), 2);
     Eigen::VectorXd variance_hats  = _variances / (1 - pow(_ewma_2, _t));
     if (_t > 5) {
-        _parameters = _parameters.array() + _learning_rate +
-                      (_learning_rate * 15.0 * (pow(0.99, _t))) *
+        _parameters = _parameters.array() + (_learning_rate +
+                      (_learning_rate * 15.0 * (pow(0.99, _t)))) *
                               (f_gradient_hat.array() / (sqrt(variance_hats.array()) + _epsilon));
     }
     _t += 1;
