@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['ftol_478',['ftol',['../classLBFGSpp_1_1LBFGSParam.html#afd25aeda1f1a3cb9084e2e860ff6caf8',1,'LBFGSpp::LBFGSParam::ftol()'],['../classLBFGSpp_1_1LBFGSBParam.html#aa65896259d12ee094ba197e7202b6d8f',1,'LBFGSpp::LBFGSBParam::ftol()']]]
+  ['link_473',['link',['../structFamilyAttributes.html#a67fdf38da75e39615903648b1ad0a598',1,'FamilyAttributes']]],
+  ['lower_5f95_5fest_474',['lower_95_est',['../structSample.html#a2879289c4949276c2d71df239ca0b985',1,'Sample']]]
 ];

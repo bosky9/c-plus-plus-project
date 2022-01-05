@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['linesearch_480',['linesearch',['../classLBFGSpp_1_1LBFGSParam.html#a2fb18577b0e516ce6f5d8554e36dde05',1,'LBFGSpp::LBFGSParam']]],
-  ['link_481',['link',['../structFamilyAttributes.html#a67fdf38da75e39615903648b1ad0a598',1,'FamilyAttributes']]],
-  ['lower_5f95_5fest_482',['lower_95_est',['../structSample.html#a2879289c4949276c2d71df239ca0b985',1,'Sample']]]
+  ['n5_478',['N5',['../norm__post__sim_8hpp.html#aa5715751ba47a547becd8b0ec308bcf6',1,'nps']]],
+  ['n95_479',['N95',['../norm__post__sim_8hpp.html#a628743e79794d51520f7108a24c23981',1,'nps']]],
+  ['nsims_480',['NSIMS',['../norm__post__sim_8hpp.html#a3ed98d5992a41f764539dc1afdea890f',1,'nps']]]
 ];

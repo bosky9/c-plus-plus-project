@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['epsilon_476',['epsilon',['../classLBFGSpp_1_1LBFGSParam.html#a460aea47ddeffaed305054e9620fa974',1,'LBFGSpp::LBFGSParam::epsilon()'],['../classLBFGSpp_1_1LBFGSBParam.html#afb20e8fd6c6808c1f736218841ba6947',1,'LBFGSpp::LBFGSBParam::epsilon()']]],
-  ['epsilon_5frel_477',['epsilon_rel',['../classLBFGSpp_1_1LBFGSParam.html#afade09f669340abc6d62f5416ddeed4e',1,'LBFGSpp::LBFGSParam::epsilon_rel()'],['../classLBFGSpp_1_1LBFGSBParam.html#a08e5aba4186fc879b43fa70c25fca581',1,'LBFGSpp::LBFGSBParam::epsilon_rel()']]]
+  ['index_472',['index',['../structSingleDataFrame.html#adee537e3179d63a29e4b060e070af9d0',1,'SingleDataFrame::index()'],['../structutils_1_1DataFrame.html#aafca0eacf7d726308e19e5f02a71a3b5',1,'utils::DataFrame::index()']]]
 ];

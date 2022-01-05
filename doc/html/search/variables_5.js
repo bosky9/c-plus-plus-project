@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['index_479',['index',['../structSingleDataFrame.html#adee537e3179d63a29e4b060e070af9d0',1,'SingleDataFrame::index()'],['../structDataFrame.html#a0ca2af4dc68bcfa8651d39149e88ac76',1,'DataFrame::index()']]]
+  ['mean_5fest_475',['mean_est',['../structSample.html#a2a1e665218b9c33762d30add11179543',1,'Sample']]],
+  ['mean_5ftransform_476',['mean_transform',['../structFamilyAttributes.html#a3a2d0841889314ded2d5f925ae106ce5',1,'FamilyAttributes']]],
+  ['median_5fest_477',['median_est',['../structSample.html#afeba76afbe239e33c2375f10ceba3e26',1,'Sample']]]
 ];

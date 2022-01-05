@@ -493,7 +493,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict(10, true);
         // catch_utilities::check_intervals_order(predictions.data);
-        model.plot_predict(10, 5, true, 600, 400);
+        model.plot_predict(10, 5, false, 600, 400);
 
         delete x;
     }
@@ -526,7 +526,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict(10, true);
         catch_utilities::check_intervals_order(predictions.data);
-        model.plot_predict(10, 5, true, 600, 400);
+        model.plot_predict(10, 5, false, 600, 400);
 
         delete x;
     }
@@ -555,6 +555,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict(10, true);
         catch_utilities::check_intervals_order(predictions.data);
+        model.plot_predict(10, 5, false, 600, 400);
 
         delete x;
     }
@@ -583,6 +584,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
         utils::DataFrame predictions = model.predict(10, true);
         catch_utilities::check_intervals_order(predictions.data);
+        model.plot_predict(10, 5, false, 600, 400);
 
         delete x;
     }

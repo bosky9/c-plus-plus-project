@@ -715,12 +715,14 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
         std::vector<double> alpha;
         for (size_t i{50}; i > 12; i -= 2)
             alpha.push_back(0.15 * static_cast<double>(i) * 0.01);
-        for (size_t i{0}; i < error_bars.size(); ++i) {
-            std::vector<double> date_index_h;
-            std::copy(date_index.end() - static_cast<long>(h) - 1, date_index.end(), std::back_inserter(date_index_h));
+        std::vector<double> date_index_h;
+        std::copy(date_index.end() - static_cast<long>(h) - 1, date_index.end(), std::back_inserter(date_index_h));
+        for (size_t i{0}; i < error_bars.size() - 1; ++i) {
             plt::fill_between(date_index_h, error_bars[i], error_bars[error_bars.size() - i - 2],
-                              {{"alpha", std::to_string(alpha[i])}});
+                              {{"alpha", "alpha[i]"}});
         }
+        plt::fill_between(date_index_h, error_bars[error_bars.size() - 1], error_bars[0],
+                          {{"alpha", "alpha[error_bars.size() - 1]"}});
 
         plt::plot(plot_index, plot_values);
         plt::title("Forecast for " + _data_frame.data_name);
@@ -904,7 +906,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
     if (plot_data)
         plt::named_plot("Data", date_index,
                         std::vector<double>(&mu_Y.second[0], mu_Y.second.data() + mu_Y.second.size()),
-                        "sk"); // FIXME: alpha = 0.5 parameter only in hist method
+                        "b"); // FIXME: alpha = 0.5 parameter only in hist method
     // plt::title(static_cast<std::string>(_data_frame.data_name));
     plt::save("../data/arima_plots/plot_sample.png");
     plt::show();
@@ -933,8 +935,8 @@ double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T)
 
     Eigen::Matrix sample_data{sample(nsims)};
     std::vector<double> T_sims;
-    for (Eigen::Index i{0}; i < sample_data.cols(); ++i)
-        T_sims.push_back(T(sample_data.col(i)));
+    for (Eigen::Index i{0}; i < sample_data.rows(); ++i)
+        T_sims.push_back(T(sample_data.row(i)));
     double T_actual{
             T(Eigen::VectorXd::Map(_data_frame.data.data(), static_cast<Eigen::Index>(_data_frame.data.size())))};
 
@@ -960,18 +962,18 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
 
     Eigen::VectorXd temp_mus(mus.at(0).size());
     Eigen::MatrixXd data_draws(nsims, mus.at(0).size());
+    auto scale_shape_skew{get_scale_and_shape_sim(lv_draws)};
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(nsims); ++i) {
-        auto scale_shape_skew{get_scale_and_shape(lv_draws.col(i))};
         std::transform(mus[i].begin(), mus[i].end(), temp_mus.begin(), _link);
         data_draws.row(i) =
-                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew), std::get<1>(scale_shape_skew),
-                                       std::get<2>(scale_shape_skew), static_cast<int>(mus.at(i).size()));
+                _family->draw_variable(temp_mus, std::get<0>(scale_shape_skew)[i], std::get<1>(scale_shape_skew)[i],
+                                       std::get<2>(scale_shape_skew)[i], static_cast<int>(temp_mus.size()));
     }
 
-    Eigen::Matrix sample_data{sample(nsims)};
+    Eigen::MatrixXd sample_data{sample(nsims)};
     std::vector<double> T_sims;
-    for (Eigen::Index i{0}; i < sample_data.cols(); ++i)
-        T_sims.push_back(T(sample_data.col(i)));
+    for (Eigen::Index i{0}; i < sample_data.rows(); ++i)
+        T_sims.push_back(T(sample_data.row(i)));
     double T_actual{T(Eigen::VectorXd::Map(_data_frame.data.data(), _data_frame.data.size()))};
 
     std::string description;
@@ -985,9 +987,9 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
         description = " of the median";
 
     plt::figure_size(width.value(), height.value());
-    plt::subplot(1, 1, 1);
+    // plt::subplot(1, 1, 1);
     plt::axvline(T_actual);
-    plt::plot(T_sims);
+    plt::hist(T_sims, 25);
     plt::title("Posterior predictive" + description);
     plt::xlabel("T(x)");
     plt::ylabel("Frequency");
