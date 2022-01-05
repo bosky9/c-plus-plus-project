@@ -48,6 +48,81 @@ struct ModelOutput final {
  * @brief Contains general time series methods to be inherited by models
  */
 class TSM {
+public:
+    /**
+     * @brief Fits a model
+     * @param method A fitting method (e.g. 'MLE')
+     * @return Results of the fit
+     *
+     * @detail  Since the Python function receives a list of kwargs,
+     *          we decided to translate it explicitly as parameters,
+     *          some of them tagged as "optional" because by default
+     *          the Python version inits them as None.
+     *
+     *          This function calls all other _..._fit(...) functions.
+     *
+     *          Since the return type is "Results*" (Results being an abstract class),
+     *          in order to return pointer to Results subclasses
+     *          it is necessary to declare their extension as public.
+     *          es. "class MLEResults : public Results {...}".
+     */
+    Results* fit(std::string method                         = "",
+                 std::optional<Eigen::MatrixXd> cov_matrix = std::nullopt,
+                 std::optional<size_t> iterations = 1000, std::optional<size_t> nsims = 1000,
+                 const std::optional<std::string>& optimizer = "RMSProp", std::optional<size_t> batch_size = 12,
+                 std::optional<size_t> mini_batch = std::nullopt, std::optional<bool> map_start = true,
+                 std::optional<double> learning_rate = 0.001, std::optional<bool> record_elbo = std::nullopt,
+                 std::optional<bool> quiet_progress = false);
+
+    /**
+     * @brief Auxiliary function for creating dates for forecasts
+     * @param n How many steps to forecast
+     * @return A transformed date_index object
+     */
+    [[nodiscard]] std::vector<double> shift_dates(size_t n) const;
+
+    /**
+     * @brief Transforms latent variables to actual scale by applying link function
+     * @return Transformed latent variables
+     */
+    [[nodiscard]] Eigen::VectorXd transform_z() const;
+
+    // Not used in Python
+    // [[nodiscard]] Eigen::VectorXd transform_parameters() const;
+
+    /**
+     * @brief Plots latent variables by calling latent parameters object
+     * @param indices Vector of indices to plot
+     * @param width Width of the figure
+     * @param height Height of the figure
+     */
+    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15,
+                size_t height = 5) const;
+
+    // Not used in Python
+    // void plot_parameters(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t
+    // height = 5);
+
+    /**
+     * @brief Adjusts priors for the latent variables
+     * @param index Which latent variable index/indices to be altered
+     * @param prior Which prior distribution? E.g. Normal(0,1)
+     */
+    void adjust_prior(const std::vector<size_t>& index, const Family& prior);
+
+    /**
+     * @brief Draws latent variables from the model (for Bayesian inference)
+     * @param nsims How many draws to take
+     * @return Matrix of draws
+     */
+    [[nodiscard]] Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000) const;
+
+    /**
+     * @brief Returns the latent variables
+     * @return Latent variables
+     */
+    [[nodiscard]] virtual LatentVariables get_latent_variables() const;
+
 protected:
     SingleDataFrame _data_frame;
     std::string _model_name;
@@ -155,7 +230,8 @@ protected:
 
     /**
      * @brief Performs a Laplace approximation to the posterior
-     * @param obj_type method, whether a likelihood or a posterior
+     * @param obj_type method, whether a likelihood or a posterior    //@TODO: consider using only optional on None parameters
+
      * @return A LaplaceResults object
      */
     LaplaceResults* _laplace_fit(const std::function<double(Eigen::VectorXd)>& obj_type);
@@ -217,80 +293,4 @@ protected:
 
     // Used only in VAR models
     //[[nodiscard]] double multivariate_neg_logposterior(const Eigen::VectorXd& beta);
-
-public:
-    //@TODO: consider using only optional on None parameters
-    /**
-     * @brief Fits a model
-     * @param method A fitting method (e.g. 'MLE')
-     * @return Results of the fit
-     *
-     * @detail  Since the Python function receives a list of kwargs,
-     *          we decided to translate it explicitly as parameters,
-     *          some of them tagged as "optional" because by default
-     *          the Python version inits them as None.
-     *
-     *          This function calls all other _..._fit(...) functions.
-     *
-     *          Since the return type is "Results*" (Results being an abstract class),
-     *          in order to return pointer to Results subclasses
-     *          it is necessary to declare their extension as public.
-     *          es. "class MLEResults : public Results {...}".
-     */
-    Results* fit(std::string method                         = "",
-                 std::optional<Eigen::MatrixXd> cov_matrix = std::nullopt,
-                 std::optional<size_t> iterations = 1000, std::optional<size_t> nsims = 1000,
-                 const std::optional<std::string>& optimizer = "RMSProp", std::optional<size_t> batch_size = 12,
-                 std::optional<size_t> mini_batch = std::nullopt, std::optional<bool> map_start = true,
-                 std::optional<double> learning_rate = 0.001, std::optional<bool> record_elbo = std::nullopt,
-                 std::optional<bool> quiet_progress = false);
-
-    /**
-     * @brief Auxiliary function for creating dates for forecasts
-     * @param n How many steps to forecast
-     * @return A transformed date_index object
-     */
-    [[nodiscard]] std::vector<double> shift_dates(size_t n) const;
-
-    /**
-     * @brief Transforms latent variables to actual scale by applying link function
-     * @return Transformed latent variables
-     */
-    [[nodiscard]] Eigen::VectorXd transform_z() const;
-
-    // Not used in Python
-    // [[nodiscard]] Eigen::VectorXd transform_parameters() const;
-
-    /**
-     * @brief Plots latent variables by calling latent parameters object
-     * @param indices Vector of indices to plot
-     * @param width Width of the figure
-     * @param height Height of the figure
-     */
-    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15,
-                size_t height = 5) const;
-
-    // Not used in Python
-    // void plot_parameters(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t
-    // height = 5);
-
-    /**
-     * @brief Adjusts priors for the latent variables
-     * @param index Which latent variable index/indices to be altered
-     * @param prior Which prior distribution? E.g. Normal(0,1)
-     */
-    void adjust_prior(const std::vector<size_t>& index, const Family& prior);
-
-    /**
-     * @brief Draws latent variables from the model (for Bayesian inference)
-     * @param nsims How many draws to take
-     * @return Matrix of draws
-     */
-    [[nodiscard]] Eigen::MatrixXd draw_latent_variables(size_t nsims = 5000) const;
-
-    /**
-     * @brief Returns the latent variables
-     * @return Latent variables
-     */
-    [[nodiscard]] virtual LatentVariables get_latent_variables() const;
 };
