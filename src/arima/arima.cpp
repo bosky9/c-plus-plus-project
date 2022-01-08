@@ -2,29 +2,30 @@
 
 #include "arima/arima.hpp"
 
-#include "Eigen/Core" // Eigen::VectorXd, Eigen::MatrixXd, Eigen::Index, Eigen::last, Eigen::all, Eigen::seq
+#include "Eigen/Core"                // Eigen::VectorXd, Eigen::MatrixXd, Eigen::Index, Eigen::last, Eigen::all, Eigen::seq
 #include "arima/arima_recursion.hpp" // arima_recursion, arima_recursion_normal
 #include "data_check.hpp"            // data_check
 #include "families/family.hpp"       // Family, FamilyAttributes, lv_to_build
 #include "families/normal.hpp"       // Normal
 #include "latent_variables.hpp"      // LatentVariables
-#include "matplotlibcpp.hpp" // plt::figure_size, plt::plot, plt::subplot, plt::named_plot, plt::title, plt::xlabel, plt::ylabel, plt::legend, plt::save, plt::fill_between, plt::axvline, plt::show
-#include "multivariate_normal.hpp" // Mvn::logpdf
-#include "results.hpp"             // Results
-#include "tsm.hpp"                 // TSM, SingleDataFrame, draw_latent_variables
-#include "utilities.hpp"           // utils::diff, utils::DataFrame, utils::percentile, utils::mean
+#include "matplotlibcpp.hpp"         // plt::figure_size, plt::plot, plt::subplot, plt::named_plot, plt::title, plt::xlabel, plt::ylabel, plt::legend, plt::save, plt::fill_between, plt::axvline, plt::show
+#include "multivariate_normal.hpp"   // Mvn::logpdf
+#include "results.hpp"               // Results
+#include "tsm.hpp"                   // TSM, SingleDataFrame, draw_latent_variables
+#include "utilities.hpp"             // utils::diff, utils::DataFrame, utils::percentile, utils::mean
 
-#include <algorithm> // std::max, std::copy, std::transform
-#include <cmath>     // std::sqrt, std::tgamma, M_PI
-#include <iterator>  // std::back_inserter
-#include <limits>    // std::numeric_limits
-#include <numeric>   // std::reduce, std::iota
-#include <optional>  // std::optional
-#include <random>    // std::random_device, std::default_random_engine, std::uniform_int_distribution
-#include <string>    // std::string, std::to_string
-#include <tuple>     // std::get, std::tuple, std::make_tuple
-#include <utility>   // std::pair, std::move
-#include <vector>    // std::vector
+#include <algorithm>           // std::max, std::min, std::copy, std::transform, std::max_element, std::min_element
+#include <cmath>               // std::sqrt, std::tgamma, M_PI
+#include <iterator>            // std::back_inserter
+#include <limits>              // std::numeric_limits
+#include <numeric>             // std::reduce, std::iota
+#include <optional>            // std::optional
+#include <random>              // std::random_device, std::default_random_engine, std::uniform_int_distribution
+#include <sciplot/sciplot.hpp> // sciplot::Plot
+#include <string>              // std::string, std::to_string
+#include <tuple>               // std::get, std::tuple, std::make_tuple
+#include <utility>             // std::pair, std::move
+#include <vector>              // std::vector
 
 ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, const Family& family) : TSM{"ARIMA"} {
     // Latent Variable information
@@ -710,27 +711,41 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
         plot_index        = std::get<3>(results);
     }
 
-    plt::figure_size(width.value(), height.value());
+    // Create a Plot object
+    sciplot::Plot plot;
+    // Find the range of the y values to plot
+    double min_y_value = *std::min_element(plot_values.begin(), plot_values.end());
+    double max_y_value = *std::max_element(plot_values.begin(), plot_values.end());
+    // Draw the error zones
     if (intervals) {
         std::vector<double> alpha;
         for (size_t i{50}; i > 12; i -= 2)
             alpha.push_back(0.15 * static_cast<double>(i) * 0.01);
         std::vector<double> date_index_h;
         std::copy(date_index.end() - static_cast<long>(h) - 1, date_index.end(), std::back_inserter(date_index_h));
-        for (size_t i{0}; i < error_bars.size() - 1; ++i) {
-            plt::fill_between(date_index_h, error_bars[i], error_bars[error_bars.size() - i - 2],
-                              {{"alpha", "alpha[i]"}});
+        for (size_t i{0}; i < error_bars.size()/2; ++i) {
+            plot.drawCurvesFilled(date_index_h, error_bars[i], error_bars[error_bars.size() - i - 1]).fillIntensity(alpha[i]);
         }
-        plt::fill_between(date_index_h, error_bars[error_bars.size() - 1], error_bars[0],
-                          {{"alpha", "alpha[error_bars.size() - 1]"}});
-
-        plt::plot(plot_index, plot_values);
-        plt::title("Forecast for " + _data_frame.data_name);
-        plt::xlabel("Time");
-        plt::ylabel(_data_frame.data_name);
-        plt::save("../data/arima_plots/plot_predict.png");
-        plt::show();
+        // Update the range of y to contain the error zones
+        min_y_value = std::min(min_y_value, *std::min_element(error_bars[0].begin(), error_bars[0].end()));
+        max_y_value = std::max(max_y_value, *std::max_element(error_bars[error_bars.size()-1].begin(), error_bars[error_bars.size()-1].end()));
     }
+    // Draw the data
+    plot.drawCurve(plot_index, plot_values);
+    // Set the size
+    plot.size(width.value(), height.value());
+    // Set the x and y labels
+    plot.xlabel("Time");
+    plot.ylabel(_data_frame.data_name);
+    // Set the x and y ranges
+    plot.xrange(plot_index.at(0), plot_index.back());
+    plot.yrange(min_y_value, max_y_value);
+    // Hide the legend
+    plot.legend().hide();
+    // Save the plot to a PDF file
+    plot.save("../data/arima_plots/plot_predict.pdf");
+    // Show the plot in a pop-up window
+    plot.show();
 }
 
 
@@ -814,7 +829,7 @@ utils::DataFrame ARIMA::predict(size_t h, bool intervals) const {
         }
     } else {
         Eigen::VectorXd t_z{transform_z()};
-        t_z = t_z.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
+        t_z = t_z.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; }); // TODO: t_z.hasNaN() is always false?
         Eigen::VectorXd mean_values{mean_prediction(mu_Y.first, mu_Y.second, h, t_z)};
         if (intervals)
             sim_values = sim_prediction(mu_Y.first, mu_Y.second, h, t_z, 15000);
