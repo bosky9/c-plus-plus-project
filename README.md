@@ -153,8 +153,8 @@ This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) fi
 ## Authors
 
 * **[Alessia Bodini](https://github.com/alessiabodini)** - VR451051
-* **[Federisco Boschi](https://github.com/bosky9)** - VR
-* **[Ettore Cinquetti](https://github.com/e5ti)** - VR
+* **[Federisco Boschi](https://github.com/bosky9)** - VR445479
+* **[Ettore Cinquetti](https://github.com/e5ti)** - VR451823
 
 **[Back to top](#table-of-contents)**
 
