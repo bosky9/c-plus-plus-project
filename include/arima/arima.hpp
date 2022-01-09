@@ -93,7 +93,7 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_fit(std::optional<size_t> width = 10, std::optional<size_t> height = 7) const;
+    void plot_fit(std::optional<size_t> width = 1280, std::optional<size_t> height = 720) const;
 
     /**
      * @brief Plots forecasts with the estimated model
@@ -103,8 +103,8 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_predict(size_t h = 5, size_t past_values = 20, bool intervals = true, std::optional<size_t> width = 10,
-                      std::optional<size_t> height = 7) const;
+    void plot_predict(size_t h = 5, size_t past_values = 20, bool intervals = true, std::optional<size_t> width = 1280,
+                      std::optional<size_t> height = 720) const;
 
     /**
      * @brief Makes dynamic out-of-sample predictions with the estimated model on in-sample data
@@ -126,7 +126,7 @@ public:
      * @param height Height of the figure
      */
     void plot_predict_is(size_t h = 5, bool fit_once = true, const std::string& fit_method = "MLE",
-                         std::optional<size_t> width = 10, std::optional<size_t> height = 7) const;
+                         std::optional<size_t> width = 1280, std::optional<size_t> height = 720) const;
 
     /**
      * @brief Makes forecast with the estimated model
@@ -150,8 +150,8 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_sample(size_t nsims = 10, bool plot_data = true, std::optional<size_t> width = 10,
-                     std::optional<size_t> height = 7) const;
+    void plot_sample(size_t nsims = 10, bool plot_data = true, std::optional<size_t> width = 1280,
+                     std::optional<size_t> height = 720) const;
 
     /**
      * @brief Computes posterior predictive p-value
@@ -169,8 +169,8 @@ public:
      * @param height Height of the figure
      */
     void plot_ppc(size_t nsims = 1000, const std::function<double(Eigen::VectorXd)>& T = utils::mean,
-                  const std::string& T_name = "mean", std::optional<size_t> width = 10,
-                  std::optional<size_t> height = 7) const;
+                  const std::string& T_name = "mean", std::optional<size_t> width = 1280,
+                  std::optional<size_t> height = 720) const;
 
 private:
     size_t _ar;    ///< How many AR lags the model will have

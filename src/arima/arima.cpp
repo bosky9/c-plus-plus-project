@@ -8,7 +8,6 @@
 #include "families/family.hpp"       // Family, FamilyAttributes, lv_to_build
 #include "families/normal.hpp"       // Normal
 #include "latent_variables.hpp"      // LatentVariables
-#include "matplotlibcpp.hpp"         // plt::figure_size, plt::plot, plt::subplot, plt::named_plot, plt::title, plt::xlabel, plt::ylabel, plt::legend, plt::save, plt::fill_between, plt::axvline, plt::show
 #include "multivariate_normal.hpp"   // Mvn::logpdf
 #include "results.hpp"               // Results
 #include "tsm.hpp"                   // TSM, SingleDataFrame, draw_latent_variables
@@ -615,7 +614,6 @@ ARIMA::summarize_simulations(const Eigen::VectorXd& mean_values, const Eigen::Ma
 }
 
 void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) const {
-    plt::figure_size(width.value(), height.value());
     std::vector<double> date_index;
     std::copy(_data_frame.index.begin() + static_cast<long>(std::max(_ar, _ma)),
               _data_frame.index.begin() + static_cast<long>(_data_length), std::back_inserter(date_index));
@@ -641,12 +639,28 @@ void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) 
                        [this](double x) { return _link(x); });
 
     std::vector<double> Y(&mu_Y.second[0], mu_Y.second.data() + mu_Y.second.size());
-    plt::named_plot("Data", date_index, Y);
-    plt::named_plot("ARIMA model", date_index, values_to_plot, "k");
-    plt::title(_data_frame.data_name);
-    // plt::legend(std::map<std::string, std::string>{{"loc", "2"}});
-    plt::save("../data/arima_plots/plot_fit.png");
-    plt::show();
+
+    // Create a Plot object
+    sciplot::Plot plot;
+    // Draw the data
+    plot.drawCurve(date_index, Y).label("Data");
+    plot.drawCurve(date_index, values_to_plot).label("ARIMA model").lineColor("black");
+    // Set the size
+    plot.size(width.value(), height.value());
+    // Set the x and y labels
+    plot.xlabel("Time");
+    plot.ylabel(_data_frame.data_name);
+    // Set the x and y ranges
+    double min_y_value = std::min(*std::min_element(Y.begin(), Y.end()), *std::min_element(values_to_plot.begin(), values_to_plot.end()));
+    double max_y_value = std::max(*std::max_element(Y.begin(), Y.end()), *std::max_element(values_to_plot.begin(), values_to_plot.end()));
+    plot.xrange(date_index.front(), date_index.back());
+    plot.yrange(min_y_value, max_y_value);
+    // Show the legend
+    plot.legend().atTopRight().transparent();
+    // Save the plot to a PDF file
+    plot.save("../data/arima_plots/plot_fit.pdf");
+    // Show the plot in a pop-up window
+    plot.show();
 }
 
 void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::optional<size_t> width,
@@ -738,7 +752,7 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
     plot.xlabel("Time");
     plot.ylabel(_data_frame.data_name);
     // Set the x and y ranges
-    plot.xrange(plot_index.at(0), plot_index.back());
+    plot.xrange(plot_index.front(), plot_index.back());
     plot.yrange(min_y_value, max_y_value);
     // Hide the legend
     plot.legend().hide();
@@ -796,17 +810,34 @@ utils::DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& f
 
 void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_method, std::optional<size_t> width,
                             std::optional<size_t> height) const {
-    plt::figure_size(width.value(), height.value());
+    // Create a Plot object
+    sciplot::Plot plot;
+    // Draw the data and find the range of y values
     auto predictions{predict_is(h, fit_once, fit_method)};
     std::vector<double> data;
     std::copy(_data_frame.data.end() - static_cast<long>(h), _data_frame.data.end(), std::back_inserter(data));
-    plt::named_plot("Data", predictions.index, data);
-    for (size_t i{0}; i < predictions.data.size(); ++i)
-        plt::named_plot("Predictions", predictions.index, predictions.data[i], "k");
-    plt::title(_data_frame.data_name);
-    // plt::legend(std::map<std::string, std::string>{{"loc", "2"}});
-    plt::save("../data/arima_plots/plot_predict_is.png");
-    plt::show();
+    plot.drawCurve(predictions.index, data).label("Data");
+    double min_y_value = *std::min_element(data.begin(), data.end());
+    double max_y_value = *std::max_element(data.begin(), data.end());
+    for (size_t i{0}; i < predictions.data.size(); ++i) {
+        plot.drawCurve(predictions.index, predictions.data[i]).label("Predictions").lineColor("black");
+        min_y_value = std::min(min_y_value, *std::min_element(predictions.data[i].begin(), predictions.data[i].end()));
+        max_y_value = std::max(max_y_value, *std::max_element(predictions.data[i].begin(), predictions.data[i].end()));
+    }
+    // Set the size
+    plot.size(width.value(), height.value());
+    // Set the x and y labels
+    plot.xlabel("Time");
+    plot.ylabel(_data_frame.data_name);
+    // Set the x and y ranges
+    plot.xrange(predictions.index.front(), predictions.index.back());
+    plot.yrange(min_y_value, max_y_value);
+    // Show the legend
+    plot.legend().atTopRight().transparent();
+    // Save the plot to a PDF file
+    plot.save("../data/arima_plots/plot_predict_is.pdf");
+    // Show the plot in a pop-up window
+    plot.show();
 }
 
 utils::DataFrame ARIMA::predict(size_t h, bool intervals) const {
@@ -906,25 +937,48 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
             _latent_variables.get_estimation_method() == "M-H") &&
            "No latent variables estimated!");
 
-    plt::figure_size(width.value(), height.value());
+    // Create a Plot object
+    sciplot::Plot plot;
+    // Draw the data and find the range of y values
+    double min_y_value{0};
+    double max_y_value{0};
     std::vector<double> date_index;
     std::copy(_data_frame.index.begin() + static_cast<long>(std::max(_ar, _ma)),
               _data_frame.index.begin() + static_cast<long>(_data_length), std::back_inserter(date_index));
     auto mu_Y = _model(_latent_variables.get_z_values());
-    Eigen::MatrixXd draws{sample(nsims).transpose()};
-    for (Eigen::Index i{0}; i < draws.rows(); ++i)
-        plt::named_plot(
-                "Posterior Draws", date_index,
-                std::vector<double>(&draws.row(i)[0],
-                                    draws.row(i).data() +
-                                            draws.row(i).size())); // FIXME: alpha = 1.0 parameter only in hist method
-    if (plot_data)
-        plt::named_plot("Data", date_index,
-                        std::vector<double>(&mu_Y.second[0], mu_Y.second.data() + mu_Y.second.size()),
-                        "b"); // FIXME: alpha = 0.5 parameter only in hist method
-    // plt::title(static_cast<std::string>(_data_frame.data_name));
-    plt::save("../data/arima_plots/plot_sample.png");
-    plt::show();
+    Eigen::MatrixXd draws{sample(nsims)};
+    for (Eigen::Index i{0}; i < draws.rows(); ++i) {
+        std::vector<double> y(&draws.row(i)[0],draws.row(i).data() + draws.row(i).size());
+        if (i == 0) {
+            plot.drawCurve(date_index, y).label("Posterior Draws");
+            min_y_value = *std::min_element(y.begin(), y.end());
+            max_y_value = *std::max_element(y.begin(), y.end());
+        } else {
+            plot.drawCurve(date_index, y).labelNone();
+            min_y_value = std::min(min_y_value, *std::min_element(y.begin(), y.end()));
+            max_y_value = std::max(max_y_value, *std::max_element(y.begin(), y.end()));
+        }
+    }
+    if (plot_data) {
+        std::vector<double> y(&mu_Y.second[0], mu_Y.second.data() + mu_Y.second.size());
+        plot.drawPoints(date_index, y).label("Data").lineColor("black").pointType(4);
+        min_y_value = std::min(min_y_value, *std::min_element(y.begin(), y.end()));
+        max_y_value = std::max(max_y_value, *std::max_element(y.begin(), y.end()));
+    }
+    // Set the size
+    plot.size(width.value(), height.value());
+    // Set the x and y labels
+    plot.xlabel("Time");
+    plot.ylabel(_data_frame.data_name);
+    // Set the x and y ranges
+    plot.xrange(date_index.front(), date_index.back());
+    plot.yrange(min_y_value, max_y_value);
+    // Show the legend
+    plot.legend().atTopRight().transparent();
+    // Save the plot to a PDF file
+    plot.save("../data/arima_plots/plot_sample.pdf");
+    // Show the plot in a pop-up window
+    plot.show();
 }
 
 double ARIMA::ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>& T) const {
@@ -987,13 +1041,26 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
 
     Eigen::MatrixXd sample_data{sample(nsims)};
     std::vector<double> T_sims;
-    for (Eigen::Index i{0}; i < sample_data.rows(); ++i)
-        T_sims.push_back(T(sample_data.row(i)));
+    std::vector<int64_t> hist_x{};
+    std::vector<int64_t> hist_y{};
+    for (Eigen::Index i{0}; i < sample_data.rows(); ++i) {
+        double val = T(sample_data.row(i));
+        T_sims.push_back(val);
+        // Calculate the histogram of T_sims
+        auto val_int = static_cast<int64_t>(val);
+        auto it = find(hist_x.begin(), hist_x.end(), val_int);
+        if (it != hist_x.end())
+            hist_y.at(std::distance(hist_x.begin(), it))++;
+        else {
+            hist_x.push_back(val_int);
+            hist_y.push_back(1);
+        }
+    }
     double T_actual{T(Eigen::VectorXd::Map(_data_frame.data.data(), _data_frame.data.size()))};
 
     std::string description;
-    if (T_name == "utils::mean")
-        description = " of the utils::mean";
+    if (T_name == "mean")
+        description = " of the mean";
     else if (T_name == "max")
         description = " of the maximum";
     else if (T_name == "min")
@@ -1001,13 +1068,22 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     else if (T_name == "median")
         description = " of the median";
 
-    plt::figure_size(width.value(), height.value());
-    // plt::subplot(1, 1, 1);
-    plt::axvline(T_actual);
-    plt::hist(T_sims, 25);
-    plt::title("Posterior predictive" + description);
-    plt::xlabel("T(x)");
-    plt::ylabel("Frequency");
-    plt::save("../data/arima_plots/plot_ppc.png");
-    plt::show();
+    // Create a Plot object
+    sciplot::Plot plot;
+    // Draw the data and calculate the range of y values
+    double max_y_value = static_cast<double>(*std::max_element(hist_y.begin(), hist_y.end()));
+    plot.drawBoxes(hist_x, hist_y).label("Posterior predictive" + description);
+    plot.boxWidthAbsolute(0.5);
+    plot.drawCurve(std::vector<double>{T_actual,T_actual}, std::vector<double>{0,max_y_value+10}).lineColor("red").labelNone();
+    // Set the size
+    plot.size(width.value(), height.value());
+    // Set the x and y labels
+    plot.xlabel("T(x)");
+    plot.ylabel("Frequency");
+    // Show the legend
+    plot.legend().atTopRight().transparent();
+    // Save the plot to a PDF file
+    plot.save("../data/arima_plots/plot_ppc.pdf");
+    // Show the plot in a pop-up window
+    plot.show();
 }
