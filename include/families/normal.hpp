@@ -146,7 +146,7 @@ public:
      * @param mu Latent variable for which the prior is being formed over
      * @return p(mu)
      */
-    [[nodiscard]] double pdf(double mu);
+    [[nodiscard]] double pdf(double mu) const;
 
     /**
      * @brief Wrapper function for changing latent variables for variational inference

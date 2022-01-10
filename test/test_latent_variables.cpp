@@ -43,13 +43,31 @@ TEST_CASE("LatentVariable creation", "[LatentVariable]") {
     }
 }
 
-TEST_CASE("Plot latent variable", "[plot_z]") {
-    Normal prior{};
-    Normal q{};
-    std::string name = "Constant";
-    LatentVariable lv{name, prior, q};
-    lv.set_sample(Eigen::Vector3d{1, 2, 3});
-    lv.plot_z(600, 400);
+TEST_CASE("Plot latent variable with sample", "[plot_z]") {
+    Normal n1{0, 0.5};
+    Normal n2{0.3};
+    LatentVariable lv{"AR(1)", n1, n2};
+    Eigen::VectorXd sample{{1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 2, -1, 3}};
+    lv.set_sample(sample);
+    lv.plot_z();
+}
+
+TEST_CASE("Plot latent variable with value and std", "[plot_z]") {
+    Normal n1{0, 0.5};
+    Normal n2{0.3};
+    LatentVariable lv{"AR(1)", n1, n2};
+    lv.set_value(3);
+    lv.set_std(0.5);
+    lv.plot_z();
+}
+
+TEST_CASE("Plot latent variable with value, std and prior transform", "[plot_z]") {
+    Normal n1{0, 0.5, "exp"};
+    Normal n2{0.3};
+    LatentVariable lv{"AR(1)", n1, n2};
+    lv.set_value(3);
+    lv.set_std(0.5);
+    lv.plot_z();
 }
 
 TEST_CASE("LatentVariables creation", "[LatentVariables]") {

@@ -73,7 +73,7 @@ public:
      * @detail  This one uses the "matplotlibcpp.hpp" library,
      *          which calls Python to print a matplot.
      */
-    void plot_z(size_t width = 15, size_t height = 5) const;
+    void plot_z(size_t width = 1280, size_t height = 720) const;
 
     /**
      * @brief Returns the method's name
@@ -425,7 +425,7 @@ public:
      * @param height Height of the figure
      * @param loc Location of the legend
      */
-    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t height = 5,
+    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 1280, size_t height = 720,
                 const std::string& loc = "upper right") const;
 
     /**

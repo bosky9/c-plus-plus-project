@@ -96,8 +96,8 @@ public:
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15,
-                size_t height = 5) const;
+    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 1280,
+                size_t height = 720) const;
 
     // Not used in Python
     // void plot_parameters(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 15, size_t

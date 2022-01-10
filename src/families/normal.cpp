@@ -81,7 +81,7 @@ double Normal::neg_loglikelihood(const Eigen::VectorXd& y, const Eigen::VectorXd
     return Normal::markov_blanket(y, mean, scale).sum();
 }
 
-double Normal::pdf(double mu) {
+double Normal::pdf(double mu) const {
     if (!_transform_name.empty()) // We need to transform mu if transform != ""
         mu = _transform(mu);
     return (1.0 / _sigma0) * exp(-((0.5 * pow(mu - _mu0, 2)) / pow(_sigma0, 2)));
