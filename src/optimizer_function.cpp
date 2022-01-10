@@ -7,7 +7,7 @@
 #include <limits>     // std::numeric_limits
 #include <utility>    // std::move
 
-OptimizerFunction::OptimizerFunction(std::function<double(Eigen::VectorXd)> function)
+OptimizerFunction::OptimizerFunction(std::function<double(const Eigen::VectorXd&)> function)
     : _function{std::move(function)} {}
 
 double OptimizerFunction::operator()(const Eigen::VectorXd& beta, Eigen::VectorXd& grad) {

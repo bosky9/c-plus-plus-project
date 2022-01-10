@@ -13,7 +13,7 @@
 class OptimizerFunction final {
 
 public:
-    explicit OptimizerFunction(std::function<double(Eigen::VectorXd)> function);
+    explicit OptimizerFunction(std::function<double(const Eigen::VectorXd&)> function);
 
     double operator()(const Eigen::VectorXd& beta, Eigen::VectorXd& grad);
 
