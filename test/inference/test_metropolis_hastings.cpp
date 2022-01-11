@@ -1,7 +1,7 @@
 /**
  * @file test_metropolis_hastings.cpp
- * @author Bodini Alessia, Boschi Federico e Cinquetti Ettore
- * @date November, 2021
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
  */
 
 #include "inference/metropolis_hastings.hpp"

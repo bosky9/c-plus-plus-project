@@ -1,3 +1,9 @@
+/**
+ * @file test_arima.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "arima/arima.hpp"
 
 #include "utilities.hpp"

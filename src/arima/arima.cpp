@@ -2,7 +2,7 @@
 
 #include "arima/arima.hpp"
 
-#include "Eigen/Core"                // Eigen::VectorXd, Eigen::MatrixXd, Eigen::Index, Eigen::last, Eigen::all, Eigen::seq
+#include "Eigen/Core" // Eigen::VectorXd, Eigen::MatrixXd, Eigen::Index, Eigen::last, Eigen::all, Eigen::seq
 #include "arima/arima_recursion.hpp" // arima_recursion, arima_recursion_normal
 #include "data_check.hpp"            // data_check
 #include "families/family.hpp"       // Family, FamilyAttributes, lv_to_build
@@ -651,14 +651,16 @@ void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) 
     plot.xlabel("Time");
     plot.ylabel(_data_frame.data_name);
     // Set the x and y ranges
-    double min_y_value = std::min(*std::min_element(Y.begin(), Y.end()), *std::min_element(values_to_plot.begin(), values_to_plot.end()));
-    double max_y_value = std::max(*std::max_element(Y.begin(), Y.end()), *std::max_element(values_to_plot.begin(), values_to_plot.end()));
+    double min_y_value = std::min(*std::min_element(Y.begin(), Y.end()),
+                                  *std::min_element(values_to_plot.begin(), values_to_plot.end()));
+    double max_y_value = std::max(*std::max_element(Y.begin(), Y.end()),
+                                  *std::max_element(values_to_plot.begin(), values_to_plot.end()));
     plot.xrange(date_index.front(), date_index.back());
     plot.yrange(min_y_value, max_y_value);
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/arima_plots/plot_fit.pdf");
+    plot.save("../data/arima_plots/plot_fit.png");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -737,12 +739,14 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
             alpha.push_back(0.15 * static_cast<double>(i) * 0.01);
         std::vector<double> date_index_h;
         std::copy(date_index.end() - static_cast<long>(h) - 1, date_index.end(), std::back_inserter(date_index_h));
-        for (size_t i{0}; i < error_bars.size()/2; ++i) {
-            plot.drawCurvesFilled(date_index_h, error_bars[i], error_bars[error_bars.size() - i - 1]).fillIntensity(alpha[i]);
+        for (size_t i{0}; i < error_bars.size() / 2; ++i) {
+            plot.drawCurvesFilled(date_index_h, error_bars[i], error_bars[error_bars.size() - i - 1])
+                    .fillIntensity(alpha[i]);
         }
         // Update the range of y to contain the error zones
         min_y_value = std::min(min_y_value, *std::min_element(error_bars[0].begin(), error_bars[0].end()));
-        max_y_value = std::max(max_y_value, *std::max_element(error_bars[error_bars.size()-1].begin(), error_bars[error_bars.size()-1].end()));
+        max_y_value = std::max(max_y_value, *std::max_element(error_bars[error_bars.size() - 1].begin(),
+                                                              error_bars[error_bars.size() - 1].end()));
     }
     // Draw the data
     plot.drawCurve(plot_index, plot_values);
@@ -757,7 +761,7 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
     // Hide the legend
     plot.legend().hide();
     // Save the plot to a PDF file
-    plot.save("../data/arima_plots/plot_predict.pdf");
+    plot.save("../data/arima_plots/plot_predict.png");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -835,7 +839,7 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/arima_plots/plot_predict_is.pdf");
+    plot.save("../data/arima_plots/plot_predict_is.png");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -948,7 +952,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
     auto mu_Y = _model(_latent_variables.get_z_values());
     Eigen::MatrixXd draws{sample(nsims)};
     for (Eigen::Index i{0}; i < draws.rows(); ++i) {
-        std::vector<double> y(&draws.row(i)[0],draws.row(i).data() + draws.row(i).size());
+        std::vector<double> y(&draws.row(i)[0], draws.row(i).data() + draws.row(i).size());
         if (i == 0) {
             plot.drawCurve(date_index, y).label("Posterior Draws");
             min_y_value = *std::min_element(y.begin(), y.end());
@@ -976,7 +980,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/arima_plots/plot_sample.pdf");
+    plot.save("../data/arima_plots/plot_sample.png");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -1048,7 +1052,7 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
         T_sims.push_back(val);
         // Calculate the histogram of T_sims
         auto val_int = static_cast<int64_t>(val);
-        auto it = find(hist_x.begin(), hist_x.end(), val_int);
+        auto it      = find(hist_x.begin(), hist_x.end(), val_int);
         if (it != hist_x.end())
             hist_y.at(std::distance(hist_x.begin(), it))++;
         else {
@@ -1074,7 +1078,9 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     double max_y_value = static_cast<double>(*std::max_element(hist_y.begin(), hist_y.end()));
     plot.drawBoxes(hist_x, hist_y).label("Posterior predictive" + description);
     plot.boxWidthAbsolute(0.5);
-    plot.drawCurve(std::vector<double>{T_actual,T_actual}, std::vector<double>{0,max_y_value+10}).lineColor("red").labelNone();
+    plot.drawCurve(std::vector<double>{T_actual, T_actual}, std::vector<double>{0, max_y_value + 10})
+            .lineColor("red")
+            .labelNone();
     // Set the size
     plot.size(width.value(), height.value());
     // Set the x and y labels
@@ -1083,7 +1089,7 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/arima_plots/plot_ppc.pdf");
+    plot.save("../data/arima_plots/plot_ppc.png");
     // Show the plot in a pop-up window
     plot.show();
 }
