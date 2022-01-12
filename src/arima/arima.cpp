@@ -39,11 +39,11 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _multivariate_model = false;
 
     // Format the data
-    SingleDataFrame checked_data = data_check(data);
-    _data_frame.data             = checked_data.data;
-    _data_frame.data_name        = checked_data.data_name;
-    _data_frame.index            = checked_data.index;
-    _data_original               = data;
+    utils::SingleDataFrame checked_data = data_check(data);
+    _data_frame.data                    = checked_data.data;
+    _data_frame.data_name               = checked_data.data_name;
+    _data_frame.index                   = checked_data.index;
+    _data_original                      = data;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
@@ -115,11 +115,11 @@ ARIMA::ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t in
     _multivariate_model = false;
 
     // Format the data
-    SingleDataFrame checked_data = data_check(data_frame, target);
-    _data_frame.data             = checked_data.data;
-    _data_frame.data_name        = checked_data.data_name;
-    _data_frame.index            = checked_data.index;
-    _data_original               = _data_frame.data;
+    utils::SingleDataFrame checked_data = data_check(data_frame, target);
+    _data_frame.data                    = checked_data.data;
+    _data_frame.data_name               = checked_data.data_name;
+    _data_frame.index                   = checked_data.index;
+    _data_original                      = _data_frame.data;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)

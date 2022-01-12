@@ -6,7 +6,7 @@
 
 #include "arima/arima.hpp"
 
-#include "utilities.hpp"
+#include "utilities.hpp" // utils::parse_csv
 
 #include <catch2/catch_test_macros.hpp>
 

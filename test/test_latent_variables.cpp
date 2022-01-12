@@ -1,10 +1,15 @@
-#include <catch2/catch_test_macros.hpp>
+/**
+ * @file test_latent_variables.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
 
-#include "families/flat.hpp"
-#include "families/normal.hpp"
 #include "latent_variables.hpp"
 
-#include <memory>
+#include "families/flat.hpp"   // Flat
+#include "families/normal.hpp" // Normal
+
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("LatentVariable creation", "[LatentVariable]") {
     Normal prior{0, 3};

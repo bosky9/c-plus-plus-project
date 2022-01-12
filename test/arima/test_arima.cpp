@@ -6,10 +6,10 @@
 
 #include "arima/arima.hpp"
 
-#include "utilities.hpp"
+#include "utilities.hpp" // utils::parse_csv
 
 #include <catch2/catch_test_macros.hpp>
-#include <random>
+#include <random> // std::default_random_engine, std::normal_distribution
 
 namespace catch_utilities {
 void check_intervals_order(std::vector<std::vector<double>> predictions) {
@@ -101,16 +101,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
 
         delete x;
     }
-}
 
-
-TEST_CASE("Test an ARIMA model with a Normal family, 2", "[ARIMA]") {
-    // std::random_device rnd;
-    std::default_random_engine generator{};
-    std::normal_distribution<double> distribution(0, 1);
-    std::vector<double> data(100, 0);
-    for (size_t i{1}; i < 100; ++i)
-        data[i] = 0.9 * data[i - 1] + distribution(generator);
     /**
      * @brief Tests on ARIMA model with 1 AR and 1 MA term that the latent variable list length is correct and that
      * the estimated latent variables are not nan
@@ -279,8 +270,6 @@ TEST_CASE("Test an ARIMA model with a Normal family, 2", "[ARIMA]") {
         delete x;
     }
 
-    // ---  Up to this point, no memory leaks are detected ---
-
     /**
      * @brief Tests that prediction intervals are ordered correctly using Metropolis-Hastings method
      */
@@ -345,7 +334,7 @@ TEST_CASE("Test an ARIMA model with a Normal family, 2", "[ARIMA]") {
     }
 }
 
-TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
+TEST_CASE("Test an ARIMA model with sunspot years data (plots included)", "[ARIMA]") {
     utils::DataFrame data = utils::parse_csv("../data/sunspots.csv");
 
     /**
