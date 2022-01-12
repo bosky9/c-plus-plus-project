@@ -425,15 +425,15 @@ public:
      * @param height Height of the figure
      * @param loc Location of the legend
      */
-    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 1280, size_t height = 720,
-                const std::string& loc = "upper right") const;
+    void plot_z(const std::optional<std::vector<size_t>>& indices = std::nullopt, size_t width = 1280,
+                size_t height = 720) const;
 
     /**
      * @brief Plot samples
      * @param width Width of the figure
      * @param height Height of the figure
      */
-    void trace_plot(size_t width = 15, size_t height = 15);
+    void trace_plot(size_t width = 1280, size_t height = 720);
 
 private:
     std::string _model_name;                                         ///< Model's name
