@@ -465,7 +465,6 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
     // Create a Plot object
     sciplot::Plot plot;
     // Draw the data
-    // TODO: Sostituire con sciplot
     for (size_t z{0}; z < _z_list.size(); z++) {
         assert((!_z_list[z].get_sample().has_value() ||
                 !(_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value())) &&
@@ -474,27 +473,47 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
             std::find(indices.value().begin(), indices.value().end(), z) == indices.value().end()) {
             std::function<double(double)> transform = _z_list[z].get_prior()->get_transform();
             if (_z_list[z].get_sample().has_value()) {
-                std::vector<double> x{&_z_list[z].get_sample().value()[0],
-                                      _z_list[z].get_sample().value().data() + _z_list[z].get_sample().value().size()};
-                std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
-                plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), x);
+                Eigen::VectorXd sample = _z_list[z].get_sample().value();
+                std::transform(sample.begin(), sample.end(), sample.begin(), [transform](double n) { return transform(n); });
+                // Calculate mean and std of sample
+                double mean = sample.mean();
+                std::vector<double> diff(sample.size());
+                std::transform(sample.begin(), sample.end(), diff.begin(), [mean](double x) { return x - mean; });
+                double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+                double std = std::sqrt(sq_sum / sample.size());
+                // Calculate and draw the pdf of the sample values
+                Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(100, mean - std * 3.5, mean + std * 3.5);
+                Eigen::VectorXd y(x.size());
+                Normal distribution{mean, std};
+                std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) {return distribution.pdf(n);});
+                plot.drawCurve(x, y).label(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name());
             } else if (_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value()) {
                 if (_z_list[z].get_prior()->get_transform_name().empty()) {
+                    // Calculate and draw the pdf of a normal distribution with mean and std of the latent variable
                     Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(
                             100, _z_list[z].get_value().value() - _z_list[z].get_std().value() * 3.5,
                             _z_list[z].get_value().value() + _z_list[z].get_std().value() * 3.5);
-                    std::vector<double> x_v{&x[0], x.data() + x.size()};
-                    // TODO: Sostituire con Normal::pdf
-                    Eigen::VectorXd y = Mvn::pdf(x, _z_list[z].get_value().value(), _z_list[z].get_std().value());
-                    std::vector<double> y_v{&y[0], y.data() + y.size()};
-                    plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), x_v, y_v);
+                    Eigen::VectorXd y(x.size());
+                    Normal distribution{_z_list[z].get_value().value(), _z_list[z].get_std().value()};
+                    std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) {return distribution.pdf(n);});
+                    plot.drawCurve(x, y).label(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name());
                 } else {
                     Eigen::VectorXd sims{
                             Mvn::random(_z_list[z].get_value().value(), _z_list[z].get_std().value(), 100000)};
-                    std::vector<double> sims_v{&sims[0], sims.data() + sims.size()};
-                    std::transform(sims_v.begin(), sims_v.end(), sims_v.begin(),
+                    std::transform(sims.begin(), sims.end(), sims.begin(),
                                    [transform](double n) { return transform(n); });
-                    plt::named_plot(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name(), sims_v);
+                    // Calculate mean and std of sims
+                    double mean = sims.mean();
+                    std::vector<double> diff(sims.size());
+                    std::transform(sims.begin(), sims.end(), diff.begin(), [mean](double x) { return x - mean; });
+                    double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+                    double std = std::sqrt(sq_sum / sims.size());
+                    // Calculate and draw the pdf of the simulated values
+                    Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(100, mean - std * 3.5, mean + std * 3.5);
+                    Eigen::VectorXd y(x.size());
+                    Normal distribution{mean, std};
+                    std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) {return distribution.pdf(n);});
+                    plot.drawCurve(x, y).label(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name());
                 }
             }
         }
