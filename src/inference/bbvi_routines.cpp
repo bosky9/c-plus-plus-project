@@ -1,7 +1,7 @@
 /**
  * @file bbvi_routines.cpp
- * @author Bodini Alessia, Boschi Federico e Cinquetti Ettore
- * @date November, 2021
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
  */
 
 #include "inference/bbvi_routines.hpp"

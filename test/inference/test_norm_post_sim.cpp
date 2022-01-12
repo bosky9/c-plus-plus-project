@@ -1,7 +1,7 @@
 /**
  * @file test_norm_post_sim.hpp
- * @author Bodini Alessia, Boschi Federico e Cinquetti Ettore
- * @date November, 2021
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
  */
 
 #include "inference/norm_post_sim.hpp"
