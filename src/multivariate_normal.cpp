@@ -54,16 +54,6 @@ double Mvn::cdf(double x, [[maybe_unused]] double mean, [[maybe_unused]] double 
     return std::erfc(-x / std::sqrt(2)) / 2; // std::erfc is the Complementary Error Function
 }
 
-// TODO: Questa funzione è sbagliata
-Eigen::VectorXd Mvn::pdf(const Eigen::VectorXd& x, double mean, double sigma) {
-    Eigen::VectorXd result{x};
-    double sqrt2pi = std::sqrt(2 * M_PI);
-    std::transform(result.begin(), result.end(), result.begin(), [mean, sigma, sqrt2pi](double n) {
-        return (std::exp(std::pow((n - mean) / sigma, 2) / 2) / sqrt2pi) / sigma;
-    });
-    return result;
-}
-
 Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& means, const Eigen::VectorXd& scales) {
     assert((means.size() == 1 && (scales.size() == 1 || x.size() == 1 || x.size() == scales.size())) ||
            (scales.size() == 1 && (x.size() == 1 || x.size() == means.size())) ||

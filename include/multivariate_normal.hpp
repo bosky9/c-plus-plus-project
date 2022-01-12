@@ -44,15 +44,6 @@ public:
     [[nodiscard]] static double cdf(double x, double mean = 0.0, double sigma = 1.0);
 
     /**
-     * @brief Compute the PDF of a normal distribution (like scipy.stats.norm.pdf)
-     * @param x Vector of indices
-     * @param mean Mean
-     * @param sigma Scale
-     * @return Vector of PDF values in x
-     */
-    static Eigen::VectorXd pdf(const Eigen::VectorXd& x, double mean = 0.0, double sigma = 1.0);
-
-    /**
      * @brief Compute the logpdf of a normal distribution (like scipy.stats.norm.logpdf)
      * @param x Vector of indexes
      * @param means Vector of means of the normal distribution
