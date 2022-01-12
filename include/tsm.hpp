@@ -9,21 +9,13 @@
 #include "latent_variables.hpp"
 #include "posterior.hpp"
 #include "results.hpp"
+#include "utilities.hpp"
 
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-
-/**
- * @brief Struct that represents the internal data of a time-series model
- */
-struct SingleDataFrame final {
-    std::vector<double> index; ///< The times of the input data (years, days or seconds)
-    std::vector<double> data;  ///< The univariate time series data (values) that will be used
-    std::string data_name;     ///< The names of the data
-};
 
 /**
  * @brief Struct that represents the model output
@@ -66,8 +58,7 @@ public:
      *          it is necessary to declare their extension as public.
      *          es. "class MLEResults : public Results {...}".
      */
-    Results* fit(std::string method                         = "",
-                 std::optional<Eigen::MatrixXd> cov_matrix = std::nullopt,
+    Results* fit(std::string method = "", std::optional<Eigen::MatrixXd> cov_matrix = std::nullopt,
                  std::optional<size_t> iterations = 1000, std::optional<size_t> nsims = 1000,
                  const std::optional<std::string>& optimizer = "RMSProp", std::optional<size_t> batch_size = 12,
                  std::optional<size_t> mini_batch = std::nullopt, std::optional<bool> map_start = true,
@@ -124,7 +115,7 @@ public:
     [[nodiscard]] virtual LatentVariables get_latent_variables() const;
 
 protected:
-    SingleDataFrame _data_frame;
+    utils::SingleDataFrame _data_frame;
     std::string _model_name;
     std::string _model_name2; ///< The self.model_name2 variable in Python
     std::string _model_type;  ///< The type of model (e.g. 'ARIMA', 'GARCH')
@@ -230,7 +221,8 @@ protected:
 
     /**
      * @brief Performs a Laplace approximation to the posterior
-     * @param obj_type method, whether a likelihood or a posterior    //@TODO: consider using only optional on None parameters
+     * @param obj_type method, whether a likelihood or a posterior
+     parameters
 
      * @return A LaplaceResults object
      */
@@ -252,8 +244,8 @@ protected:
      *          upper_95_est, lower_95_est} python data.
      */
     MCMCResults* _mcmc_fit(double scale = 1.0, size_t nsims = 10000, const std::string& method = "M-H",
-                           std::optional<Eigen::MatrixXd> cov_matrix = std::nullopt,
-                           bool map_start = true, bool quiet_progress = false);
+                           std::optional<Eigen::MatrixXd> cov_matrix = std::nullopt, bool map_start = true,
+                           bool quiet_progress = false);
 
     /**
      * @brief Performs OLS (not actually implemented)

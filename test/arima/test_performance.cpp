@@ -6,11 +6,11 @@
 
 #include "arima/arima.hpp"
 
-#include "utilities.hpp"
+#include "utilities.hpp" // utils::parse_csv
 
 #include <catch2/catch_test_macros.hpp>
-#include <chrono>
-#include <iostream>
+#include <chrono>   // std::chrono::steady_clock::now, std::chrono::duration_cast
+#include <iostream> // std::cout
 
 TEST_CASE("Test performances on sunspot data: fit", "[fit]") {
     utils::DataFrame data{utils::parse_csv("../data/sunspots.csv")};
@@ -20,7 +20,7 @@ TEST_CASE("Test performances on sunspot data: fit", "[fit]") {
     Results* x{model.fit("BBVI")};
     auto end = std::chrono::steady_clock::now();
 
-    std::cout << "Elapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+    std::cout << "\nElapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
               << " sec\n";
     std::cout << "Elapsed time in milliseconds: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
@@ -37,7 +37,7 @@ TEST_CASE("Test performances on sunspot data: predict", "[predict]") {
     utils::DataFrame predictions{model.predict()};
     auto end = std::chrono::steady_clock::now();
 
-    std::cout << "Elapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+    std::cout << "\nElapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
               << " sec\n";
     std::cout << "Elapsed time in milliseconds: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
@@ -54,7 +54,7 @@ TEST_CASE("Test performances on sunspot data: predict_is", "[predict_is]") {
     utils::DataFrame predictions{model.predict_is()};
     auto end = std::chrono::steady_clock::now();
 
-    std::cout << "Elapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+    std::cout << "\nElapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
               << " sec\n";
     std::cout << "Elapsed time in milliseconds: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
@@ -71,7 +71,7 @@ TEST_CASE("Test performances on sunspot data: sample", "[sample]") {
     Eigen::MatrixXd sample{model.sample()};
     auto end = std::chrono::steady_clock::now();
 
-    std::cout << "Elapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+    std::cout << "\nElapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
               << " sec\n";
     std::cout << "Elapsed time in milliseconds: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
@@ -88,7 +88,7 @@ TEST_CASE("Test performances on sunspot data: ppc", "[ppc]") {
     [[maybe_unused]] double ppc{model.ppc()};
     auto end = std::chrono::steady_clock::now();
 
-    std::cout << "Elapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
+    std::cout << "\nElapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
               << " sec\n";
     std::cout << "Elapsed time in milliseconds: "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
