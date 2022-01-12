@@ -19,6 +19,7 @@
 #include <optional>   // std::optional, std::nullopt
 #include <ostream>    // std::ostream
 #include <sciplot/Plot.hpp>
+#include <sciplot/Figure.hpp>
 #include <string>  // std::string, std::to_string
 #include <tuple>   // std::tuple
 #include <utility> // std::pair, std::move
@@ -533,59 +534,60 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
 
 void LatentVariables::trace_plot(size_t width, size_t height) {
     assert(_z_list[0].get_sample().has_value() && "No samples to plot!");
-    plt::figure_size(width, height);
     // A color name based plot is used instead of a RGB color based plot
-    std::vector<std::string> palette{"royalblue",    "mediumseagreen", "chocolate",
-                                     "mediumpurple", "goldenrod",      "skyblue"};
-
+    std::vector<std::string> palette{"royalblue", "green", "orange",
+                                     "purple", "yellow", "skyblue"};
+    std::vector<std::vector<sciplot::PlotVariant>> plots;
+    // For each latent variable
     for (size_t i{0}; i < _z_list.size(); ++i) {
+        std::vector<sciplot::PlotVariant> row_plots;
+        // Transform the sample values of the latent variable
         Eigen::VectorXd chain{_z_list[i].get_sample().value()};
+        std::function<double(double)> transform = _z_list[i].get_prior()->get_transform();
+        Eigen::VectorXd transformed_chain(chain.size());
+        std::transform(chain.begin(), chain.end(), transformed_chain.begin(), [transform](double n) { return transform(n); });
+        // Draw 4 different plots
         for (size_t j{0}; j < 4; j++) {
-            size_t iteration = i * 4 + j + 1;
-            plt::subplot(static_cast<long>(_z_list.size()), 4, static_cast<long>(iteration));
-            if (iteration >= 1 && iteration <= _z_list.size() * 4 + 1) {
-                std::function<double(double)> transform = _z_list[i].get_prior()->get_transform();
-                if (iteration % 4 == 1) {
-                    std::vector<double> x{&chain[0], chain.data() + chain.size()};
-                    std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
-                    plt::plot(x, palette[i]);
-                    plt::ylabel(_z_list[i].get_name());
-                    if (iteration == 1)
-                        plt::title("Density Estimate");
-                } else if (iteration % 4 == 2) {
-                    std::vector<double> x{&chain[0], chain.data() + chain.size()};
-                    std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
-                    plt::plot(x, palette[i]);
-                    if (iteration == 2)
-                        plt::title("Trace Plot");
-                } else if (iteration % 4 == 3) {
-                    std::vector<double> x{&chain[0], chain.data() + chain.size()};
-                    std::transform(x.begin(), x.end(), x.begin(), [transform](double n) { return transform(n); });
-                    std::partial_sum(x.begin(), x.end(), x.begin());
-                    std::vector<double> indices(chain.size());
-                    std::iota(indices.begin(), indices.end(), 1);
-                    std::vector<double> result(chain.size());
-                    std::transform(x.begin(), x.end(), indices.begin(), result.begin(), std::divides<>());
-                    plt::plot(x, palette[i]);
-                    if (iteration == 3)
-                        plt::title("Cumulative Average");
-                } else if (iteration % 4 == 0) {
-                    std::vector<double> x(9);
-                    std::iota(x.begin(), x.end(), 1);
-                    std::vector<double> y(9);
-                    for (size_t lag{1}; lag < 10 && lag < static_cast<size_t>(chain.size());
-                         lag++) { // Added lag < chain.size() to avoid index error in acf()
-                        Eigen::VectorXd eigen_chain =
-                                Eigen::VectorXd::Map(chain.data(), static_cast<Eigen::Index>(chain.size()));
-                        y[lag - 1] = acf(eigen_chain, lag);
-                    }
-                    plt::bar(x, y, palette[i]);
-                    if (iteration == 4)
-                        plt::title("ACF Plot");
-                }
+            // Create a Plot object
+            sciplot::Plot plot;
+            // Draw the data
+            if (j == 0) {
+                // Calculate and draw the pdf of transformed_chain
+                // TODO: Draw the pdf instead the histogram
+                plot.drawHistogram(transformed_chain).label("Density Estimate").lineColor(palette[i]);
+                plot.ylabel(_z_list[i].get_name());
+                plot.legend().atTopRight().transparent();
+            } else if (j == 1) {
+                // Draw transformed_chain
+                Eigen::VectorXd x(transformed_chain.size());
+                std::iota(x.begin(), x.end(), 0);
+                plot.drawCurve(x, transformed_chain).label("Trace Plot").lineColor(palette[i]);
+            } else if (j == 2) {
+                // Calculate and draw the cumulative average
+                Eigen::VectorXd y(transformed_chain.size());
+                std::partial_sum(transformed_chain.begin(), transformed_chain.end(), y.begin());
+                std::vector<double> to_divide(transformed_chain.size());
+                std::iota(to_divide.begin(), to_divide.end(), 1);
+                std::transform(y.begin(), y.end(), to_divide.begin(), y.begin(), std::divides<>());
+                Eigen::VectorXd x(y.size());
+                std::iota(x.begin(), x.end(), 0);
+                plot.drawCurve(x, y).label("Cumulative Average").lineColor(palette[i]);
+            } else if (j == 3) {
+                // Calculate and draw the ACF
+                Eigen::VectorXd x(9);
+                std::iota(x.begin(), x.end(), 1);
+                Eigen::VectorXd y(9);
+                std::transform(x.begin(), x.end(), y.begin(), [chain](size_t n) {return acf(chain,n);});
+                plot.drawBoxes(x, y).label("ACF Plot").fillSolid().fillColor(palette[i]);
             }
+            row_plots.emplace_back(plot);
         }
+        plots.push_back(row_plots);
     }
-    plt::save("../data/latent_variables_plots/trace_plot.png");
-    plt::show();
+    // Create the figure containing all plots
+    sciplot::Figure fig(std::as_const(plots));
+    // Set the size
+    fig.size(width, height);
+    // Save the figure to a PDF file
+    fig.save("../data/latent_variables_plots/trace_plot.pdf");
 }
