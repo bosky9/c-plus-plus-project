@@ -149,7 +149,21 @@ MCMCResults* TSM::_mcmc_fit(double scale, size_t nsims, const std::string& metho
             MetropolisHastings(_neg_logposterior, scale, nsims, starting_values, cov_matrix, 2, true, quiet_progress)};
     Sample sample = sampler.sample();
 
+    // IS SAMPLE THE PROBLEM?
     _latent_variables.set_z_values(sample.mean_est, "M-H", std::nullopt, sample.chain);
+
+    /*
+     * FOR DEBUGGING PURPOSE
+    Eigen::VectorXd max_sample = sample.chain.rowwise().maxCoeff();
+    Eigen::VectorXd min_sample = sample.chain.rowwise().minCoeff();
+
+
+    for (Eigen::Index i{0}; i < max_sample.size(); i++){
+        std::cout << max_sample[i] << std::endl;
+        std::cout << min_sample[i] << std::endl;
+    }
+    */
+
     std::function<double(double)> transform;
     if (_latent_variables.get_z_list().size() == 1) {
         transform              = _latent_variables.get_z_list()[0].get_prior()->get_transform();

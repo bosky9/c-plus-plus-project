@@ -26,6 +26,10 @@
 #include <utility>             // std::pair, std::move
 #include <vector>              // std::vector
 
+static bool abs_compare(double a, double b){
+    return std::abs(a) < std::abs(b);
+}
+
 ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, const Family& family) : TSM{"ARIMA"} {
     // Latent Variable information
     _ar                 = ar;
@@ -528,11 +532,23 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
             Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(simulations), static_cast<Eigen::Index>(h))};
 
     for (Eigen::Index n{0}; n < static_cast<Eigen::Index>(simulations); ++n) {
+        bool keep_drawing = true;
         Eigen::VectorXd t_z{draw_latent_variables(1).transpose().row(0)};
+
+        // THIS IS NOT A SOLUTION
+        while (keep_drawing) {
+            if(std::abs(t_z[0]) > std::abs(t_z[1]*1e10))
+                t_z = draw_latent_variables(1).transpose().row(0);
+            else
+                keep_drawing = false;
+        }
+        // THIS IS NOT A SOLUTION (but ...)
+
+        Eigen::VectorXd tz_copy{t_z};
         auto mu_Y{_model(t_z)};
         for (Eigen::Index i{0}; i < t_z.size(); ++i)
             t_z[i] = _latent_variables.get_z_list()[i].get_prior_transform()(t_z[i]);
-
+        // CHECK DRAW LATENT VARIABLES
         auto scale_shape_skew{get_scale_and_shape(t_z)};
 
         // Create arrays to iterate over
@@ -573,6 +589,20 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
             // For indexing consistency
             std::vector<double> Y_exp_h;
             std::copy(Y_exp_v.end() - static_cast<long>(h), Y_exp_v.end(), std::back_inserter(Y_exp_h));
+            /*
+             * FOR DEBUGGING PURPOSES
+            double max_val = std::abs(Y_exp_h[std::distance(Y_exp_h.begin() , std::max_element(Y_exp_h.begin(), Y_exp_h.end(), abs_compare))]);
+            if( max_val > 1000) {
+                std::cout << max_val << std::endl;
+                for(auto& lv : _latent_variables.get_z_list()) {
+                    auto maxc = lv.get_sample()->maxCoeff();
+                    auto minc = lv.get_sample()->minCoeff();
+                    std::cout << tz_copy;
+                    std::cout << maxc;
+                    std::cout << minc;
+                }
+            }
+             */
             sim_vector.row(n) = Eigen::VectorXd::Map(Y_exp_h.data(), static_cast<Eigen::Index>(Y_exp_h.size()));
         }
 
