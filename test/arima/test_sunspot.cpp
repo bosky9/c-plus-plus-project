@@ -1,5 +1,12 @@
+/**
+ * @file test_sunspot.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "arima/arima.hpp"
-#include "utilities.hpp"
+
+#include "utilities.hpp" // utils::parse_csv
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -10,11 +17,21 @@ TEST_CASE("Test sunspot data", "[]") {
     std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
     Results* x{model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, false)};
 
-    // model.plot_fit();
-    // model.plot_predict_is(10, true, "BBVI");
-    // model.plot_predict(5, 20, true);
-    // model.plot_sample(10, true);
-    model.plot_ppc(1000, utils::mean, "mean");
+    //model.plot_fit();
+    //model.plot_predict_is(10, true, "BBVI");
+    //model.plot_predict(5, 20, true);
+    //model.plot_sample(10, true);
+    //model.plot_ppc(1000, utils::mean, "mean");
+
+    //model.get_latent_variables().get_z_list()[0].plot_z();
+    //model.get_latent_variables().get_z_list()[1].plot_z();
+    //model.get_latent_variables().get_z_list()[2].plot_z();
+    //model.get_latent_variables().get_z_list()[3].plot_z();
+    //model.plot_z(std::nullopt);
+
+    LatentVariables lvs = model.get_latent_variables();
+    lvs.set_z_values(model.get_latent_variables().get_z_values(), "BBVI", std::nullopt, model.sample());
+    lvs.trace_plot();
 
     delete x;
 }

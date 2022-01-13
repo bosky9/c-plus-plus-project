@@ -14,6 +14,16 @@
 #include <vector>
 
 namespace utils {
+
+/**
+ * @brief Struct that represents the internal data of a time-series model
+ */
+struct SingleDataFrame final {
+    std::vector<double> index; ///< The times of the input data (years, days or seconds)
+    std::vector<double> data;  ///< The univariate time series data (values) that will be used
+    std::string data_name;     ///< The names of the data
+};
+
 /**
  * @brief Struct that represents the input data for a time-series model
  */

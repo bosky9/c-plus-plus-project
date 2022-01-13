@@ -1,6 +1,5 @@
 #pragma once
 
-#include "tsm.hpp"
 #include "utilities.hpp"
 
 #include <iterator>
@@ -17,8 +16,8 @@
  * @details Represents the Python case where a np.array is passed to the function, that identifies already the final
  * data to process.
  */
-inline SingleDataFrame data_check(const std::vector<double>& data) {
-    SingleDataFrame checked_data;
+inline utils::SingleDataFrame data_check(const std::vector<double>& data) {
+    utils::SingleDataFrame checked_data;
     checked_data.data  = data;
     checked_data.index = std::vector<double>(data.size());
     std::iota(checked_data.index.begin(), checked_data.index.end(), 0);
@@ -34,10 +33,10 @@ inline SingleDataFrame data_check(const std::vector<double>& data) {
  *
  * @details Represents the Python case where a pd.DataFrame is passed to the function.
  */
-inline SingleDataFrame data_check(const utils::DataFrame& data_frame, const std::string& target = "") {
+inline utils::SingleDataFrame data_check(const utils::DataFrame& data_frame, const std::string& target = "") {
     assert(data_frame.data_name.size() == data_frame.data.size());
 
-    SingleDataFrame checked_data;
+    utils::SingleDataFrame checked_data;
     if (target.empty()) {
         checked_data.data      = data_frame.data.at(0);
         checked_data.data_name = data_frame.data_name.at(0);

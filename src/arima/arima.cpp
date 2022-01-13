@@ -43,11 +43,11 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _multivariate_model = false;
 
     // Format the data
-    SingleDataFrame checked_data = data_check(data);
-    _data_frame.data             = checked_data.data;
-    _data_frame.data_name        = checked_data.data_name;
-    _data_frame.index            = checked_data.index;
-    _data_original               = data;
+    utils::SingleDataFrame checked_data = data_check(data);
+    _data_frame.data                    = checked_data.data;
+    _data_frame.data_name               = checked_data.data_name;
+    _data_frame.index                   = checked_data.index;
+    _data_original                      = data;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
@@ -119,11 +119,11 @@ ARIMA::ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t in
     _multivariate_model = false;
 
     // Format the data
-    SingleDataFrame checked_data = data_check(data_frame, target);
-    _data_frame.data             = checked_data.data;
-    _data_frame.data_name        = checked_data.data_name;
-    _data_frame.index            = checked_data.index;
-    _data_original               = _data_frame.data;
+    utils::SingleDataFrame checked_data = data_check(data_frame, target);
+    _data_frame.data                    = checked_data.data;
+    _data_frame.data_name               = checked_data.data_name;
+    _data_frame.index                   = checked_data.index;
+    _data_original                      = _data_frame.data;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
@@ -680,11 +680,6 @@ void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) 
     // Set the x and y labels
     plot.xlabel("Time");
     plot.ylabel(_data_frame.data_name);
-    // Set the x and y ranges
-    double min_y_value = std::min(*std::min_element(Y.begin(), Y.end()), *std::min_element(values_to_plot.begin(), values_to_plot.end()));
-    double max_y_value = std::max(*std::max_element(Y.begin(), Y.end()), *std::max_element(values_to_plot.begin(), values_to_plot.end()));
-    plot.xrange(date_index.front(), date_index.back());
-    plot.yrange(min_y_value, max_y_value);
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
@@ -757,9 +752,6 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
 
     // Create a Plot object
     sciplot::Plot plot;
-    // Find the range of the y values to plot
-    double min_y_value = *std::min_element(plot_values.begin(), plot_values.end());
-    double max_y_value = *std::max_element(plot_values.begin(), plot_values.end());
     // Draw the error zones
     if (intervals) {
         std::vector<double> alpha;
@@ -767,12 +759,8 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
             alpha.push_back(0.15 * static_cast<double>(i) * 0.01);
         std::vector<double> date_index_h;
         std::copy(date_index.end() - static_cast<long>(h) - 1, date_index.end(), std::back_inserter(date_index_h));
-        for (size_t i{0}; i < error_bars.size()/2; ++i) {
+        for (size_t i{0}; i < error_bars.size()/2; ++i)
             plot.drawCurvesFilled(date_index_h, error_bars[i], error_bars[error_bars.size() - i - 1]).fillIntensity(alpha[i]);
-        }
-        // Update the range of y to contain the error zones
-        min_y_value = std::min(min_y_value, *std::min_element(error_bars[0].begin(), error_bars[0].end()));
-        max_y_value = std::max(max_y_value, *std::max_element(error_bars[error_bars.size()-1].begin(), error_bars[error_bars.size()-1].end()));
     }
     // Draw the data
     plot.drawCurve(plot_index, plot_values);
@@ -781,9 +769,6 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
     // Set the x and y labels
     plot.xlabel("Time");
     plot.ylabel(_data_frame.data_name);
-    // Set the x and y ranges
-    plot.xrange(plot_index.front(), plot_index.back());
-    plot.yrange(min_y_value, max_y_value);
     // Hide the legend
     plot.legend().hide();
     // Save the plot to a PDF file
@@ -847,21 +832,13 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     std::vector<double> data;
     std::copy(_data_frame.data.end() - static_cast<long>(h), _data_frame.data.end(), std::back_inserter(data));
     plot.drawCurve(predictions.index, data).label("Data");
-    double min_y_value = *std::min_element(data.begin(), data.end());
-    double max_y_value = *std::max_element(data.begin(), data.end());
-    for (size_t i{0}; i < predictions.data.size(); ++i) {
+    for (size_t i{0}; i < predictions.data.size(); ++i)
         plot.drawCurve(predictions.index, predictions.data[i]).label("Predictions").lineColor("black");
-        min_y_value = std::min(min_y_value, *std::min_element(predictions.data[i].begin(), predictions.data[i].end()));
-        max_y_value = std::max(max_y_value, *std::max_element(predictions.data[i].begin(), predictions.data[i].end()));
-    }
     // Set the size
     plot.size(width.value(), height.value());
     // Set the x and y labels
     plot.xlabel("Time");
     plot.ylabel(_data_frame.data_name);
-    // Set the x and y ranges
-    plot.xrange(predictions.index.front(), predictions.index.back());
-    plot.yrange(min_y_value, max_y_value);
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
@@ -969,40 +946,25 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
 
     // Create a Plot object
     sciplot::Plot plot;
-    // Draw the data and find the range of y values
-    double min_y_value{0};
-    double max_y_value{0};
+    // Draw the data
     std::vector<double> date_index;
     std::copy(_data_frame.index.begin() + static_cast<long>(std::max(_ar, _ma)),
               _data_frame.index.begin() + static_cast<long>(_data_length), std::back_inserter(date_index));
     auto mu_Y = _model(_latent_variables.get_z_values());
     Eigen::MatrixXd draws{sample(nsims)};
     for (Eigen::Index i{0}; i < draws.rows(); ++i) {
-        std::vector<double> y(&draws.row(i)[0],draws.row(i).data() + draws.row(i).size());
-        if (i == 0) {
-            plot.drawCurve(date_index, y).label("Posterior Draws");
-            min_y_value = *std::min_element(y.begin(), y.end());
-            max_y_value = *std::max_element(y.begin(), y.end());
-        } else {
-            plot.drawCurve(date_index, y).labelNone();
-            min_y_value = std::min(min_y_value, *std::min_element(y.begin(), y.end()));
-            max_y_value = std::max(max_y_value, *std::max_element(y.begin(), y.end()));
-        }
+        if (i == 0)
+            plot.drawCurve(date_index, draws.row(i)).label("Posterior Draws");
+        else
+            plot.drawCurve(date_index, draws.row(i)).labelNone();
     }
-    if (plot_data) {
-        std::vector<double> y(&mu_Y.second[0], mu_Y.second.data() + mu_Y.second.size());
-        plot.drawPoints(date_index, y).label("Data").lineColor("black").pointType(4);
-        min_y_value = std::min(min_y_value, *std::min_element(y.begin(), y.end()));
-        max_y_value = std::max(max_y_value, *std::max_element(y.begin(), y.end()));
-    }
+    if (plot_data)
+        plot.drawPoints(date_index, mu_Y.second).label("Data").lineColor("black").pointType(4);
     // Set the size
     plot.size(width.value(), height.value());
     // Set the x and y labels
     plot.xlabel("Time");
     plot.ylabel(_data_frame.data_name);
-    // Set the x and y ranges
-    plot.xrange(date_index.front(), date_index.back());
-    plot.yrange(min_y_value, max_y_value);
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
