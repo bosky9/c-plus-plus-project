@@ -18,8 +18,8 @@
 #include <numeric>    // std::accumulate, std::partial_sum, std::iota
 #include <optional>   // std::optional, std::nullopt
 #include <ostream>    // std::ostream
-#include <sciplot/Plot.hpp>
 #include <sciplot/Figure.hpp>
+#include <sciplot/Plot.hpp>
 #include <string>  // std::string, std::to_string
 #include <tuple>   // std::tuple
 #include <utility> // std::pair, std::move
@@ -119,37 +119,35 @@ void LatentVariable::plot_z(size_t width, size_t height) const {
         std::vector<double> diff(sample.size());
         std::transform(sample.begin(), sample.end(), diff.begin(), [mean](double x) { return x - mean; });
         double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-        double std = std::sqrt(sq_sum / sample.size());
+        double std    = std::sqrt(sq_sum / sample.size());
         // Calculate and draw the pdf
         x = Eigen::VectorXd::LinSpaced(100, mean - std * 3.5, mean + std * 3.5);
         Eigen::VectorXd y(x.size());
         Normal distribution{mean, std};
-        std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) {return distribution.pdf(n);});
+        std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) { return distribution.pdf(n); });
         plot.drawCurve(x, y).label(_method + " estimate of " + _name);
     } else if (_value.has_value() && _std.has_value()) {
-        x = Eigen::VectorXd::LinSpaced(100, _value.value() - _std.value() * 3.5,
-                                                       _value.value() + _std.value() * 3.5);
+        x = Eigen::VectorXd::LinSpaced(100, _value.value() - _std.value() * 3.5, _value.value() + _std.value() * 3.5);
         if (_prior->get_transform_name().empty()) {
             // Plot the pdf of a normal distribution with the mean and std of the latent variable
             Eigen::VectorXd y(x.size());
             Normal distribution{_value.value(), _std.value()};
-            std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) {return distribution.pdf(n);});
+            std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) { return distribution.pdf(n); });
             plot.drawCurve(x, y).label(_method + " estimate of " + _name);
         } else {
             // Plot the pdf of simulated (transformed) values
             Eigen::VectorXd sims{Mvn::random(_value.value(), _std.value(), 100000)};
-            std::transform(sims.begin(), sims.end(), sims.begin(),
-                           [transform](double n) { return transform(n); });
+            std::transform(sims.begin(), sims.end(), sims.begin(), [transform](double n) { return transform(n); });
             Eigen::VectorXd y(x.size());
             // Calculate mean and std of sims
             double mean = sims.mean();
             std::vector<double> diff(sims.size());
             std::transform(sims.begin(), sims.end(), diff.begin(), [mean](double x) { return x - mean; });
             double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-            double std = std::sqrt(sq_sum / sims.size());
+            double std    = std::sqrt(sq_sum / sims.size());
             // Calculate and draw the pdf
             Normal distribution{mean, std};
-            std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) {return distribution.pdf(n);});
+            std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) { return distribution.pdf(n); });
             plot.drawCurve(x, y).label(_method + " estimate of " + _name);
         }
     }
@@ -160,7 +158,7 @@ void LatentVariable::plot_z(size_t width, size_t height) const {
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/latent_variables_plots/plot_z_single.pdf");
+    plot.save("../data/latent_variables_plots/plot_z_single.png");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -475,18 +473,19 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
             std::function<double(double)> transform = _z_list[z].get_prior()->get_transform();
             if (_z_list[z].get_sample().has_value()) {
                 Eigen::VectorXd sample = _z_list[z].get_sample().value();
-                std::transform(sample.begin(), sample.end(), sample.begin(), [transform](double n) { return transform(n); });
+                std::transform(sample.begin(), sample.end(), sample.begin(),
+                               [transform](double n) { return transform(n); });
                 // Calculate mean and std of sample
                 double mean = sample.mean();
                 std::vector<double> diff(sample.size());
                 std::transform(sample.begin(), sample.end(), diff.begin(), [mean](double x) { return x - mean; });
                 double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-                double std = std::sqrt(sq_sum / sample.size());
+                double std    = std::sqrt(sq_sum / sample.size());
                 // Calculate and draw the pdf of the sample values
                 Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(100, mean - std * 3.5, mean + std * 3.5);
                 Eigen::VectorXd y(x.size());
                 Normal distribution{mean, std};
-                std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) {return distribution.pdf(n);});
+                std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) { return distribution.pdf(n); });
                 plot.drawCurve(x, y).label(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name());
             } else if (_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value()) {
                 if (_z_list[z].get_prior()->get_transform_name().empty()) {
@@ -496,7 +495,8 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
                             _z_list[z].get_value().value() + _z_list[z].get_std().value() * 3.5);
                     Eigen::VectorXd y(x.size());
                     Normal distribution{_z_list[z].get_value().value(), _z_list[z].get_std().value()};
-                    std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) {return distribution.pdf(n);});
+                    std::transform(x.begin(), x.end(), y.begin(),
+                                   [distribution](double n) { return distribution.pdf(n); });
                     plot.drawCurve(x, y).label(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name());
                 } else {
                     Eigen::VectorXd sims{
@@ -508,12 +508,13 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
                     std::vector<double> diff(sims.size());
                     std::transform(sims.begin(), sims.end(), diff.begin(), [mean](double x) { return x - mean; });
                     double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-                    double std = std::sqrt(sq_sum / sims.size());
+                    double std    = std::sqrt(sq_sum / sims.size());
                     // Calculate and draw the pdf of the simulated values
                     Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(100, mean - std * 3.5, mean + std * 3.5);
                     Eigen::VectorXd y(x.size());
                     Normal distribution{mean, std};
-                    std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) {return distribution.pdf(n);});
+                    std::transform(x.begin(), x.end(), y.begin(),
+                                   [distribution](double n) { return distribution.pdf(n); });
                     plot.drawCurve(x, y).label(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name());
                 }
             }
@@ -527,7 +528,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/latent_variables_plots/plot_z.pdf");
+    plot.save("../data/latent_variables_plots/plot_z.png");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -535,8 +536,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
 void LatentVariables::trace_plot(size_t width, size_t height) {
     assert(_z_list[0].get_sample().has_value() && "No samples to plot!");
     // A color name based plot is used instead of a RGB color based plot
-    std::vector<std::string> palette{"royalblue", "green", "orange",
-                                     "purple", "yellow", "skyblue"};
+    std::vector<std::string> palette{"royalblue", "green", "orange", "purple", "yellow", "skyblue"};
     std::vector<std::vector<sciplot::PlotVariant>> plots;
     // For each latent variable
     for (size_t i{0}; i < _z_list.size(); ++i) {
@@ -545,7 +545,8 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
         Eigen::VectorXd chain{_z_list[i].get_sample().value()};
         std::function<double(double)> transform = _z_list[i].get_prior()->get_transform();
         Eigen::VectorXd transformed_chain(chain.size());
-        std::transform(chain.begin(), chain.end(), transformed_chain.begin(), [transform](double n) { return transform(n); });
+        std::transform(chain.begin(), chain.end(), transformed_chain.begin(),
+                       [transform](double n) { return transform(n); });
         // Draw 4 different plots
         for (size_t j{0}; j < 4; j++) {
             // Create a Plot object
@@ -577,7 +578,7 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
                 Eigen::VectorXd x(9);
                 std::iota(x.begin(), x.end(), 1);
                 Eigen::VectorXd y(9);
-                std::transform(x.begin(), x.end(), y.begin(), [chain](size_t n) {return acf(chain,n);});
+                std::transform(x.begin(), x.end(), y.begin(), [chain](size_t n) { return acf(chain, n); });
                 plot.drawBoxes(x, y).label("ACF Plot").fillSolid().fillColor(palette[i]);
             }
             row_plots.emplace_back(plot);
@@ -589,5 +590,6 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
     // Set the size
     fig.size(width, height);
     // Save the figure to a PDF file
-    fig.save("../data/latent_variables_plots/trace_plot.pdf");
+    fig.save("../data/latent_variables_plots/trace_plot.png");
+    fig.show();
 }

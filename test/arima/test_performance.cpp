@@ -6,92 +6,99 @@
 
 #include "arima/arima.hpp"
 
-#include "utilities.hpp" // utils::parse_csv
+#include "utilities.hpp" // utils::parse_csv, utils::create_performance_file, utils::save_performance
 
 #include <catch2/catch_test_macros.hpp>
-#include <chrono>   // std::chrono::steady_clock::now, std::chrono::duration_cast
-#include <iostream> // std::cout
+#include <chrono> // std::chrono::steady_clock::now, std::chrono::duration_cast
 
-TEST_CASE("Test performances on sunspot data: fit", "[fit]") {
+TEST_CASE("Test performances on sunspot data (no sample and ppc)", "") {
     utils::DataFrame data{utils::parse_csv("../data/sunspots.csv")};
-
-    auto start = std::chrono::steady_clock::now();
     ARIMA model{data, 2, 2, 0, "sunactivity"};
-    Results* x{model.fit("BBVI")};
-    auto end = std::chrono::steady_clock::now();
+    std::string method{"BBVI"};
+    std::string filename{utils::create_performance_file("sunspots", method, 2, 2)};
 
-    std::cout << "\nElapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-              << " sec\n";
-    std::cout << "Elapsed time in milliseconds: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
+    SECTION("fit", "[fit]") {
+        auto start{std::chrono::steady_clock::now()};
+        Results* x{model.fit(method)};
+        auto end{std::chrono::steady_clock::now()};
+        utils::save_performance(filename, "fit", method,
+                                std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+        delete x;
+    }
 
-    delete x;
+    SECTION("predict", "[predict]") {
+        Results* x{model.fit(method)};
+        auto start{std::chrono::steady_clock::now()};
+        utils::DataFrame predictions{model.predict()};
+        auto end{std::chrono::steady_clock::now()};
+        utils::save_performance(filename, "predict", method,
+                                std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+        delete x;
+    }
+
+    SECTION("predict_is", "[predict_is]") {
+        Results* x{model.fit(method)};
+        auto start = std::chrono::steady_clock::now();
+        utils::DataFrame predictions{model.predict_is(5, true, method)};
+        auto end = std::chrono::steady_clock::now();
+        utils::save_performance(filename, "predict_is", method,
+                                std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+        delete x;
+    }
 }
 
-TEST_CASE("Test performances on sunspot data: predict", "[predict]") {
+TEST_CASE("Test performances on sunspot data (full)", "") {
     utils::DataFrame data{utils::parse_csv("../data/sunspots.csv")};
-
-    auto start = std::chrono::steady_clock::now();
     ARIMA model{data, 2, 2, 0, "sunactivity"};
-    Results* x{model.fit("BBVI")};
-    utils::DataFrame predictions{model.predict()};
-    auto end = std::chrono::steady_clock::now();
+    std::string method{"BBVI"};
+    std::string filename{utils::create_performance_file("sunspots", method, 2, 2, 0)};
 
-    std::cout << "\nElapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-              << " sec\n";
-    std::cout << "Elapsed time in milliseconds: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
+    SECTION("fit", "[fit]") {
+        auto start{std::chrono::steady_clock::now()};
+        Results* x{model.fit(method)};
+        auto end{std::chrono::steady_clock::now()};
+        utils::save_performance(filename, "fit", method,
+                                std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+        delete x;
+    }
 
-    delete x;
-}
+    SECTION("predict", "[predict]") {
+        Results* x{model.fit(method)};
+        auto start{std::chrono::steady_clock::now()};
+        utils::DataFrame predictions{model.predict()};
+        auto end{std::chrono::steady_clock::now()};
+        utils::save_performance(filename, "predict", method,
+                                std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+        delete x;
+    }
 
-TEST_CASE("Test performances on sunspot data: predict_is", "[predict_is]") {
-    utils::DataFrame data{utils::parse_csv("../data/sunspots.csv")};
+    SECTION("predict_is", "[predict_is]") {
+        Results* x{model.fit(method)};
+        auto start = std::chrono::steady_clock::now();
+        utils::DataFrame predictions{model.predict_is(5, true, method)};
+        auto end = std::chrono::steady_clock::now();
+        utils::save_performance(filename, "predict_is", method,
+                                std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+        delete x;
+    }
 
-    auto start = std::chrono::steady_clock::now();
-    ARIMA model{data, 2, 2, 0, "sunactivity"};
-    Results* x{model.fit("BBVI")};
-    utils::DataFrame predictions{model.predict_is()};
-    auto end = std::chrono::steady_clock::now();
+    SECTION("sample", "[sample]") {
+        Results* x{model.fit(method)};
+        auto start{std::chrono::steady_clock::now()};
+        Eigen::MatrixXd sample{model.sample()};
+        auto end{std::chrono::steady_clock::now()};
+        utils::save_performance(filename, "sample", method,
+                                std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+        delete x;
+    }
 
-    std::cout << "\nElapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-              << " sec\n";
-    std::cout << "Elapsed time in milliseconds: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
-
-    delete x;
-}
-
-TEST_CASE("Test performances on sunspot data: sample", "[sample]") {
-    utils::DataFrame data{utils::parse_csv("../data/sunspots.csv")};
-
-    auto start = std::chrono::steady_clock::now();
-    ARIMA model{data, 2, 2, 0, "sunactivity"};
-    Results* x{model.fit("BBVI")};
-    Eigen::MatrixXd sample{model.sample()};
-    auto end = std::chrono::steady_clock::now();
-
-    std::cout << "\nElapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-              << " sec\n";
-    std::cout << "Elapsed time in milliseconds: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
-
-    delete x;
-}
-
-TEST_CASE("Test performances on sunspot data: ppc", "[ppc]") {
-    utils::DataFrame data{utils::parse_csv("../data/sunspots.csv")};
-
-    auto start = std::chrono::steady_clock::now();
-    ARIMA model{data, 2, 2, 0, "sunactivity"};
-    Results* x{model.fit("BBVI")};
-    [[maybe_unused]] double ppc{model.ppc()};
-    auto end = std::chrono::steady_clock::now();
-
-    std::cout << "\nElapsed time in seconds: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count()
-              << " sec\n";
-    std::cout << "Elapsed time in milliseconds: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
-
-    delete x;
+    SECTION("ppc", "[ppc]") {
+        Results* x{model.fit(method)};
+        auto start{std::chrono::steady_clock::now()};
+        [[maybe_unused]] double ppc{model.ppc()};
+        auto end{std::chrono::steady_clock::now()};
+        utils::save_performance(filename, "ppc", method,
+                                std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
+        delete x;
+    }
 }

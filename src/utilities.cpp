@@ -1,7 +1,7 @@
 #include "utilities.hpp"
 
+#include <chrono>  // std::chrono::milliseconds
 #include <fstream> // std::ifstream
-#include <sstream>
 
 utils::DataFrame utils::parse_csv(const std::string& filename) {
     std::ifstream file(filename, std::ifstream::in);
@@ -63,11 +63,37 @@ utils::DataFrame utils::parse_csv(const std::string& filename) {
     return df;
 }
 
+std::string utils::create_performance_file(std::string data, std::string method, size_t ar, size_t ma, size_t integ,
+                                           std::string family, std::optional<std::string> target) {
+    std::string filename{"../data/performance_results/" + data + "_" + method + "_" + std::to_string(ar) + "_" +
+                         std::to_string(ma) + "_" + std::to_string(integ) + "_" + std::to_string(integ) + "_" + family};
+    filename += (target.has_value()) ? "_" + target.value() + ".csv" : ".csv";
+    std::ifstream file_exists(filename, std::ifstream::in);
+    if (file_exists.fail()) {
+        std::ofstream file(filename, std::ofstream::out);
+        assert(!file.fail() && "File cannot be created!");
+        file << "Test name, Fit method, Elapsed time (ms)\n";
+        file.close();
+    } else
+        file_exists.close();
+    return filename;
+}
+
+void utils::save_performance(std::string filename, std::string test_name, std::string method,
+                             std::chrono::milliseconds time, bool print) {
+    std::ofstream file(filename, std::ofstream::app);
+    assert(!file.fail() && "File not found!");
+    file << test_name << ", " << method << ", " << time.count() << "\n";
+    if (print) {
+        std::cout << "\nElapsed time in seconds: " << time.count() * 1000 << " sec\n";
+        std::cout << "Elapsed time in milliseconds: " << time.count() << " ms\n";
+    }
+    file.close();
+}
+
 double utils::mean(Eigen::VectorXd v) {
     std::vector<double> vec(v.data(), v.data() + v.size());
-    vec.erase(std::remove_if(std::begin(vec),
-                             std::end(vec),
-                           [](const auto& value) { return std::isnan(value); }),
+    vec.erase(std::remove_if(std::begin(vec), std::end(vec), [](const auto& value) { return std::isnan(value); }),
               std::end(vec));
     return std::accumulate(vec.begin(), vec.end(), 0.0) / static_cast<double>(v.size());
 }

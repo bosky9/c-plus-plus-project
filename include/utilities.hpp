@@ -7,6 +7,7 @@
 #include "inference/bbvi.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <numeric>
@@ -39,6 +40,23 @@ struct DataFrame final {
  * @return DataFrame obtained from values in the file
  */
 DataFrame parse_csv(const std::string& filename);
+
+/**
+ * @brief Create file to write perfomance results
+ * @param test
+ */
+std::string create_performance_file(std::string data, std::string method, size_t ar, size_t ma, size_t integ = 0,
+                                    std::string family = "Normal", std::optional<std::string> target = std::nullopt);
+
+/**
+ * @brief Save performance tests to csv file performance_results.csv
+ * @test_name Name of the function invoked
+ * @method Name of the fit method used
+ * @time Elapsed time in milliseconds
+ * @print If true prints also to stdout
+ */
+void save_performance(std::string filename, std::string test_name, std::string method, std::chrono::milliseconds time,
+                      bool print = false);
 
 /**
  * @brief Check if the class R of object is a subclass of T
