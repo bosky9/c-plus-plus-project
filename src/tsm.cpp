@@ -211,7 +211,7 @@ MLEResults* TSM::_optimize_fit(const std::string& method, const std::function<do
     // Optimize using L-BFGS
     // Set up parameters
     LBFGSpp::LBFGSParam<double> param;
-    param.epsilon        = 1e-6;
+    param.epsilon        = 1e-8;
     param.max_iterations = 100;
     // Create solver and function object
     LBFGSpp::LBFGSSolver<double> solver(param);
