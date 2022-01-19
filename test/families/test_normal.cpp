@@ -102,3 +102,15 @@ TEST_CASE("Compute score", "[vi_score]") {
     REQUIRE(normal.vi_score(static_cast<Eigen::VectorXd>(Eigen::Vector2d{1.0, 1.0}), 0) == Eigen::Vector2d{1.0, 1.0});
     REQUIRE(normal.vi_score(static_cast<Eigen::VectorXd>(Eigen::Vector2d{1.0, 1.0}), 1) == Eigen::Vector2d{0.0, 0.0});
 }
+
+TEST_CASE("Clone function", "[clone]") {
+    Normal normal{1, 3.5};
+    std::unique_ptr<Family> normal2 = normal.clone();
+    REQUIRE(normal2->get_name() == "Normal");
+    REQUIRE( dynamic_cast<Normal*>(normal2.get())->get_sigma0() == normal.get_sigma0());
+    REQUIRE( dynamic_cast<Normal*>(normal2.get())->get_mu0() == normal.get_mu0());
+    REQUIRE(normal2.get()->logpdf(1.8) == normal.logpdf(1.8));
+}
+
+
+
