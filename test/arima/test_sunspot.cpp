@@ -13,12 +13,12 @@
 TEST_CASE("Test sunspot data", "[]") {
     utils::DataFrame data{utils::parse_csv("../data/sunspots.csv")}; // or nile.csv
 
-    ARIMA model{data, 2, 2, 0, "sunactivity"}; // or volume
+    ARIMA model{data, 4, 4, 0, "sunactivity"}; // or volume
     std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
     Results* x{model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, false)};
 
     model.plot_fit();
-    model.plot_predict_is(10, true, "BBVI");
+    model.plot_predict_is(50, true, "BBVI");
     model.plot_predict(5, 20, true);
     model.plot_sample(10, true);
     model.plot_ppc(1000, utils::mean, "mean");
@@ -31,7 +31,6 @@ TEST_CASE("Test sunspot data", "[]") {
 
     LatentVariables lvs = model.get_latent_variables();
     lvs.set_z_values(model.get_latent_variables().get_z_values(), "BBVI", std::nullopt, model.sample());
-    lvs.trace_plot();
 
     delete x;
 }

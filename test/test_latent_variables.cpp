@@ -20,8 +20,8 @@ TEST_CASE("LatentVariable creation", "[LatentVariable]") {
     SECTION("Get methods") {
         REQUIRE(lv.get_name() == "Constant");
         REQUIRE(lv.get_start() == 0.0);
-        REQUIRE(lv.get_prior()->get_name() == "Normal");
-        REQUIRE(lv.get_prior()->vi_return_param(0) == 0.0);
+        REQUIRE(lv.get_prior_clone()->get_name() == "Normal");
+        REQUIRE(lv.get_prior_clone()->vi_return_param(0) == 0.0);
         REQUIRE(lv.get_q_clone()->get_name() == "Normal");
         REQUIRE(lv.get_q_clone()->vi_return_param(0) == 0.0);
         REQUIRE(lv.get_method().empty());
@@ -37,7 +37,7 @@ TEST_CASE("LatentVariable creation", "[LatentVariable]") {
         REQUIRE(lv.get_method() == "AR");
         Flat prior1{};
         lv.set_prior(prior1);
-        REQUIRE(lv.get_prior()->get_name() == "Flat");
+        REQUIRE(lv.get_prior_clone()->get_name() == "Flat");
         Eigen::Vector3d s{2.0, 5.0, 4.0};
         lv.set_sample(s);
         REQUIRE(lv.get_sample().value() == s);

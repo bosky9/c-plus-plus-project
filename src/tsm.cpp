@@ -166,14 +166,14 @@ MCMCResults* TSM::_mcmc_fit(double scale, size_t nsims, const std::string& metho
 
     std::function<double(double)> transform;
     if (_latent_variables.get_z_list().size() == 1) {
-        transform              = _latent_variables.get_z_list()[0].get_prior()->get_transform();
+        transform              = _latent_variables.get_z_list()[0].get_prior_clone()->get_transform();
         sample.mean_est[0]     = transform(sample.mean_est[0]);
         sample.median_est[0]   = transform(sample.median_est[0]);
         sample.upper_95_est[0] = transform(sample.upper_95_est[0]);
         sample.lower_95_est[0] = transform(sample.lower_95_est[0]);
     } else
         for (Eigen::Index i{0}; i < sample.chain.rows(); ++i) {
-            transform              = _latent_variables.get_z_list()[i].get_prior()->get_transform();
+            transform              = _latent_variables.get_z_list()[i].get_prior_clone()->get_transform();
             sample.mean_est[i]     = transform(sample.mean_est[i]);
             sample.median_est[i]   = transform(sample.median_est[i]);
             sample.upper_95_est[i] = transform(sample.upper_95_est[i]);
@@ -283,7 +283,7 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd> cov_matrix,
 [[nodiscard]] double TSM::neg_logposterior(const Eigen::VectorXd& beta) {
     double post = _neg_loglik(beta);
     for (Eigen::Index k{0}; k < static_cast<Eigen::Index>(_z_no); k++)
-        post += -_latent_variables.get_z_list()[k].get_prior()->logpdf(beta[k]);
+        post += -_latent_variables.get_z_list()[k].get_prior_clone()->logpdf(beta[k]);
     return post;
 }
 
@@ -291,7 +291,7 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd> cov_matrix,
     double post = (static_cast<double>(_data_frame.data.size()) / static_cast<double>(mini_batch)) *
                   _mb_neg_loglik(beta, mini_batch);
     for (Eigen::Index k{0}; k < static_cast<Eigen::Index>(_z_no); k++)
-        post += -_latent_variables.get_z_list()[k].get_prior()->logpdf(beta[k]);
+        post += -_latent_variables.get_z_list()[k].get_prior_clone()->logpdf(beta[k]);
     return post;
 }
 

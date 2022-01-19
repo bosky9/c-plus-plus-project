@@ -201,7 +201,7 @@ void ARIMA::create_latent_variables() {
     Normal n1{Normal(0, 3)};
     _latent_variables.add_z("Constant", n1, n1);
 
-    n1 = Normal(0, 0.5);
+    n1 = Normal{0, 0.5};
     Normal n2{Normal(0.3)};
     for (size_t ar_terms{0}; ar_terms < _ar; ar_terms++)
         _latent_variables.add_z("AR(" + std::to_string(ar_terms + 1) + ")", n1, n2);
@@ -399,13 +399,13 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eig
 
 double ARIMA::normal_neg_loglik(const Eigen::VectorXd& beta) const {
     std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_y = _model(beta);
-    Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
+    Eigen::VectorXd scale{{_latent_variables.get_prior_transform_back()(beta(Eigen::last))}};
     return -Mvn::logpdf(mu_y.second, mu_y.first, scale).sum();
 }
 
 double ARIMA::normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_batch) const {
     std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = _mb_model(beta, mini_batch);
-    Eigen::VectorXd scale{{_latent_variables.get_z_priors().back()->get_transform()(beta(Eigen::last))}};
+    Eigen::VectorXd scale{{_latent_variables.get_prior_transform_back()(beta(Eigen::last))}};
     return -Mvn::logpdf(mu_Y.second, mu_Y.first, scale).sum();
 }
 
@@ -413,7 +413,7 @@ double ARIMA::non_normal_neg_loglik(const Eigen::VectorXd& beta) const {
     std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = _model(beta);
     Eigen::VectorXd transformed_parameters(beta.size());
     for (Eigen::Index k{0}; k < beta.size(); k++)
-        transformed_parameters(k) = _latent_variables.get_z_priors().at(k)->get_transform()(beta(k));
+        transformed_parameters(k) = _latent_variables.get_prior_transform_at(k)(beta(k));
     auto scale_shape_skew = get_scale_and_shape(transformed_parameters);
     Eigen::VectorXd link_mu(mu_Y.first.size());
     std::transform(mu_Y.first.begin(), mu_Y.first.end(), link_mu.begin(), _link);
@@ -424,7 +424,7 @@ double ARIMA::non_normal_mb_neg_loglik(const Eigen::VectorXd& beta, size_t mini_
     std::pair<Eigen::VectorXd, Eigen::VectorXd> mu_Y = _mb_model(beta, mini_batch);
     Eigen::VectorXd transformed_parameters(beta.size());
     for (Eigen::Index k{0}; k < beta.size(); k++)
-        transformed_parameters(k) = _latent_variables.get_z_priors().at(k)->get_transform()(beta(k));
+        transformed_parameters(k) = _latent_variables.get_prior_transform_at(k)(beta(k));
     auto scale_shape_skew = get_scale_and_shape(transformed_parameters);
     Eigen::VectorXd link_mu(mu_Y.first.size());
     std::transform(mu_Y.first.begin(), mu_Y.first.end(), link_mu.begin(), _link);

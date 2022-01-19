@@ -149,10 +149,10 @@ void MLEResults::summary_with_hessian(bool transformed) const {
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names{_z.get_z_names()};
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size() - _z_hide); ++i) {
-        if (_z.get_z_list()[i].get_prior()->get_transform_name().empty())
+        if (_z.get_z_list()[i].get_prior_clone()->get_transform_name().empty())
             data.push_back(
                     {{"z_name", z_names[i]},
-                     {"z_value", std::to_string(round_to(_z.get_z_list()[i].get_prior()->get_transform()(_z_values[i]),
+                     {"z_value", std::to_string(round_to(_z.get_z_list()[i].get_prior_clone()->get_transform()(_z_values[i]),
                                                          _rounding_points))},
                      {"z_std", std::to_string(round_to(t_p_std[i], _rounding_points))},
                      {"z_z", std::to_string(round_to(t_z[i] / t_p_std[i], _rounding_points))},
@@ -162,11 +162,11 @@ void MLEResults::summary_with_hessian(bool transformed) const {
         else if (transformed)
             data.push_back(
                     {{"z_name", _z.get_z_list()[i].get_name()},
-                     {"z_value", std::to_string(round_to(_z.get_z_list()[i].get_prior()->get_transform()(_z_values[i]),
+                     {"z_value", std::to_string(round_to(_z.get_z_list()[i].get_prior_clone()->get_transform()(_z_values[i]),
                                                          _rounding_points))}});
         else
             data.push_back(
-                    {{"z_name", (_z.get_z_list()[i].get_prior()->get_itransform_name() + "(" +
+                    {{"z_name", (_z.get_z_list()[i].get_prior_clone()->get_itransform_name() + "(" +
                                  _z.get_z_list()[i].get_name() + ")")},
                      {"z_value", (std::to_string(round_to(_z_values[i], _rounding_points)))},
                      {"z_std", (std::to_string(round_to(t_p_std[i], _rounding_points)))},
@@ -228,7 +228,7 @@ void MLEResults::summary_without_hessian() const {
     std::list<std::map<std::string, std::string>> data;
     std::vector<std::string> z_names{_z.get_z_names()};
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(z_names.size()); ++i)
-        data.push_back({{"z_name", z_names[i]}, {"z_value", std::to_string(round_to(_z.get_z_list()[i].get_prior()->get_transform()(_results[i]), 4))}});
+        data.push_back({{"z_name", z_names[i]}, {"z_value", std::to_string(round_to(_z.get_z_list()[i].get_prior_clone()->get_transform()(_results[i]), 4))}});
 
     // Create fmts
     std::vector<std::tuple<std::string, std::string, int>> fmt{{"Latent Variable", "z_name", 40},

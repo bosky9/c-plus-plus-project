@@ -30,14 +30,14 @@ LatentVariable::LatentVariable(std::string name, const Family& prior, const Fami
       _transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
 
 LatentVariable::LatentVariable(const LatentVariable& lv)
-    : _name{lv.get_name()}, _index{lv._index}, _prior{lv.get_prior()->clone()},
+    : _name{lv.get_name()}, _index{lv._index}, _prior{lv.get_prior_clone()->clone()},
       _transform{lv._transform}, _start{lv.get_start()}, _q{lv.get_q_clone()}, _method{lv.get_method()},
       _value{lv.get_value()}, _std{lv.get_std()}, _sample{lv.get_sample()} {}
 
 LatentVariable::LatentVariable(LatentVariable&& lv) noexcept {
     _name      = lv.get_name();
     _index     = lv._index;
-    _prior     = lv.get_prior();
+    _prior     = lv.get_prior_clone();
     _transform = lv._transform;
     _start     = lv.get_start();
     _q         = lv.get_q_clone();
@@ -63,7 +63,7 @@ LatentVariable& LatentVariable::operator=(const LatentVariable& lv) {
     _name  = lv.get_name();
     _index = lv._index;
     _prior.reset();
-    _prior     = lv.get_prior()->clone();
+    _prior     = lv.get_prior_clone();
     _transform = lv._transform;
     _start     = lv.get_start();
     _q.reset();
@@ -79,7 +79,7 @@ LatentVariable& LatentVariable::operator=(LatentVariable&& lv) noexcept {
     _name  = lv.get_name();
     _index = lv._index;
     _prior.reset();
-    _prior     = lv.get_prior()->clone();
+    _prior     = lv.get_prior_clone();
     _transform = lv._transform;
     _start     = lv.get_start();
     _q.reset();
@@ -171,7 +171,7 @@ std::string LatentVariable::get_name() const {
     return _name;
 }
 
-std::unique_ptr<Family> LatentVariable::get_prior() const {
+std::unique_ptr<Family> LatentVariable::get_prior_clone() const {
     return (_prior->clone());
 }
 
@@ -315,8 +315,8 @@ void LatentVariables::adjust_prior(const std::vector<size_t>& index, const Famil
         assert(item > _z_list.size() - 1);
         _z_list[item].set_prior(prior);
         if (prior.get_name() == "Normal") {
-            _z_list[item].set_start(_z_list[item].get_prior()->vi_return_param(0));
-            _z_list[item].set_start(_z_list[item].get_prior()->vi_return_param(1));
+            _z_list[item].set_start(_z_list[item].get_prior_clone()->vi_return_param(0));
+            _z_list[item].set_start(_z_list[item].get_prior_clone()->vi_return_param(1));
         }
     }
 }
@@ -339,7 +339,7 @@ std::vector<std::string> LatentVariables::get_z_names() const {
 std::vector<std::unique_ptr<Family>> LatentVariables::get_z_priors() const {
     std::vector<std::unique_ptr<Family>> priors;
     for (const LatentVariable& z : _z_list)
-        priors.push_back(z.get_prior());
+        priors.push_back(z.get_prior_clone());
     return priors;
 }
 
@@ -357,14 +357,14 @@ std::pair<std::vector<std::string>, std::vector<std::string>> LatentVariables::g
 std::vector<std::function<double(double)>> LatentVariables::get_z_transforms() const {
     std::vector<std::function<double(double)>> transforms;
     for (const LatentVariable& z : _z_list)
-        transforms.push_back(z.get_prior()->get_transform());
+        transforms.push_back(z.get_prior_clone()->get_transform());
     return transforms;
 }
 
 std::vector<std::string> LatentVariables::get_z_transforms_names() const {
     std::vector<std::string> transforms;
     for (const LatentVariable& z : _z_list)
-        transforms.push_back(z.get_prior()->get_transform_name());
+        transforms.push_back(z.get_prior_clone()->get_transform_name());
     return transforms;
 }
 
@@ -470,7 +470,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
                "No information on latent variable to plot!");
         if (!indices.has_value() ||
             std::find(indices.value().begin(), indices.value().end(), z) == indices.value().end()) {
-            std::function<double(double)> transform = _z_list[z].get_prior()->get_transform();
+            std::function<double(double)> transform = _z_list[z].get_prior_clone()->get_transform();
             if (_z_list[z].get_sample().has_value()) {
                 Eigen::VectorXd sample = _z_list[z].get_sample().value();
                 std::transform(sample.begin(), sample.end(), sample.begin(),
@@ -488,7 +488,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
                 std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) { return distribution.pdf(n); });
                 plot.drawCurve(x, y).label(_z_list[z].get_method() + " estimate of " + _z_list[z].get_name());
             } else if (_z_list[z].get_value().has_value() && _z_list[z].get_std().has_value()) {
-                if (_z_list[z].get_prior()->get_transform_name().empty()) {
+                if (_z_list[z].get_prior_clone()->get_transform_name().empty()) {
                     // Calculate and draw the pdf of a normal distribution with mean and std of the latent variable
                     Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(
                             100, _z_list[z].get_value().value() - _z_list[z].get_std().value() * 3.5,
@@ -543,7 +543,7 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
         std::vector<sciplot::PlotVariant> row_plots;
         // Transform the sample values of the latent variable
         Eigen::VectorXd chain{_z_list[i].get_sample().value()};
-        std::function<double(double)> transform = _z_list[i].get_prior()->get_transform();
+        std::function<double(double)> transform = _z_list[i].get_prior_clone()->get_transform();
         Eigen::VectorXd transformed_chain(chain.size());
         std::transform(chain.begin(), chain.end(), transformed_chain.begin(),
                        [transform](double n) { return transform(n); });
@@ -592,4 +592,11 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
     // Save the figure to a PDF file
     fig.save("../data/latent_variables_plots/trace_plot.png");
     fig.show();
+}
+std::function<double(double)> LatentVariables::get_prior_transform_at(const size_t &i) const {
+    return _z_list.at(i).get_prior_transform();
+}
+
+std::function<double(double)> LatentVariables::get_prior_transform_back() const {
+    return _z_list.back().get_prior_transform();
 }

@@ -91,7 +91,7 @@ public:
      * @brief Returns the prior for the latent variable
      * @return Prior
      */
-    [[nodiscard]] std::unique_ptr<Family> get_prior() const;
+    [[nodiscard]] std::unique_ptr<Family> get_prior_clone() const;
 
     /**
      * @brief Returns the prior's trasformation function
@@ -434,6 +434,9 @@ public:
      * @param height Height of the figure
      */
     void trace_plot(size_t width = 1280, size_t height = 720);
+
+    [[nodiscard]] std::function<double(double)> get_prior_transform_at(const size_t &i) const;
+    [[nodiscard]] std::function<double(double)> get_prior_transform_back() const;
 
 private:
     std::string _model_name;                                         ///< Model's name
