@@ -114,6 +114,8 @@ public:
      */
     [[nodiscard]] virtual LatentVariables get_latent_variables() const;
 
+    std::function<double(const Eigen::VectorXd)> get_neg_loglik() const;
+
 protected:
     utils::SingleDataFrame _data_frame;
     std::string _model_name;

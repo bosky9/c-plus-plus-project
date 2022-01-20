@@ -265,17 +265,18 @@ ARIMA::get_scale_and_shape_sim(const Eigen::MatrixXd& transformed_lvs) const {
 }
 
 std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::VectorXd& beta) const {
-    Eigen::VectorXd Y(_data_frame.data.size() - _max_lag);
+    Eigen::VectorXd Y(_data_length - _max_lag);
     std::copy(_data_frame.data.begin() + _max_lag, _data_frame.data.end(), Y.begin());
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
+    const std::vector<LatentVariable> &temp_z_list = _latent_variables.get_z_list();
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
-        z[i] = _latent_variables.get_z_list().at(i).get_prior_transform()(beta[i]);
+        z[i] = temp_z_list.at(i).get_prior_transform()(beta[i]);
     }
 
     // Constant and AR terms
-    Eigen::VectorXd mu;
+    Eigen::VectorXd mu(_data_length - _max_lag);
     if (_ar != 0) {
         // We are not adding one to the Eigen index because seq includes the last element
         mu = _x.transpose() * z(Eigen::seq(0, Eigen::last - static_cast<Eigen::Index>(_family_z_no + _ma)));

@@ -362,3 +362,6 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
 LatentVariables TSM::get_latent_variables() const {
     return _latent_variables;
 }
+std::function<double(const Eigen::VectorXd)> TSM::get_neg_loglik() const {
+    return _neg_loglik;
+}

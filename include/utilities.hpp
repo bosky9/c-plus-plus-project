@@ -55,7 +55,7 @@ std::string create_performance_file(std::string data, std::string method, size_t
  * @time Elapsed time in milliseconds
  * @print If true prints also to stdout
  */
-void save_performance(std::string filename, std::string test_name, std::string method, std::chrono::milliseconds time,
+void save_performance(std::string filename, std::string test_name, std::string method, std::chrono::microseconds time,
                       bool print = false);
 
 /**
