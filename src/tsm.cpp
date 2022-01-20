@@ -191,7 +191,7 @@ MCMCResults* TSM::_mcmc_fit(double scale, size_t nsims, const std::string& metho
                            output.states, output.states_var);
 }
 
-MLEResults* TSM::_ols_fit() {
+MLEResults* TSM::_ols_fit() { // Not implemented, specific for VAR models
     return nullptr;
 }
 
@@ -281,8 +281,8 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd> cov_matrix,
 }
 
 [[nodiscard]] double TSM::neg_logposterior(const Eigen::VectorXd& beta) {
-    double post = _neg_loglik(beta);
-    const std::vector<LatentVariable> &lvs = _latent_variables.get_z_list();
+    double post                            = _neg_loglik(beta);
+    const std::vector<LatentVariable>& lvs = _latent_variables.get_z_list();
     for (Eigen::Index k{0}; k < static_cast<Eigen::Index>(_z_no); k++)
         post += -lvs.at(k).use_prior_logpdf(beta[k]);
     return post;
@@ -291,7 +291,7 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd> cov_matrix,
 [[nodiscard]] double TSM::mb_neg_logposterior(const Eigen::VectorXd& beta, size_t mini_batch) {
     double post = (static_cast<double>(_data_frame.data.size()) / static_cast<double>(mini_batch)) *
                   _mb_neg_loglik(beta, mini_batch);
-    const std::vector<LatentVariable> &lvs = _latent_variables.get_z_list();
+    const std::vector<LatentVariable>& lvs = _latent_variables.get_z_list();
     for (Eigen::Index k{0}; k < static_cast<Eigen::Index>(_z_no); k++)
         post += -lvs.at(k).use_prior_logpdf(beta[k]);
     return post;
@@ -337,8 +337,8 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
         }
         return output;
     } else {
-        const std::vector<LatentVariable> &lvs = _latent_variables.get_z_list();
-        size_t cols                     = 0;
+        const std::vector<LatentVariable>& lvs = _latent_variables.get_z_list();
+        size_t cols                            = 0;
         if (!lvs.empty())
             cols = lvs.at(0).get_sample().value().size();
         Eigen::MatrixXd chain(lvs.size(), cols);

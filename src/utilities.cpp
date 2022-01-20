@@ -80,12 +80,12 @@ std::string utils::create_performance_file(std::string data, std::string method,
 }
 
 void utils::save_performance(std::string filename, std::string test_name, std::string method,
-                             std::chrono::microseconds time, bool print) {
+                             std::chrono::milliseconds time, bool print) {
     std::ofstream file(filename, std::ofstream::app);
     assert(!file.fail() && "File not found!");
     file << test_name << ", " << method << ", " << time.count() << "\n";
     if (print) {
-        std::cout << "\nElapsed time in seconds: " << time.count() * 1000 << " sec\n";
+        std::cout << "\nElapsed time in seconds: " << time.count() / 1000 << " sec\n";
         std::cout << "Elapsed time in milliseconds: " << time.count() << " ms\n";
     }
     file.close();

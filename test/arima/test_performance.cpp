@@ -13,7 +13,8 @@
 
 TEST_CASE("Test neg_loglik function", "[neg_loglik]") {
     utils::DataFrame data{utils::parse_csv("../data/sunspots.csv")};
-    size_t ar = 4; size_t ma = 4;
+    size_t ar = 4;
+    size_t ma = 4;
     ARIMA model{data, ar, ma, 0, "sunactivity"};
     std::string method{"MLE"};
     std::string filename{utils::create_performance_file("sunspots", method, ar, ma)};
@@ -24,17 +25,17 @@ TEST_CASE("Test neg_loglik function", "[neg_loglik]") {
         auto start{std::chrono::high_resolution_clock::now()};
         double result = model.get_neg_loglik()(phi);
         auto end{std::chrono::high_resolution_clock::now()};
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        utils::save_performance(filename + "_neg_loglik.csv",std::to_string(result), method,
-                                duration);
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        utils::save_performance(filename + "_neg_loglik.csv", std::to_string(result), method, duration);
     }
 }
 
 TEST_CASE("Test performances on sunspot data (no sample and ppc)", "") {
     utils::DataFrame data{utils::parse_csv("../data/sunspots.csv")};
-    size_t ar = 4; size_t ma = 4;
+    size_t ar = 2;
+    size_t ma = 2;
     ARIMA model{data, ar, ma, 0, "sunactivity"};
-    std::string method{"MLE"};
+    std::string method{"Laplace"};
     std::string filename{utils::create_performance_file("sunspots", method, ar, ma)};
 
     SECTION("fit", "[fit]") {

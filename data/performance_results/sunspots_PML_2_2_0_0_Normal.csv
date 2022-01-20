@@ -1,0 +1,7 @@
+Test name, Fit method, Elapsed time (ms)
+fit, PML, 325
+predict, PML, 10
+predict_is, PML, 203266
+fit, PML, 266
+predict, PML, 15
+predict_is, PML, 129

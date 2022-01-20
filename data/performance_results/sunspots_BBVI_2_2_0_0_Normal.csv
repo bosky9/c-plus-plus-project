@@ -1,0 +1,11 @@
+Test name, Fit method, Elapsed time (ms)
+fit, BBVI, 4964
+predict, BBVI, 7
+predict_is, BBVI, 4839
+sample, BBVI, 156
+ppc, BBVI, 308
+fit, BBVI, 4366
+predict, BBVI, 9
+predict_is, BBVI, 4137
+sample, BBVI, 126
+ppc, BBVI, 255

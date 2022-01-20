@@ -1,0 +1,11 @@
+Test name, Fit method, Elapsed time (ms)
+fit, M-H, 2526
+predict, M-H, 4102
+predict_is, M-H, 21525
+sample, M-H, 159
+ppc, M-H, 363
+fit, M-H, 2009
+predict, M-H, 3832
+predict_is, M-H, 19613
+sample, M-H, 133
+ppc, M-H, 274

@@ -1,0 +1,7 @@
+Test name, Fit method, Elapsed time (ms)
+fit, Laplace, 3292
+predict, Laplace, 9
+predict_is, Laplace, 3194
+fit, Laplace, 3997
+predict, Laplace, 14
+predict_is, Laplace, 3139
