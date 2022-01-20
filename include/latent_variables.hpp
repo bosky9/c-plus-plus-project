@@ -100,6 +100,12 @@ public:
     [[nodiscard]] std::function<double(double)> get_prior_transform() const;
 
     /**
+     * @brief Returns the prior's logpdf function
+     * @return Logpdf function of prior
+     */
+    [[nodiscard]] double use_prior_logpdf(const double &beta) const;
+
+    /**
      * @brief Returns the sample (optional)
      * @return Sample
      */

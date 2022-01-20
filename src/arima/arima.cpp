@@ -297,8 +297,9 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(const Eigen:
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
+    const std::vector<LatentVariable> &temp_z_list = _latent_variables.get_z_list();
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
-        z[i] = _latent_variables.get_z_list().at(i).get_prior_transform()(beta[i]);
+        z[i] = temp_z_list.at(i).get_prior_transform()(beta[i]);
     }
 
     // Constant and AR terms
@@ -328,7 +329,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(const Eigen::
     std::vector<double> sample(mini_batch);
     std::iota(sample.begin(), sample.end(), rand_int);
 
-    std::vector<double> data;
+    std::vector<double> data(_data_length - _max_lag);
     std::copy(_data_frame.data.begin() + _max_lag, _data_frame.data.end(), std::back_inserter(data));
     Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
     Y = Y(Eigen::all, sample);
@@ -338,8 +339,9 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(const Eigen::
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
+    const std::vector<LatentVariable> &temp_z_list = _latent_variables.get_z_list();
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
-        z[i] = _latent_variables.get_z_list().at(i).get_prior_transform()(beta[i]);
+        z[i] = temp_z_list.at(i).get_prior_transform()(beta[i]);
     }
 
     // Constant and AR terms
@@ -366,7 +368,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eig
     std::vector<double> sample(mini_batch);
     std::iota(sample.begin(), sample.end(), rand_int);
 
-    std::vector<double> data;
+    std::vector<double> data(_data_length - _max_lag);
     std::copy(_data_frame.data.begin() + _max_lag, _data_frame.data.end(), std::back_inserter(data));
     Eigen::VectorXd Y{Eigen::VectorXd::Map(data.data(), static_cast<Eigen::Index>(data.size()))};
     Y = Y(Eigen::all, sample);
@@ -376,10 +378,10 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eig
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
+    const std::vector<LatentVariable> &temp_z_list = _latent_variables.get_z_list();
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
-        z[i] = _latent_variables.get_z_list().at(i).get_prior_transform()(beta[i]);
+        z[i] = temp_z_list.at(i).get_prior_transform()(beta[i]);
     }
-
     // Constant and AR terms
     Eigen::VectorXd mu;
     if (_ar != 0)

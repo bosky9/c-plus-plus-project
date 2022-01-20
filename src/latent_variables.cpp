@@ -244,6 +244,10 @@ void LatentVariable::set_sigma0_q(double sigma0) {
         dynamic_cast<Normal*>(_q.get())->set_sigma0(sigma0);
 }
 
+double LatentVariable::use_prior_logpdf(const double &beta) const{
+    return _prior->logpdf(beta);
+}
+
 LatentVariables::LatentVariables(std::string model_name)
     : _model_name{std::move(model_name)}, _z_list{}, _z_indices{} {}
 
