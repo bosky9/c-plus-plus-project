@@ -56,8 +56,8 @@ double Mvn::cdf(double x, [[maybe_unused]] double mean, [[maybe_unused]] double 
 
 Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& means, const Eigen::VectorXd& scales) {
     assert((means.size() == 1 && (scales.size() == 1 || x.size() == 1 || x.size() == scales.size())) ||
-           (scales.size() == 1 && (x.size() == 1 || x.size() == means.size())) ||
-           (means.size() == scales.size() && (x.size() == 1 || x.size() == means.size())));
+    (scales.size() == 1 && (x.size() == 1 || x.size() == means.size())) ||
+    (means.size() == scales.size() && (x.size() == 1 || x.size() == means.size())));
     size_t size = std::max({x.size(), means.size(), scales.size()});
     Eigen::VectorXd result(size);
     const double ONE_OVER_SQRT_2PI{0.39894228040143267793994605993438};
@@ -65,8 +65,11 @@ Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& mea
         double x_val  = x.size() == 1 ? x(0) : x(i);
         double mean   = means.size() == 1 ? means(0) : means(i);
         double scale  = scales.size() == 1 ? scales(0) : scales(i);
-        //long double e = expl(-0.5 * std::pow((x_val - mean) / scale, 2.0));
-        result(i) = -(0.5 * std::pow((x_val - mean) / scale, 2.0)) + std::log(ONE_OVER_SQRT_2PI / scale);
+        long double e = expl(-0.5 * std::pow((x_val - mean) / scale, 2.0));
+        if (e == 0)
+            result(i) = -(0.5 * std::pow((x_val - mean) / scale, 2.0)) + std::log(ONE_OVER_SQRT_2PI / scale);
+        else
+            result(i) = static_cast<double>(std::log((ONE_OVER_SQRT_2PI / scale) * e));
     }
     return result;
 }
