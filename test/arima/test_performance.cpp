@@ -26,7 +26,7 @@ TEST_CASE("Test neg_loglik function", "[neg_loglik]") {
         double result = model.get_neg_loglik()(phi);
         auto end{std::chrono::high_resolution_clock::now()};
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        utils::save_performance(filename + "_neg_loglik.csv", std::to_string(result), method, duration);
+        utils::save_performance(filename, std::to_string(result), method, duration);
     }
 }
 

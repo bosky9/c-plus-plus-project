@@ -119,7 +119,7 @@ void LatentVariable::plot_z(size_t width, size_t height) const {
         std::vector<double> diff(sample.size());
         std::transform(sample.begin(), sample.end(), diff.begin(), [mean](double x) { return x - mean; });
         double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-        double std    = std::sqrt(sq_sum / sample.size());
+        double std    = std::sqrt(sq_sum / static_cast<double>(sample.size()));
         // Calculate and draw the pdf
         x = Eigen::VectorXd::LinSpaced(100, mean - std * 3.5, mean + std * 3.5);
         Eigen::VectorXd y(x.size());
@@ -144,7 +144,7 @@ void LatentVariable::plot_z(size_t width, size_t height) const {
             std::vector<double> diff(sims.size());
             std::transform(sims.begin(), sims.end(), diff.begin(), [mean](double x) { return x - mean; });
             double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-            double std    = std::sqrt(sq_sum / sims.size());
+            double std    = std::sqrt(sq_sum / static_cast<double>(sims.size()));
             // Calculate and draw the pdf
             Normal distribution{mean, std};
             std::transform(x.begin(), x.end(), y.begin(), [distribution](double n) { return distribution.pdf(n); });
@@ -244,7 +244,7 @@ void LatentVariable::set_sigma0_q(double sigma0) {
         dynamic_cast<Normal*>(_q.get())->set_sigma0(sigma0);
 }
 
-double LatentVariable::use_prior_logpdf(const double &beta) const{
+double LatentVariable::use_prior_logpdf(const double& beta) const {
     return _prior->logpdf(beta);
 }
 
@@ -335,15 +335,15 @@ void LatentVariables::update_z_list_q(size_t position, uint8_t index, double val
 
 std::vector<std::string> LatentVariables::get_z_names() const {
     std::vector<std::string> names;
-    for (const LatentVariable& z : _z_list)
-        names.push_back(z.get_name());
+    std::transform(_z_list.begin(), _z_list.end(), std::back_inserter(names),
+                   [](const LatentVariable& z) { return z.get_name(); });
     return names;
 }
 
 std::vector<std::unique_ptr<Family>> LatentVariables::get_z_priors() const {
     std::vector<std::unique_ptr<Family>> priors;
-    for (const LatentVariable& z : _z_list)
-        priors.push_back(z.get_prior_clone());
+    std::transform(_z_list.begin(), _z_list.end(), std::back_inserter(priors),
+                   [](const LatentVariable& z) { return z.get_prior_clone(); });
     return priors;
 }
 
@@ -360,15 +360,15 @@ std::pair<std::vector<std::string>, std::vector<std::string>> LatentVariables::g
 
 std::vector<std::function<double(double)>> LatentVariables::get_z_transforms() const {
     std::vector<std::function<double(double)>> transforms;
-    for (const LatentVariable& z : _z_list)
-        transforms.push_back(z.get_prior_clone()->get_transform());
+    std::transform(_z_list.begin(), _z_list.end(), std::back_inserter(transforms),
+                   [](const LatentVariable& z) { return z.get_prior_clone()->get_transform(); });
     return transforms;
 }
 
 std::vector<std::string> LatentVariables::get_z_transforms_names() const {
     std::vector<std::string> transforms;
-    for (const LatentVariable& z : _z_list)
-        transforms.push_back(z.get_prior_clone()->get_transform_name());
+    std::transform(_z_list.begin(), _z_list.end(), std::back_inserter(transforms),
+                   [](const LatentVariable& z) { return z.get_prior_clone()->get_transform_name(); });
     return transforms;
 }
 
@@ -397,17 +397,17 @@ Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
 
 std::vector<std::unique_ptr<Family>> LatentVariables::get_z_approx_dist() const {
     std::vector<std::unique_ptr<Family>> dists;
-    for (const LatentVariable& z : _z_list)
-        dists.push_back(z.get_q_clone());
+    std::transform(_z_list.begin(), _z_list.end(), std::back_inserter(dists),
+                   [](const LatentVariable& z) { return z.get_q_clone(); });
     return dists;
 }
 
 std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
     std::vector<std::unique_ptr<Family>> approx_dists = get_z_approx_dist();
-    std::vector<std::string> q_list(approx_dists.size());
-    for (auto& approx : approx_dists)
-        q_list.emplace_back((utils::isinstance<Normal>(approx.get())) ? "Normal"
-                                                                      : "Approximate distribution not detected");
+    std::vector<std::string> q_list;
+    std::transform(approx_dists.begin(), approx_dists.end(), std::back_inserter(q_list), [](auto& approx) {
+        return (utils::isinstance<Normal>(approx.get())) ? "Normal" : "Approximate distribution not detected";
+    });
     return q_list;
 }
 
@@ -484,7 +484,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
                 std::vector<double> diff(sample.size());
                 std::transform(sample.begin(), sample.end(), diff.begin(), [mean](double x) { return x - mean; });
                 double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-                double std    = std::sqrt(sq_sum / sample.size());
+                double std    = std::sqrt(sq_sum / static_cast<double>(sample.size()));
                 // Calculate and draw the pdf of the sample values
                 Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(100, mean - std * 3.5, mean + std * 3.5);
                 Eigen::VectorXd y(x.size());
@@ -512,7 +512,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
                     std::vector<double> diff(sims.size());
                     std::transform(sims.begin(), sims.end(), diff.begin(), [mean](double x) { return x - mean; });
                     double sq_sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-                    double std    = std::sqrt(sq_sum / sims.size());
+                    double std    = std::sqrt(sq_sum / static_cast<double>(sims.size()));
                     // Calculate and draw the pdf of the simulated values
                     Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(100, mean - std * 3.5, mean + std * 3.5);
                     Eigen::VectorXd y(x.size());
@@ -582,7 +582,8 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
                 Eigen::VectorXd x(9);
                 std::iota(x.begin(), x.end(), 1);
                 Eigen::VectorXd y(9);
-                std::transform(x.begin(), x.end(), y.begin(), [chain](size_t n) { return acf(chain, n); });
+                std::transform(x.begin(), x.end(), y.begin(),
+                               [chain](double n) { return acf(chain, static_cast<size_t>(n)); });
                 plot.drawBoxes(x, y).label("ACF Plot").fillSolid().fillColor(palette[i]);
             }
             row_plots.emplace_back(plot);
@@ -597,7 +598,7 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
     fig.save("../data/latent_variables_plots/trace_plot.png");
     fig.show();
 }
-std::function<double(double)> LatentVariables::get_prior_transform_at(const size_t &i) const {
+std::function<double(double)> LatentVariables::get_prior_transform_at(const size_t& i) const {
     return _z_list.at(i).get_prior_transform();
 }
 

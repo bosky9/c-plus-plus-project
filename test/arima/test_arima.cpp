@@ -502,9 +502,9 @@ TEST_CASE("Test an ARIMA model with sunspot years data (plots included)", "[ARIM
         Results* x{model.fit("BBVI", opt_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt,
                              true)};
 
-        utils::DataFrame predictions = model.predict_is(10, true, "MLE", true);
+        utils::DataFrame predictions = model.predict_is(10, true, "BBVI", true);
         catch_utilities::check_intervals_order(predictions.data);
-        model.plot_predict_is(10, true, "MLE", 600, 400);
+        model.plot_predict_is(10, true, "BBVI", 600, 400);
 
         delete x;
     }
@@ -535,9 +535,9 @@ TEST_CASE("Test an ARIMA model with sunspot years data (plots included)", "[ARIM
         Results* x{model.fit("M-H", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03, std::nullopt,
                              true)};
 
-        utils::DataFrame predictions = model.predict_is(10, true, "MLE", true);
+        utils::DataFrame predictions = model.predict_is(10, true, "M-H", true);
         catch_utilities::check_intervals_order(predictions.data);
-        model.plot_predict_is(10, true, "MLE", 600, 400);
+        model.plot_predict_is(10, true, "M-H", 600, 400);
 
         delete x;
     }
@@ -564,9 +564,9 @@ TEST_CASE("Test an ARIMA model with sunspot years data (plots included)", "[ARIM
         Results* x{model.fit("PML", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03, std::nullopt,
                              true)};
 
-        utils::DataFrame predictions = model.predict_is(10, true, "MLE", true);
+        utils::DataFrame predictions = model.predict_is(10, true, "PML", true);
         catch_utilities::check_intervals_order(predictions.data);
-        model.plot_predict_is(10, true, "MLE", 600, 400);
+        model.plot_predict_is(10, true, "PML", 600, 400);
 
         delete x;
     }
@@ -593,9 +593,9 @@ TEST_CASE("Test an ARIMA model with sunspot years data (plots included)", "[ARIM
         Results* x{model.fit("Laplace", opt_matrix, 1000, 200, std::nullopt, 12, std::nullopt, true, 1e-03,
                              std::nullopt, true)};
 
-        utils::DataFrame predictions = model.predict_is(10, true, "MLE", true);
+        utils::DataFrame predictions = model.predict_is(10, true, "Laplace", true);
         catch_utilities::check_intervals_order(predictions.data);
-        model.plot_predict_is(10, true, "MLE", 600, 400);
+        model.plot_predict_is(10, true, "Laplace", 600, 400);
 
         delete x;
     }
@@ -603,7 +603,7 @@ TEST_CASE("Test an ARIMA model with sunspot years data (plots included)", "[ARIM
     /**
      * @brief Tests sampling function
      */
-    SECTION("Test sampling function", "[sample]") {
+    SECTION("Test sampling function using BBVI", "[sample]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
         Results* x{
@@ -617,14 +617,42 @@ TEST_CASE("Test an ARIMA model with sunspot years data (plots included)", "[ARIM
         delete x;
     }
 
+    SECTION("Test sampling function using MH", "[sample]") {
+        ARIMA model{data, 2, 2};
+        std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
+        Results* x{
+                model.fit("M-H", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
+
+        Eigen::MatrixXd sample = model.sample(100);
+        REQUIRE(sample.rows() == 100);
+        REQUIRE(static_cast<size_t>(sample.cols()) == data.index.size() - 2);
+        model.plot_sample(100, true, 600, 400);
+
+        delete x;
+    }
+
     /**
      * @brief Tests PPC value
      */
-    SECTION("Test PPC value", "[ppc]") {
+    SECTION("Test PPC value using BBVI", "[ppc]") {
         ARIMA model{data, 2, 2};
         std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
         Results* x{
                 model.fit("BBVI", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
+
+        double p_value = model.ppc();
+        REQUIRE(p_value >= 0.0);
+        REQUIRE(p_value <= 1.0);
+        model.plot_ppc(1000, utils::mean, "mean", 600, 400);
+
+        delete x;
+    }
+
+    SECTION("Test PPC value using MH", "[ppc]") {
+        ARIMA model{data, 2, 2};
+        std::optional<Eigen::MatrixXd> op_matrix = std::nullopt;
+        Results* x{
+                model.fit("M-H", op_matrix, 100, 10000, "RMSProp", 12, std::nullopt, true, 1e-03, std::nullopt, true)};
 
         double p_value = model.ppc();
         REQUIRE(p_value >= 0.0);

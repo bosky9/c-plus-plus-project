@@ -45,5 +45,3 @@ double acf(const Eigen::Vector<T, N>& x, size_t lag = 0) {
     static_assert(std::is_floating_point<T>::value, "acf accepts only vector of float or double");
     return cov(x, lag) / cov(x);
 }
-
-// TODO: missing function acf_plot

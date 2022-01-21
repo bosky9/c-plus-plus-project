@@ -32,9 +32,9 @@ FetchContent_Declare(sciplot_content
         GIT_REPOSITORY https://github.com/sciplot/sciplot.git
         GIT_TAG master)
 FetchContent_GetProperties(sciplot_content)
-if(NOT sciplot_content_POPULATED)
+if (NOT sciplot_content_POPULATED)
     FetchContent_Populate(sciplot_content)
-endif()
+endif ()
 include_directories(${sciplot_content_SOURCE_DIR})
 
 # Fetch Python (required by matplotlibcpp.hpp)
@@ -44,6 +44,8 @@ find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 add_executable(tests)
 file(GLOB_RECURSE SRCS_LIST ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE TESTS_LIST ${PROJECT_SOURCE_DIR}/test/*.cpp)
+list(REMOVE_ITEM TESTS_LIST ${PROJECT_SOURCE_DIR}/test/arima/test_performance.cpp)
+list(REMOVE_ITEM TESTS_LIST ${PROJECT_SOURCE_DIR}/test/arima/test_sunspot.cpp)
 target_sources(tests PRIVATE ${SRCS_LIST} ${TESTS_LIST})
 
 target_link_libraries(tests PRIVATE Python3::Python Python3::Module Catch2::Catch2WithMain)

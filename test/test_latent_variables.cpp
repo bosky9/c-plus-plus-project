@@ -94,8 +94,8 @@ TEST_CASE("Trace plot", "[trace_plot]") {
     Normal q{1, 2};
     LatentVariables lvs{"ARIMA"};
     lvs.create("Constant", std::vector<size_t>{1, 2}, q, prior);
-    Eigen::MatrixXd samples(2, 2);
-    samples << 1, 2, 3, 4;
+    Eigen::MatrixXd samples(2, 10);
+    samples << 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20;
     lvs.set_z_values(Eigen::Vector2d{1, 2}, "BBVI", Eigen::Vector2d{2, 4}, samples);
     lvs.trace_plot(600, 400);
 }
