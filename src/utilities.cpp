@@ -124,3 +124,7 @@ std::vector<double> utils::diff(const std::vector<double>& v) {
         new_v.at(i) = v.at(i + 1) - v.at(i);
     return new_v;
 }
+
+bool utils::abs_compare(double a, double b) {
+    return std::abs(a) < std::abs(b);
+}

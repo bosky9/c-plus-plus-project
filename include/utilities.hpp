@@ -112,4 +112,12 @@ double min(Eigen::VectorXd v);
  * @return Vector of differences
  */
 std::vector<double> diff(const std::vector<double>& v);
+
+/**
+ * @brief Utility for comparing values in sample method (ARIMA)
+ * @param a First value
+ * @param b Second value
+ * @return If the absolute value of the first one is greater than the one of the second
+ */
+bool abs_compare(double a, double b);
 } // namespace utils

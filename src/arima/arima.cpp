@@ -26,11 +26,10 @@
 #include <utility>             // std::pair, std::move
 #include <vector>              // std::vector
 
-[[maybe_unused]] static bool abs_compare(double a, double b) {
-    return std::abs(a) < std::abs(b);
-}
-
-ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ, const Family& family) : TSM{"ARIMA"} {
+template<typename T>
+ARIMA::ARIMA(const T& data, size_t ar, size_t ma, size_t integ, const std::optional<std::string>& target,
+             const Family& family)
+    : TSM("ARIMA") {
     // Latent Variable information
     _ar                 = ar;
     _ma                 = ma;
@@ -43,11 +42,10 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     _multivariate_model = false;
 
     // Format the data
-    utils::SingleDataFrame checked_data = data_check(data);
+    utils::SingleDataFrame checked_data = data_check(data, _data_original, target);
     _data_frame.data                    = checked_data.data;
     _data_frame.data_name               = checked_data.data_name;
     _data_frame.index                   = checked_data.index;
-    _data_original                      = data;
 
     // Difference data
     for (size_t order{0}; order < _integ; order++)
@@ -95,7 +93,7 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
         _neg_loglik    = {[this](const Eigen::VectorXd& x) { return normal_neg_loglik(x); }};
         _mb_neg_loglik = {[this](const Eigen::VectorXd& x, size_t mb) { return normal_mb_neg_loglik(x, mb); }};
     }
-    // TODO: else if (...) with missing models
+    // else if (...) with missing models
     else {
         _model         = {[this](const Eigen::VectorXd& x) { return non_normal_model(x); }};
         _mb_model      = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_non_normal_model(x, mb); }};
@@ -104,80 +102,10 @@ ARIMA::ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ
     }
 }
 
-ARIMA::ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t integ, const std::string& target,
-             const Family& family)
-    : TSM{"ARIMA"} {
-    // Latent Variable information
-    _ar                 = ar;
-    _ma                 = ma;
-    _integ              = integ;
-    _z_no               = _ar + _ma + 2;
-    _max_lag            = std::max(static_cast<int>(_ar), static_cast<int>(_ma));
-    _z_hide             = false;
-    _supported_methods  = {"MLE", "PML", "Laplace", "M-H", "BBVI"};
-    _default_method     = "MLE";
-    _multivariate_model = false;
-
-    // Format the data
-    utils::SingleDataFrame checked_data = data_check(data_frame, target);
-    _data_frame.data                    = checked_data.data;
-    _data_frame.data_name               = checked_data.data_name;
-    _data_frame.index                   = checked_data.index;
-    _data_original                      = _data_frame.data;
-
-    // Difference data
-    for (size_t order{0}; order < _integ; order++)
-        _data_frame.data = utils::diff(_data_frame.data);
-    _data_frame.data_name = "Differenced " + _data_frame.data_name;
-    _data_length          = _data_frame.data.size();
-
-    _x = ar_matrix();
-    create_latent_variables();
-    _family.reset();
-    _family             = (family.clone());
-    FamilyAttributes fa = family.setup();
-    _model_name2        = fa.name;
-    _link               = fa.link;
-    _scale              = fa.scale;
-    _shape              = fa.shape;
-    _skewness           = fa.skewness;
-    _mean_transform     = fa.mean_transform;
-    _model_name         = _model_name2 + " ARIMA(" + std::to_string(_ar) + "," + std::to_string(_integ) + "," +
-                  std::to_string(_ma) + ")";
-
-    // Build any remaining latent variables that are specific to the family chosen
-    std::vector<lv_to_build> lvs = _family->build_latent_variables();
-    for (size_t no{0}; no < lvs.size(); no++) {
-        lv_to_build lv = lvs[no];
-        Family* prior  = std::get<1>(lv);
-        Family* q      = std::get<2>(lv);
-        _latent_variables.add_z(std::get<0>(lv), *prior, *q);
-        _latent_variables.set_z_starting_value(1 + no + _ar + _ma, std::get<3>(lv));
-        delete std::get<1>(lv);
-        delete std::get<2>(lv);
-    }
-    _latent_variables.set_z_starting_value(
-            0, _mean_transform(static_cast<double>(std::reduce(_data_frame.data.begin(), _data_frame.data.end())) /
-                               static_cast<double>(_data_frame.data.size())));
-
-    _family_z_no = lvs.size();
-    _z_no        = _latent_variables.get_z_list().size();
-
-    // If Normal family is selected, we use faster likelihood functions
-    if ("Normal" == _family->get_name()) {
-        _model         = {[this](const Eigen::VectorXd& x) { return normal_model(x); }};
-        _mb_model      = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_normal_model(x, mb); }};
-        _neg_loglik    = {[this](const Eigen::VectorXd& x) { return normal_neg_loglik(x); }};
-        _mb_neg_loglik = {[this](const Eigen::VectorXd& x, size_t mb) { return normal_mb_neg_loglik(x, mb); }};
-    }
-    // TODO: else if (...) with missing models
-    else {
-        _model         = {[this](const Eigen::VectorXd& x) { return non_normal_model(x); }};
-        _mb_model      = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_non_normal_model(x, mb); }};
-        _neg_loglik    = {[this](const Eigen::VectorXd& x) { return non_normal_neg_loglik(x); }};
-        _mb_neg_loglik = {[this](const Eigen::VectorXd& x, size_t mb) { return non_normal_mb_neg_loglik(x, mb); }};
-    }
-}
+template ARIMA::ARIMA(const std::vector<double>&, size_t, size_t, size_t, const std::optional<std::string>&,
+                      const Family&);
+template ARIMA::ARIMA(const utils::DataFrame&, size_t, size_t, size_t, const std::optional<std::string>&,
+                      const Family&);
 
 Eigen::MatrixXd ARIMA::ar_matrix() const {
     Eigen::MatrixXd X{Eigen::MatrixXd::Ones(static_cast<Eigen::Index>(_ar + 1),
@@ -270,7 +198,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::normal_model(const Eigen::Vec
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
-    const std::vector<LatentVariable> &temp_z_list = _latent_variables.get_z_list();
+    const std::vector<LatentVariable>& temp_z_list = _latent_variables.get_z_list();
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
         z[i] = temp_z_list.at(i).get_prior_transform()(beta[i]);
     }
@@ -297,7 +225,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::non_normal_model(const Eigen:
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
-    const std::vector<LatentVariable> &temp_z_list = _latent_variables.get_z_list();
+    const std::vector<LatentVariable>& temp_z_list = _latent_variables.get_z_list();
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
         z[i] = temp_z_list.at(i).get_prior_transform()(beta[i]);
     }
@@ -339,7 +267,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_normal_model(const Eigen::
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
-    const std::vector<LatentVariable> &temp_z_list = _latent_variables.get_z_list();
+    const std::vector<LatentVariable>& temp_z_list = _latent_variables.get_z_list();
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
         z[i] = temp_z_list.at(i).get_prior_transform()(beta[i]);
     }
@@ -378,7 +306,7 @@ std::pair<Eigen::VectorXd, Eigen::VectorXd> ARIMA::mb_non_normal_model(const Eig
 
     // Transform latent variables
     Eigen::VectorXd z(beta.size());
-    const std::vector<LatentVariable> &temp_z_list = _latent_variables.get_z_list();
+    const std::vector<LatentVariable>& temp_z_list = _latent_variables.get_z_list();
     for (Eigen::Index i{0}; i < beta.size(); ++i) {
         z[i] = temp_z_list.at(i).get_prior_transform()(beta[i]);
     }
@@ -681,7 +609,7 @@ void ARIMA::plot_fit(std::optional<size_t> width, std::optional<size_t> height) 
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/arima_plots/plot_fit.png");
+    plot.save("../data/arima_plots/plot_fit.pdf");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -771,7 +699,7 @@ void ARIMA::plot_predict(size_t h, size_t past_values, bool intervals, std::opti
     // Hide the legend
     plot.legend().hide();
     // Save the plot to a PDF file
-    plot.save("../data/arima_plots/plot_predict.png");
+    plot.save("../data/arima_plots/plot_predict.pdf");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -791,7 +719,7 @@ utils::DataFrame ARIMA::predict_is(size_t h, bool fit_once, const std::string& f
         std::copy(_data_original.begin(), _data_original.end() - static_cast<long>(h - t),
                   std::back_inserter(data_original_t));
         std::iota(index.begin(), index.end(), 0);
-        ARIMA x{data_original_t, _ar, _ma, _integ, *_family};
+        ARIMA x{data_original_t, _ar, _ma, _integ, "", *_family};
         if (!fit_once) {
             Results* temp_r = x.fit(fit_method);
             delete temp_r;
@@ -841,7 +769,7 @@ void ARIMA::plot_predict_is(size_t h, bool fit_once, const std::string& fit_meth
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/arima_plots/plot_predict_is.png");
+    plot.save("../data/arima_plots/plot_predict_is.pdf");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -967,7 +895,7 @@ void ARIMA::plot_sample(size_t nsims, bool plot_data, std::optional<size_t> widt
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/arima_plots/plot_sample.png");
+    plot.save("../data/arima_plots/plot_sample.pdf");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -1076,7 +1004,7 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/arima_plots/plot_ppc.png");
+    plot.save("../data/arima_plots/plot_ppc.pdf");
     // Show the plot in a pop-up window
     plot.show();
 }

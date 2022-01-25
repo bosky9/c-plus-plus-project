@@ -158,7 +158,7 @@ void LatentVariable::plot_z(size_t width, size_t height) const {
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/latent_variables_plots/plot_z_single.png");
+    plot.save("../data/latent_variables_plots/plot_z_single.pdf");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -532,7 +532,7 @@ void LatentVariables::plot_z(const std::optional<std::vector<size_t>>& indices, 
     // Show the legend
     plot.legend().atTopRight().transparent();
     // Save the plot to a PDF file
-    plot.save("../data/latent_variables_plots/plot_z.png");
+    plot.save("../data/latent_variables_plots/plot_z.pdf");
     // Show the plot in a pop-up window
     plot.show();
 }
@@ -595,7 +595,7 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
     // Set the size
     fig.size(width, height);
     // Save the figure to a PDF file
-    fig.save("../data/latent_variables_plots/trace_plot.png");
+    fig.save("../data/latent_variables_plots/trace_plot.pdf");
     fig.show();
 }
 std::function<double(double)> LatentVariables::get_prior_transform_at(const size_t& i) const {

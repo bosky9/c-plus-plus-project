@@ -107,7 +107,7 @@ TEST_CASE("Test an ARIMA model with a Normal family", "[ARIMA]") {
      * the estimated latent variables are not nan
      */
     SECTION("Test an ARIMA model with 1 AR and 1 MA term", "[fit]") {
-        ARIMA model{data, 1, 1, 0, Normal(0, 3)};
+        ARIMA model{data, 1, 1, 0, std::nullopt, Normal(0, 3)};
         Results* x{model.fit()};
         REQUIRE(model.get_latent_variables().get_z_list().size() == 4);
 

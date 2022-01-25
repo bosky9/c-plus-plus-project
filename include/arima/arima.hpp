@@ -26,12 +26,13 @@ class ARIMA final : public TSM {
 public:
     /**
      * @brief Constructor for ARIMA object
-     * @param data The univariate time series data that will be used
-     * @param index The times of the input data (years, days or seconds)
+     * @tparam T std::vector<double> or utils::DataFrame
+     * @param data The univariate time series data that will be used (passed as a vector or a DataFrame)
      * @param ar How many AR lags the model will have
      * @param ma How many MA lags the model will have
      * @param integ How many times to difference the time series (default 0)
-     * @param family E.g. Normal() (default). It must be moved from the caller.
+     * @param target Which array index to use
+     * @param family E.g. Normal() (default)
      *
      * @details Notes:
      *
@@ -51,33 +52,9 @@ public:
      *              returning (non_)normal_model(), (non_)mb_normal_model(),
      *              [which are defined in ARIMA].
      */
-    ARIMA(const std::vector<double>& data, size_t ar, size_t ma, size_t integ = 0, const Family& family = Normal());
-
-    /**
-     * @brief Constructor for ARIMA object
-     * @param data_frame The input data for the model
-     * @param ar How many AR lags the model will have
-     * @param ma How many MA lags the model will have
-     * @param integ How many times to difference the time series (default 0)
-     * @param family E.g. Normal() (default)
-     * @param target Which array index to use
-     *
-     * @details The same as the other constructor,
-     *          but multiple columns of data are passed as a DataFrame.
-     *          Only one columns is selected; which one? Decided by target.
-     */
-    ARIMA(const utils::DataFrame& data_frame, size_t ar, size_t ma, size_t integ = 0, const std::string& target = "",
-          const Family& family = Normal());
-
-
-    /**
-     * @brief Delegate constructor for ARIMA
-     * @param ar How many AR lags the model will have
-     * @param ma How many MA lags the model will have
-     * @param integ How many times to difference the time series (default 0)
-     * @param family E.g. Normal() (default). It must be moved from the caller.
-     */
-    ARIMA(size_t ar, size_t ma, size_t integ, const Family& family);
+    template<typename T>
+    ARIMA(const T& data, size_t ar, size_t ma, size_t integ = 0,
+          const std::optional<std::string>& target = std::nullopt, const Family& family = Normal());
 
     /**
      * @brief Calculates the negative log-likelihood of the model for non-Normal family
