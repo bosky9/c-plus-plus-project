@@ -1,4 +1,14 @@
+/**
+ * @file tableprinter.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "output/tableprinter.hpp"
+
+#include <algorithm> // std::transform
+#include <iomanip>   // std::setfill, std::setw
+#include <sstream>   // std::stringstream
 
 TablePrinter::TablePrinter(const std::vector<std::tuple<std::string, std::string, int>>& fmt, const std::string& sep,
                            const std::string& ul) {
@@ -8,11 +18,11 @@ TablePrinter::TablePrinter(const std::vector<std::tuple<std::string, std::string
         _fmt.append(ss.str());
 
         // try_emplace should append a new key:value pair. If key already exists, no insert
-        //std::stringstream sshe;
-        //sshe << std::get<0>(f);
-        //for (int i = 1; i < std::get<2>(f); ++i)
-         //   sshe << " ";
-         _head.try_emplace(std::get<1>(f), std::get<0>(f));
+        // std::stringstream sshe;
+        // sshe << std::get<0>(f);
+        // for (int i = 1; i < std::get<2>(f); ++i)
+        //   sshe << " ";
+        _head.try_emplace(std::get<1>(f), std::get<0>(f));
 
 
         if (!ul.empty()) {
@@ -48,12 +58,13 @@ template<typename T, std::enable_if_t<is_map_str_str<T>::value, int>>
 std::string TablePrinter::row(const T& data) {
     std::stringstream ss;
 
-    for(auto const& kw : _width){
+    for (auto const& kw : _width) {
         std::string temp_str{};
 
-        if(data.find(kw.first) != data.end())
-             temp_str = (static_cast<int>((data.at(kw.first).size())) > kw.second ) ?
-                data.at(kw.first).substr(0, kw.second) : data.at(kw.first);
+        if (data.find(kw.first) != data.end())
+            temp_str = (static_cast<int>((data.at(kw.first).size())) > kw.second)
+                               ? data.at(kw.first).substr(0, kw.second)
+                               : data.at(kw.first);
 
         ss << std::setfill(' ') << std::setw(kw.second) << std::left << temp_str << " ";
     }
@@ -62,8 +73,7 @@ std::string TablePrinter::row(const T& data) {
 
 std::string TablePrinter::operator()(const std::list<std::map<std::string /*key*/, std::string>>& dataList) {
     std::list<std::string> res;
-    for (auto const& dl : dataList)
-        res.push_back(row(dl));
+    std::transform(dataList.begin(), dataList.end(), std::back_inserter(res), [this](auto dl) { return row(dl); });
     if (!_ul.empty())
         res.push_front(row(_ul));
     res.push_front(row(_head));

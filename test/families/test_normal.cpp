@@ -6,7 +6,7 @@
 
 #include "families/normal.hpp"
 
-#include "catch2/catch_test_macros.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("Approximating model", "[approximating_model][approximating_model_reg]") {
     Eigen::VectorXd v(2);
@@ -107,10 +107,7 @@ TEST_CASE("Clone function", "[clone]") {
     Normal normal{1, 3.5};
     std::unique_ptr<Family> normal2 = normal.clone();
     REQUIRE(normal2->get_name() == "Normal");
-    REQUIRE( dynamic_cast<Normal*>(normal2.get())->get_sigma0() == normal.get_sigma0());
-    REQUIRE( dynamic_cast<Normal*>(normal2.get())->get_mu0() == normal.get_mu0());
+    REQUIRE(dynamic_cast<Normal*>(normal2.get())->get_sigma0() == normal.get_sigma0());
+    REQUIRE(dynamic_cast<Normal*>(normal2.get())->get_mu0() == normal.get_mu0());
     REQUIRE(normal2.get()->logpdf(1.8) == normal.logpdf(1.8));
 }
-
-
-

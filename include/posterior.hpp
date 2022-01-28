@@ -1,9 +1,15 @@
+/**
+ * @file posterior.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
-#include "Eigen/Core"
+#include "Eigen/Core" // Eigen::VectorXd
 
-#include <functional>
-#include <optional>
+#include <functional> // std::function
+#include <optional>   // std::optional
 
 namespace posterior {
 

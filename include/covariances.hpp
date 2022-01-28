@@ -1,13 +1,21 @@
+/**
+ * @file covariances.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
-#include "Eigen/Core"
+#include "Eigen/Core" // Eigen::VectorXd
 
-#include <algorithm>
-#include <cassert>
-#include <iterator>
-#include <numeric>
-#include <type_traits>
+#include <algorithm>   // std::transform
+#include <cassert>     // static_assert
+#include <iterator>    // std::back_inserter
+#include <numeric>     // std::inner_product, std::accumulate
+#include <type_traits> // std::is_floating_point
+#include <vector>      // std::vector
 
+namespace covariances {
 /**
  * @brief Calculate the sample autocovariance of two arrays (stationarity assumed)
  * @param x Array of data
@@ -45,3 +53,4 @@ double acf(const Eigen::Vector<T, N>& x, size_t lag = 0) {
     static_assert(std::is_floating_point<T>::value, "acf accepts only vector of float or double");
     return cov(x, lag) / cov(x);
 }
+} // namespace covariances

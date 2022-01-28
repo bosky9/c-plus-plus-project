@@ -373,6 +373,17 @@ TEST_CASE("Test an ARIMA model with sunspot years data (plots included)", "[ARIM
     }
 
     /**
+     * @brief Tests on ARIMA model that the summary given by fit results are correct.
+     */
+    SECTION("Test summary of an ARIMA model fit results", "[fit, summary]") {
+        ARIMA model{data, 1, 1, 1};
+        Results* x{model.fit()};
+        x->summary(true);
+
+        delete x;
+    }
+
+    /**
      * @brief Tests that the prediction utils::DataFrame length is equal to the number of steps h
      */
     SECTION("Test prediction length", "[predict]") {

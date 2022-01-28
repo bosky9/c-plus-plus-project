@@ -1,3 +1,9 @@
+/**
+ * @file hessian.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "hessian.hpp"
 
 using namespace derivatives;

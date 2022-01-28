@@ -1,3 +1,9 @@
+/**
+ * @file multivariate_normal.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
 #define _USE_MATH_DEFINES

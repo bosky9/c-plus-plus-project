@@ -1,8 +1,15 @@
+/**
+ * @file data_check.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
-#include "utilities.hpp"
+#include "utilities.hpp" // utils::SingleDataFrame, utils::DataFrame
 
-#include <vector>
+#include <optional> // std::optional
+#include <vector>   // std::vector
 
 /**
  * @brief Checks data type

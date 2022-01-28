@@ -1,8 +1,13 @@
+/**
+ * @file latent_variables.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
 #include "Eigen/Core"          // Eigen::VectorXd, Eigen::MatrixXd
 #include "families/family.hpp" // Family
-#include "matplotlibcpp.hpp"   // matplotlibcpp
 
 #include <functional> // std::function
 #include <map>        // std::map
@@ -12,8 +17,6 @@
 #include <string>     // std::string
 #include <utility>    // std::pair
 #include <vector>     // std::vector
-
-namespace plt = matplotlibcpp;
 
 /**
  * @class LatentVariable latent_variables_plots.hpp
@@ -69,9 +72,6 @@ public:
      * @brief Function that plots information about the latent variable
      * @param width The width of the figure to plot
      * @param height The height of the figure to plot
-     *
-     * @detail  This one uses the "matplotlibcpp.hpp" library,
-     *          which calls Python to print a matplot.
      */
     void plot_z(size_t width = 1280, size_t height = 720) const;
 
@@ -103,7 +103,7 @@ public:
      * @brief Returns the prior's logpdf function
      * @return Logpdf function of prior
      */
-    [[nodiscard]] double use_prior_logpdf(const double &beta) const;
+    [[nodiscard]] double use_prior_logpdf(const double& beta) const;
 
     /**
      * @brief Returns the sample (optional)
@@ -441,7 +441,7 @@ public:
      */
     void trace_plot(size_t width = 1280, size_t height = 720);
 
-    [[nodiscard]] std::function<double(double)> get_prior_transform_at(const size_t &i) const;
+    [[nodiscard]] std::function<double(double)> get_prior_transform_at(const size_t& i) const;
     [[nodiscard]] std::function<double(double)> get_prior_transform_back() const;
 
 private:

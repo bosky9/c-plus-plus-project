@@ -7,7 +7,7 @@
 #include "inference/stoch_optim.hpp"
 
 #include "Eigen/Core" // Eigen::VectorXd, Eigen::MatrixXd
-#include "catch2/catch_test_macros.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("Update a RMSProp optimizer", "[update]") {
     RMSProp optimizer{Eigen::Vector2d{0.1, 0.2}, Eigen::Vector2d{0.3, 0.5}, 0.001, 0.04};

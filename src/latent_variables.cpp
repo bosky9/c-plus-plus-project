@@ -1,10 +1,15 @@
+/**
+ * @file latent_variables.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "latent_variables.hpp"
 
-#include "Eigen/Core"          // Eigen::VectorXd, Eigen::Index
-#include "covariances.hpp"     // acf
-#include "families/family.hpp" // Family
-#include "families/normal.hpp" // Normal
-#include "matplotlibcpp.hpp" // plt::named_plot, plt::subplot, plt::figure_size, plt::xlabel, plt::ylabel, plt::title, plt::legend, plt::save, plt::show
+#include "Eigen/Core"              // Eigen::VectorXd, Eigen::Index
+#include "covariances.hpp"         // acf
+#include "families/family.hpp"     // Family
+#include "families/normal.hpp"     // Normal
 #include "multivariate_normal.hpp" // Mvn::pdf, Mvn::random
 #include "output/tableprinter.hpp" // TablePrinter
 #include "utilities.hpp"           // isinstance
@@ -291,19 +296,19 @@ void LatentVariables::create(const std::string& name, const std::vector<size_t>&
     size_t indices_dim = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<>());
     std::vector<std::string> indices(indices_dim, "("); // Creates a vector of indices_dim (
 
-    size_t previous_span  = indices_dim;
-    size_t previous_value = 1;
+    auto previous_span    = static_cast<double>(indices_dim);
+    double previous_value = 1;
 
     for (Eigen::Index d{0}; d < static_cast<Eigen::Index>(dim.size()); d++) {
         // span is the remaining length
-        size_t span           = previous_span / previous_value;
-        size_t current_dim    = dim.at(d);
-        size_t divide_by      = span / current_dim;
+        double span           = previous_span / previous_value;
+        auto current_dim      = static_cast<double>(dim.at(d));
+        double divide_by      = span / current_dim;
         std::string separator = (d == static_cast<Eigen::Index>(dim.size()) - 1) ? "," : ")";
         // append these fractions to each string of indices
         for (size_t indx{1}; indx < indices_dim; indx++) {
-            indices[indx] += std::to_string(ceil(indx / divide_by)) + separator;
-            if (indx >= span)
+            indices[indx] += std::to_string(ceil(static_cast<double>(indx) / divide_by)) + separator;
+            if (static_cast<double>(indx) >= span)
                 indx = 1;
         }
     }
@@ -388,10 +393,7 @@ Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
     for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(_z_list.size()); ++i) {
         assert(_z_list[i].get_value().has_value());
         values(i) = transformed ? transforms[i](_z_list[i].get_value().value()) : _z_list[i].get_value().value();
-        // std::cout << _z_list[i].get_value().value() << " vs " << transforms[i](_z_list[i].get_value().value()) <<
-        // "\n";
     }
-    // std::cout << "------------\n\n";
     return values;
 }
 
@@ -583,7 +585,7 @@ void LatentVariables::trace_plot(size_t width, size_t height) {
                 std::iota(x.begin(), x.end(), 1);
                 Eigen::VectorXd y(9);
                 std::transform(x.begin(), x.end(), y.begin(),
-                               [chain](double n) { return acf(chain, static_cast<size_t>(n)); });
+                               [chain](double n) { return covariances::acf(chain, static_cast<size_t>(n)); });
                 plot.drawBoxes(x, y).label("ACF Plot").fillSolid().fillColor(palette[i]);
             }
             row_plots.emplace_back(plot);

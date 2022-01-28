@@ -1,15 +1,22 @@
+/**
+ * @file results.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "results.hpp"
 
 #include "Eigen/Core"                  // Eigen::Index, Eigen::VectorXd, Eigen::MatrixXd
 #include "inference/norm_post_sim.hpp" // Sample, nps::norm_post_sim
 #include "latent_variables.hpp"        // LatentVariables
-#include "matplotlibcpp.hpp"           // plt::figure_size, plt::plot, plt::xlabel, plt::ylabel, plt::save, plt::show
 #include "output/tableprinter.hpp"     // TablePrinter
+#include "sciplot/sciplot.hpp"         // sciplot::Plot
 #include "tests/nhst.hpp"              // find_p_value
 
 #include <algorithm>  // std::transform
 #include <cmath>      // pow, log
 #include <functional> // std::function
+#include <iostream>   // std::cout
 #include <iterator>   // std::ostream_iterator
 #include <list>       // std::list
 #include <map>        // std::map
@@ -84,10 +91,12 @@ MLEResults::MLEResults(std::vector<std::string> data_name, std::vector<std::stri
     if (_method == "MLE" || _method == "OLS") {
         _loglik = -_objective_object(_z_values);
         _aic    = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
-        _bic    = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
+        _bic    = 2 * _objective_object(_z_values) +
+               static_cast<double>(_z_values.size()) * log(static_cast<double>(_data_length));
     } else if (_method == "PML") {
         _aic = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
-        _bic = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
+        _bic = 2 * _objective_object(_z_values) +
+               static_cast<double>(_z_values.size()) * log(static_cast<double>(_data_length));
     }
 }
 
@@ -205,10 +214,10 @@ void MLEResults::summary_with_hessian(bool transformed) const {
                                 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values), 4))}});
     model_details.push_back(
             {{"model_details", "Number of observations: " + std::to_string(_data_length)},
-             {"model_results",
-              "BIC: " + std::to_string(round_to(2 * _objective_object(_z_values) +
-                                                        static_cast<double>(_z_values.size()) * log(_data_length),
-                                                4))}});
+             {"model_results", "BIC: " + std::to_string(round_to(2 * _objective_object(_z_values) +
+                                                                         static_cast<double>(_z_values.size()) *
+                                                                                 log(static_cast<double>(_data_length)),
+                                                                 4))}});
 
     std::cout << TablePrinter{model_fmt, " ", "="}(model_details) << "\n";
     std::cout << std::string(106, '=') << "\n";
@@ -292,7 +301,8 @@ BBVIResults::BBVIResults(std::vector<std::string> data_name, std::vector<std::st
       _ses{std::move(ses)}, _elbo_records{std::move(elbo_records)} {
     _ihessian = Eigen::MatrixXd(static_cast<Eigen::VectorXd>(_ses.array().exp().pow(2)).asDiagonal());
     _aic      = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
-    _bic      = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
+    _bic      = 2 * _objective_object(_z_values) +
+           static_cast<double>(_z_values.size()) * log(static_cast<double>(_data_length));
 
     Sample samp                                   = nps::norm_post_sim(_z_values, _ihessian);
     _chain                                        = samp.chain;
@@ -347,13 +357,14 @@ std::ostream& operator<<(std::ostream& stream, const BBVIResults& results) {
 }
 
 void BBVIResults::plot_elbo(size_t width, size_t height) const {
-    plt::figure_size(width, height);
+    sciplot::Plot plot;
+    plot.size(width, height);
     std::vector<double> elbo_records{&_elbo_records[0], _elbo_records.data() + _elbo_records.size()};
-    plt::plot(elbo_records);
-    plt::xlabel("Iterations");
-    plt::ylabel("ELBO");
-    plt::save("../data/BBVIResults_plots/plot_elbo.pdf");
-    // plt::show();
+    plot.drawCurve(std::vector<double>(), elbo_records);
+    plot.xlabel("Iterations");
+    plot.ylabel("ELBO");
+    plot.save("../data/BBVIResults_plots/plot_elbo.pdf");
+    plot.show();
 }
 
 void BBVIResults::summary(bool transformed) {
@@ -429,7 +440,7 @@ BBVISSResults::BBVISSResults(std::vector<std::string> data_name, std::vector<std
       _objective_value{objective_value}, _ses{std::move(ses)}, _elbo_records{std::move(elbo_records)} {
     _ihessian = ses.array().exp().pow(2).matrix().diagonal();
     _aic      = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_value;
-    _bic      = 2 * _objective_value + static_cast<double>(_z_values.size()) * log(_data_length);
+    _bic      = 2 * _objective_value + static_cast<double>(_z_values.size()) * log(static_cast<double>(_data_length));
 
     Sample samp                                   = nps::norm_post_sim(_z_values, _ihessian);
     _chain                                        = samp.chain;
@@ -478,13 +489,14 @@ std::ostream& operator<<(std::ostream& stream, const BBVISSResults& results) {
 }
 
 void BBVISSResults::plot_elbo(size_t width, size_t height) const {
-    plt::figure_size(width, height);
+    sciplot::Plot plot;
+    plot.size(width, height);
     std::vector<double> elbo_records{&_elbo_records[0], _elbo_records.data() + _elbo_records.size()};
-    plt::plot(elbo_records);
-    plt::xlabel("Iterations");
-    plt::ylabel("ELBO");
-    plt::save("../data/BBVISSResults_plots/plot_elbo.pdf");
-    // plt::show();
+    plot.drawCurve(std::vector<double>(), elbo_records);
+    plot.xlabel("Iterations");
+    plot.ylabel("ELBO");
+    plot.save("../data/BBVISResults_plots/plot_elbo.pdf");
+    plot.show();
 }
 
 void BBVISSResults::summary(bool transformed) {
@@ -565,7 +577,8 @@ LaplaceResults::LaplaceResults(std::vector<std::string> data_name, std::vector<s
 
     _z_values = _z.get_z_values(false);
     _aic      = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
-    _bic      = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data_length);
+    _bic      = 2 * _objective_object(_z_values) +
+           static_cast<double>(_z_values.size()) * log(static_cast<double>(_data_length));
 
     if (_model_type == "LLT" || _model_type == "LLEV")
         _rounding_points = 10;
@@ -704,7 +717,8 @@ MCMCResults::MCMCResults(std::vector<std::string> data_name, std::vector<std::st
       _samples{std::move(samples)}, _mean_est{std::move(mean_est)}, _median_est{std::move(median_est)},
       _lower_95_est{std::move(lower_95_est)}, _upper_95_est{std::move(upper_95_est)} {
     _aic = 2 * static_cast<double>(_z_values.size()) + 2 * _objective_object(_z_values);
-    _bic = 2 * _objective_object(_z_values) + static_cast<double>(_z_values.size()) * log(_data.size());
+    _bic = 2 * _objective_object(_z_values) +
+           static_cast<double>(_z_values.size()) * log(static_cast<double>(_data.size()));
 }
 
 std::ostream& operator<<(std::ostream& stream, const MCMCResults& results) {

@@ -6,7 +6,7 @@
 
 #include "inference/bbvi.hpp"
 
-#include "catch2/catch_test_macros.hpp"
+#include <catch2/catch_test_macros.hpp>
 #include "families/normal.hpp" // Normal
 #include "inference/bbvi_routines.hpp"
 #include "multivariate_normal.hpp"

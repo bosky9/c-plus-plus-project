@@ -7,7 +7,7 @@
 #include "inference/metropolis_hastings.hpp"
 
 #include "Eigen/Core" // Eigen::VectorXd, Eigen::MatrixXd
-#include "catch2/catch_test_macros.hpp"
+#include <catch2/catch_test_macros.hpp>
 #include "inference/sample.hpp" // Sample
 
 TEST_CASE("Test Metropolis-Hastings", "[MetropolisHastings]") {

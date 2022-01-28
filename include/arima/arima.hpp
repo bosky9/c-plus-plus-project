@@ -1,9 +1,14 @@
+/**
+ * @file arima.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
 #include "Eigen/Core"          // Eigen::VectorXd, Eigen::MatrixXd
 #include "families/family.hpp" // Family
 #include "families/normal.hpp" // Normal
-#include "matplotlibcpp.hpp"   // matplotlibcpp
 #include "tsm.hpp"             // TSM
 #include "utilities.hpp"       // utils::DataFrame, utils::mean
 
@@ -14,8 +19,6 @@
 #include <tuple>      // std::tuple
 #include <utility>    // std::pair
 #include <vector>     // std::vector
-
-namespace plt = matplotlibcpp;
 
 /**
  * @class ARIMA arima.hpp
@@ -220,16 +223,8 @@ private:
      */
     [[nodiscard]] std::pair<Eigen::VectorXd, Eigen::VectorXd> normal_model(const Eigen::VectorXd& beta) const;
 
-    /**
-     * @brief Creates the structure of the model (model matrices etc) for a Poisson model.
-     * @details Here we apply a link function to the MA lags.
-     * @param beta Contains untransformed starting values for the latent variables
-     * @return Tuple of vectors:
-     * - mu: contains the predicted values (location) for the time series
-     * - Y: contains the length-adjusted time series (accounting for lags)
-     */
     // std::pair<Eigen::VectorXd, Eigen::VectorXd> poisson_model(Eigen::VectorXd beta);
-    //  TODO: Non abbiamo implementato in families Poisson!
+    // Only used with Poisson family (not implemented)
 
     /**
      * @brief Creates the structure of the model (model matrices etc) for a non-normal model.

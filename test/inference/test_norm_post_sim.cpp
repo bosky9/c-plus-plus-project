@@ -7,7 +7,7 @@
 #include "inference/norm_post_sim.hpp"
 
 #include "Eigen/Core" // Eigen::VectorXd, Eigen::MatrixXd
-#include "catch2/catch_test_macros.hpp"
+#include <catch2/catch_test_macros.hpp>
 #include "inference/sample.hpp" // Sample
 
 TEST_CASE("Check sizes for norm_post_sim", "[norm_post_sim]") {
@@ -30,8 +30,8 @@ TEST_CASE("Check normal distribution for norm_post_sim", "[norm_post_sim]") {
     Sample data = nps::norm_post_sim(modes, cov_matrix);
 
     for (int64_t i{0}; i < size; ++i) {
-        REQUIRE((data.mean_est[i] > -0.1) & (data.mean_est[i] < 0.1));
-        REQUIRE((data.median_est[i] > -0.2) & (data.median_est[i] < 0.2));
+        REQUIRE((data.mean_est[i] > -0.1 && data.mean_est[i] < 0.1));
+        REQUIRE((data.median_est[i] > -0.2 && data.median_est[i] < 0.2));
         REQUIRE((data.upper_95_est[i] > 1));
         REQUIRE((data.lower_95_est[i] < -1));
     }

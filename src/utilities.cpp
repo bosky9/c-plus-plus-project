@@ -1,7 +1,16 @@
+/**
+ * @file utilities.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "utilities.hpp"
 
-#include <chrono>  // std::chrono::milliseconds
-#include <fstream> // std::ifstream
+#include <algorithm> // std::sort, std::min_element, std::max_element
+#include <chrono>    // std::chrono::milliseconds
+#include <fstream>   // std::ifstream
+#include <iostream>  // std::cout
+#include <numeric>   // std::accumulate
 
 utils::DataFrame utils::parse_csv(const std::string& filename) {
     std::ifstream file(filename, std::ifstream::in);
@@ -63,8 +72,8 @@ utils::DataFrame utils::parse_csv(const std::string& filename) {
     return df;
 }
 
-std::string utils::create_performance_file(std::string data, std::string method, size_t ar, size_t ma, size_t integ,
-                                           std::string family, std::optional<std::string> target) {
+std::string utils::create_performance_file(const std::string& data, const std::string& method, size_t ar, size_t ma,
+                                           size_t integ, const std::string& family, std::optional<std::string> target) {
     std::string filename{"../data/performance_results/" + data + "_" + method + "_" + std::to_string(ar) + "_" +
                          std::to_string(ma) + "_" + std::to_string(integ) + "_" + std::to_string(integ) + "_" + family};
     filename += (target.has_value()) ? "_" + target.value() + ".csv" : ".csv";
@@ -79,7 +88,7 @@ std::string utils::create_performance_file(std::string data, std::string method,
     return filename;
 }
 
-void utils::save_performance(std::string filename, std::string test_name, std::string method,
+void utils::save_performance(const std::string& filename, const std::string& test_name, const std::string& method,
                              std::chrono::milliseconds time, bool print) {
     std::ofstream file(filename, std::ofstream::app);
     assert(!file.fail() && "File not found!");

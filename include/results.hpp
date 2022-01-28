@@ -1,13 +1,19 @@
+/**
+ * @file results.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
 #include "Eigen/Core"           // Eigen::VectorXd, Eigen::MatrixXd
 #include "latent_variables.hpp" // LatentVariables
 
-#include <functional>           // std::function
-#include <optional>             // std::optional, std::nullopt
-#include <ostream>              // std::ostream
-#include <string>               // std::string
-#include <vector>               // std::vector
+#include <functional> // std::function
+#include <optional>   // std::optional, std::nullopt
+#include <ostream>    // std::ostream
+#include <string>     // std::string
+#include <vector>     // std::vector
 
 /**
  * @class Results results.hpp

@@ -7,7 +7,7 @@
 #include "inference/metropolis_sampler.hpp"
 
 #include "Eigen/Core" // Eigen::VectorXd, Eigen::MatrixXd
-#include "catch2/catch_test_macros.hpp"
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("Test Metropolis sampler", "[metropolis_sampler]") {
     Eigen::MatrixXd phi{Eigen::MatrixXd::Identity(3, 3)};

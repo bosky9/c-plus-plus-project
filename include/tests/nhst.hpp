@@ -1,6 +1,12 @@
+/**
+ * @file nhst.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
-#include "multivariate_normal.hpp"
+#include "multivariate_normal.hpp" // Mvn
 
 inline double find_p_value(const double z) {
     double p_value = 0.0;

@@ -1,3 +1,9 @@
+/**
+ * @file arima.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #define _USE_MATH_DEFINES
 
 #include "arima/arima.hpp"
@@ -10,21 +16,20 @@
 #include "latent_variables.hpp"      // LatentVariables
 #include "multivariate_normal.hpp"   // Mvn::logpdf
 #include "results.hpp"               // Results
+#include "sciplot/sciplot.hpp"       // sciplot::Plot
 #include "tsm.hpp"                   // TSM, SingleDataFrame, draw_latent_variables
 #include "utilities.hpp"             // utils::diff, utils::DataFrame, utils::percentile, utils::mean
 
-#include <algorithm>           // std::max, std::min, std::copy, std::transform, std::max_element, std::min_element
-#include <cmath>               // std::sqrt, std::tgamma, M_PI
-#include <iterator>            // std::back_inserter
-#include <limits>              // std::numeric_limits
-#include <numeric>             // std::reduce, std::iota
-#include <optional>            // std::optional
-#include <random>              // std::random_device, std::default_random_engine, std::uniform_int_distribution
-#include <sciplot/sciplot.hpp> // sciplot::Plot
-#include <string>              // std::string, std::to_string
-#include <tuple>               // std::get, std::tuple, std::make_tuple
-#include <utility>             // std::pair, std::move
-#include <vector>              // std::vector
+#include <algorithm> // std::max, std::min, std::copy, std::transform, std::max_element, std::min_element
+#include <cmath>     // std::sqrt, std::tgamma, M_PI
+#include <limits>    // std::numeric_limits
+#include <numeric>   // std::reduce, std::iota
+#include <optional>  // std::optional
+#include <random>    // std::random_device, std::default_random_engine, std::uniform_int_distribution
+#include <string>    // std::string, std::to_string
+#include <tuple>     // std::get, std::tuple, std::make_tuple
+#include <utility>   // std::pair, std::move
+#include <vector>    // std::vector
 
 template<typename T>
 ARIMA::ARIMA(const T& data, size_t ar, size_t ma, size_t integ, const std::optional<std::string>& target,
@@ -399,7 +404,7 @@ Eigen::VectorXd ARIMA::mean_prediction(const Eigen::VectorXd& mu, const Eigen::V
         mu_exp = Eigen::VectorXd::Map(mu_exp_v.data(), static_cast<Eigen::Index>(mu_exp_v.size()));
     }
 
-    mu_exp = Eigen::VectorXd::Zero(mu_exp.size());
+    // mu_exp = Eigen::VectorXd::Zero(mu_exp.size());
 
     return Y_exp;
 }
@@ -523,8 +528,8 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
             /*
              * FOR DEBUGGING PURPOSES
             double max_val = std::abs(Y_exp_h[std::distance(Y_exp_h.begin() , std::max_element(Y_exp_h.begin(),
-            Y_exp_h.end(), abs_compare))]); if( max_val > 1000) { std::cout << max_val << std::endl; for(auto& lv :
-            _latent_variables.get_z_list()) { auto maxc = lv.get_sample()->maxCoeff(); auto minc =
+            Y_exp_h.end(), utils::abs_compare))]); if( max_val > 1000) { std::cout << max_val << std::endl; for(auto& lv
+            : _latent_variables.get_z_list()) { auto maxc = lv.get_sample()->maxCoeff(); auto minc =
             lv.get_sample()->minCoeff(); std::cout << tz_copy; std::cout << maxc; std::cout << minc;
                 }
             }
@@ -532,10 +537,8 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
             sim_vector.row(n) = Eigen::VectorXd::Map(Y_exp_h.data(), static_cast<Eigen::Index>(Y_exp_h.size()));
         }
 
-        // FIXME: del Y_exp si può tradurre con ->
-        Y_exp = Eigen::VectorXd::Zero(Y_exp.size());
-        // FIXME: del mu_exp si può tradurre con ->
-        mu_exp = Eigen::VectorXd::Zero(mu_exp.size());
+        // Y_exp = Eigen::VectorXd::Zero(Y_exp.size());
+        // mu_exp = Eigen::VectorXd::Zero(mu_exp.size());
     }
 
     return sim_vector.transpose();
@@ -794,7 +797,7 @@ utils::DataFrame ARIMA::predict(size_t h, bool intervals) const {
         }
     } else {
         Eigen::VectorXd t_z{transform_z()};
-        t_z = t_z.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; }); // TODO: t_z.hasNaN() is always false?
+        t_z = t_z.unaryExpr([](double v) { return std::isnan(v) ? 0.0 : v; });
         Eigen::VectorXd mean_values{mean_prediction(mu_Y.first, mu_Y.second, h, t_z)};
         if (intervals)
             sim_values = sim_prediction(mu_Y.first, mu_Y.second, h, t_z, 15000);
@@ -975,7 +978,8 @@ void ARIMA::plot_ppc(size_t nsims, const std::function<double(Eigen::VectorXd)>&
             hist_y.push_back(1);
         }
     }
-    double T_actual{T(Eigen::VectorXd::Map(_data_frame.data.data(), _data_frame.data.size()))};
+    double T_actual{
+            T(Eigen::VectorXd::Map(_data_frame.data.data(), static_cast<Eigen::Index>(_data_frame.data.size())))};
 
     std::string description;
     if (T_name == "mean")

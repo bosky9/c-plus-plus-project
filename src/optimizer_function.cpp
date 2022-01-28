@@ -1,3 +1,9 @@
+/**
+ * @file optimizer_function.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "optimizer_function.hpp"
 
 #include "Eigen/Core" // Eigen::Index, Eigen::VectorXd

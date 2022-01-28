@@ -1,13 +1,23 @@
+/**
+ * @file tsm.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "tsm.hpp"
 
-#include "families/normal.hpp"
-#include "lbfgspp/LBFGS.h"
-#include "optimizer_function.hpp"
-#include "utilities.hpp"
+#include "families/normal.hpp"    // Normal
+#include "hessian.hpp"            // hessian
+#include "lbfgspp/LBFGS.h"        // LBFGSpp::LBFGSParam, LBFGSpp::LBFGSSolver
+#include "optimizer_function.hpp" // OptimizerFunction
+#include "posterior.hpp"          // posterior::reverse_function_params, posterior::change_function_params
+#include "utilities.hpp"          // utils::isinstance
 
-#include <chrono>
-#include <cmath> // std::exp
-#include <random>
+#include <chrono> //std::chrono::system_clock::now()
+#include <cmath>  // std::exp
+#include <memory> // std::unique_ptr
+#include <random> // std::default_random_engine generator
+#include <utility>
 
 constexpr unsigned int str2int(const char* str, int h = 0) {
     return !str[h] ? 5381 : (str2int(str, h + 1) * 33) ^ str[h];
@@ -17,7 +27,7 @@ TSM::TSM(const std::string& model_type) : _model_type{model_type}, _latent_varia
     _neg_logposterior    = {[this](const Eigen::VectorXd& x) { return neg_logposterior(x); }};
     _mb_neg_logposterior = {[this](const Eigen::VectorXd& x, size_t mb) { return mb_neg_logposterior(x, mb); }};
     //_multivariate_neg_logposterior = {[this](const Eigen::VectorXd& x) { return multivariate_neg_logposterior(x); }};
-    //// Only for VAR models
+    // Only for VAR models
 }
 
 BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::optional<size_t>)>& posterior,
@@ -66,7 +76,7 @@ BBVIResults* TSM::_bbvi_fit(const std::function<double(Eigen::VectorXd, std::opt
         q_list.push_back(_latent_variables.get_z_list()[i].get_q_clone());
     }
 
-    BBVI* bbvi_obj; // TODO: Trovare un modo per eliminare il puntatore senza che crei segmentation fault!
+    BBVI* bbvi_obj;
     if (!mini_batch.has_value())
         bbvi_obj = new BBVI(posterior, q_list, batch_size, optimizer, iterations, learning_rate, record_elbo,
                             quiet_progress);
@@ -149,7 +159,6 @@ MCMCResults* TSM::_mcmc_fit(double scale, size_t nsims, const std::string& metho
             MetropolisHastings(_neg_logposterior, scale, nsims, starting_values, cov_matrix, 2, true, quiet_progress)};
     Sample sample = sampler.sample();
 
-    // IS SAMPLE THE PROBLEM?
     _latent_variables.set_z_values(sample.mean_est, "M-H", std::nullopt, sample.chain);
 
     /*
@@ -260,7 +269,8 @@ Results* TSM::fit(std::string method, std::optional<Eigen::MatrixXd> cov_matrix,
             return _optimize_fit(method, _neg_logposterior);
 
         case str2int("M-H"):
-            return _mcmc_fit(1.0, nsims.value(), "M-H", cov_matrix, map_start.value(), quiet_progress.value());
+            return _mcmc_fit(1.0, nsims.value(), "M-H", std::move(cov_matrix), map_start.value(),
+                             quiet_progress.value());
 
         case str2int("Laplace"):
             return _laplace_fit(_neg_logposterior);

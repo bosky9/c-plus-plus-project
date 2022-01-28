@@ -1,3 +1,9 @@
+/**
+ * @file optimizer_function.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
 #include "Eigen/Core" // Eigen::VectorXd
@@ -8,7 +14,7 @@
  * @class OptimizerFunction optimizer_function.hpp
  * @brief Used to have a function and a way to compute its derivative in the same class.
  *
- * @details     Necessary for the LBFGSSolver.minimize function, inside tsm._optimize_fit().
+ * @details Necessary for the LBFGSSolver.minimize function, inside tsm._optimize_fit().
  */
 class OptimizerFunction final {
 

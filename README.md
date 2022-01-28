@@ -28,9 +28,13 @@ Here's the [link](https://github.com/RJT1990/pyflux) to the original project.
 
 ## About the Project
 
-From the original project we took the section concerning the (basic) [ARIMA model](https://pyflux.readthedocs.io/en/latest/arima.html) and its usage with a Normal family of functions (see [here](https://pyflux.readthedocs.io/en/latest/families.html) all the available families) and we translated all the files in C++. 
+From the original project we took the section concerning the (
+basic) [ARIMA model](https://pyflux.readthedocs.io/en/latest/arima.html) and its usage with a Normal family of
+functions (see [here](https://pyflux.readthedocs.io/en/latest/families.html) all the available families) and we
+translated all the files in C++.
 
-Here's an example of what you can do with the ARIMA class we defined: 
+Here's an example of what you can do with the ARIMA class we defined:
+
 ```c++
 // Import data from some sunspot values 
 utils::DataFrame data = utils::parse_csv("../data/sunspot.year.csv");
@@ -46,24 +50,32 @@ utils::DataFrame predictions = model.predict(10, true);
 
 ## Project Status
 
-Currently our project doesn't cover all the original work. As said before, we only defined all the necessary files to work with an ARIMA model using exclusively the Normal family, but so many other families and models are still waiting to be translated. 
+Currently our project doesn't cover all the original work. As said before, we only defined all the necessary files to
+work with an ARIMA model using exclusively the Normal family, but so many other families and models are still waiting to
+be translated.
 
-Besides that, in the current status our program works perfectly using both GCC and Clang compilers. 
+Besides that, in the current status our program works perfectly using both GCC and Clang compilers.
 
 **[Back to top](#table-of-contents)**
 
 ## Getting Started
 
-To compile and try the library yourself you just need to use the `make` command from the project folder. All instructions for building and testing are available in the CMakeLists.txt file. 
+To compile and try the library yourself you just need to use the `make` command from the project folder. All
+instructions for building and testing are available in the CMakeLists.txt file.
 
 ### Dependencies
 
-This project highly relies on some external libraries, in particular on the [Eigen library](http://eigen.tuxfamily.org/index.php?title=Main_Page), used for defining most of the vectors and matrices originally created using the [NumPy library](https://numpy.org/) in Python.
-Other than that, we also used [LBFGSpp library](https://github.com/yixuan/LBFGSpp) to define optimization functions and [matplotlib-cpp](https://github.com/lava/matplotlib-cpp) to recreate the same graphs available in the Python project. For this last mention an installation of Python3 is is necessary, since `matplotlibcpp.hpp` call directly its functions. 
+This project highly relies on some external libraries, in particular on
+the [Eigen library](http://eigen.tuxfamily.org/index.php?title=Main_Page), used for defining most of the vectors and
+matrices originally created using the [NumPy library](https://numpy.org/) in Python. Other than that, we also
+used [LBFGSpp library](https://github.com/yixuan/LBFGSpp) to define optimization functions
+and [sciplot](https://sciplot.github.io/) to recreate the same graphs available in the Python project.
 
-All the libraries mentioned above are already inside the project in the *third_party* directory, without any need to be downloaded. 
+All the libraries mentioned above are already inside the project in the *third_party* directory, without any need to be
+downloaded.
 
-Finally we also used [Catch2](https://github.com/catchorg/Catch2) to write test for every class, that can be seen in the *test* folder. 
+Finally we also used [Catch2](https://github.com/catchorg/Catch2) to write test for every class, that can be seen in
+the *test* folder.
 
 A test example done using Catch2 and the data from `sunspot.year.csv` is the following:
 
@@ -90,7 +102,8 @@ TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
 
 ### Getting the Source
 
-This project is [hosted on GitHub](https://github.com/bosky9/c-plus-plus-project). You can clone this project directly using this command:
+This project is [hosted on GitHub](https://github.com/bosky9/c-plus-plus-project). You can clone this project directly
+using this command:
 
 ```
 git clone https://github.com/bosky9/c-plus-plus-project.git
@@ -98,7 +111,8 @@ git clone https://github.com/bosky9/c-plus-plus-project.git
 
 ### Building
 
-To build the project you simply need to call `cmake` on the project folder and after that the `make` command. A new executable *tests* will then be found inside the *bin* directory. 
+To build the project you simply need to call `cmake` on the project folder and after that the `make` command. A new
+executable *tests* will then be found inside the *bin* directory.
 
 ```
 cmake . -B build
@@ -115,7 +129,8 @@ make test -C build
 
 #### Other Tests
 
-For formatting [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html) with the *.clang_format* file is used, while as static analyzer we used [cppcheck](https://cppcheck.sourceforge.io/). 
+For formatting [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html) with the *.clang_format* file is used, while
+as static analyzer we used [cppcheck](https://cppcheck.sourceforge.io/).
 
 ### Installation
 
@@ -129,26 +144,19 @@ make install -C build
 
 ## Release Process
 
-The project was started in August 2021 and finished in December 2021. 
+The project was started in August 2021 and finished in December 2021.
 
 ### Versioning
+
 Currently only the first and current 1.0.0 version is available.
-
-**[Back to top](#table-of-contents)**
-
-**[Back to top](#table-of-contents)**
 
 ## Further Reading
 
 [Here]()'s a link the full report regarding this project.
 
-**[Back to top](#table-of-contents)**
-
 ## License
 
 This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) file for details.
-
-**[Back to top](#table-of-contents)**
 
 ## Authors
 
@@ -156,10 +164,8 @@ This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) fi
 * **[Federisco Boschi](https://github.com/bosky9)** - VR445479
 * **[Ettore Cinquetti](https://github.com/e5ti)** - VR451823
 
-**[Back to top](#table-of-contents)**
-
 ## Acknowledgments
 
-All the credits goes to the [PyFlux](https://github.com/RJT1990/pyflux) project. 
+All the credits goes to the [PyFlux](https://github.com/RJT1990/pyflux) project.
 
 **[Back to top](#table-of-contents)**

@@ -1,21 +1,24 @@
+/**
+ * @file tsm.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
-#include "Eigen/Core"
-#include "families/family.hpp"
-#include "hessian.hpp"
-#include "inference/bbvi.hpp"
-#include "inference/metropolis_hastings.hpp"
-#include "inference/stoch_optim.hpp"
-#include "latent_variables.hpp"
-#include "posterior.hpp"
-#include "results.hpp"
-#include "utilities.hpp"
+#include "Eigen/Core"                        // Eigen::VectorXd, Eigen::MatrixXd
+#include "families/family.hpp"               // Family
+#include "inference/bbvi.hpp"                // BBVI
+#include "inference/metropolis_hastings.hpp" // MetropolisHastings
+#include "inference/stoch_optim.hpp"         // RMSProp, ADAM
+#include "latent_variables.hpp"              // LatentVariables
+#include "results.hpp"                       // Results
+#include "utilities.hpp"                     // utils::SingleDataFrame
 
-#include <functional>
-#include <memory>
-#include <optional>
-#include <string>
-#include <vector>
+#include <functional> // std::function
+#include <optional>   // std::optional
+#include <string>     // std::string
+#include <vector>     // std::vector
 
 /**
  * @brief Struct that represents the model output
@@ -114,7 +117,7 @@ public:
      */
     [[nodiscard]] virtual LatentVariables get_latent_variables() const;
 
-    std::function<double(const Eigen::VectorXd)> get_neg_loglik() const;
+    [[nodiscard]] std::function<double(const Eigen::VectorXd)> get_neg_loglik() const;
 
 protected:
     utils::SingleDataFrame _data_frame;
@@ -186,15 +189,13 @@ protected:
 
     explicit TSM(const std::string& model_type);
 
-    // TODO: I seguenti metodi sono presenti solo nella sottoclasse VAR
-    //  Limitare i metodi che li usano solo alla classe VAR ?
+    // I seguenti metodi sono presenti solo nella sottoclasse VAR
     //_create_B_direct();
     //_ols_covariance();
     //_estimator_cov();
     //_preoptimize_model();
     //_custom_covariance();
 
-    // TODO: Implement this function for each subclass of TSM (each model return different data)
     /**
      * @brief Return output data of the model
      * @param z Untransformed starting values for the latent variables

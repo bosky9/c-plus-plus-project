@@ -1,3 +1,9 @@
+/**
+ * @file multivariate_normal.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "multivariate_normal.hpp"
 
 #include "Eigen/Core"        // Eigen::VectorXd, Eigen::MatrixXd, Eigen::Index
@@ -56,8 +62,8 @@ double Mvn::cdf(double x, [[maybe_unused]] double mean, [[maybe_unused]] double 
 
 Eigen::VectorXd Mvn::logpdf(const Eigen::VectorXd& x, const Eigen::VectorXd& means, const Eigen::VectorXd& scales) {
     assert((means.size() == 1 && (scales.size() == 1 || x.size() == 1 || x.size() == scales.size())) ||
-    (scales.size() == 1 && (x.size() == 1 || x.size() == means.size())) ||
-    (means.size() == scales.size() && (x.size() == 1 || x.size() == means.size())));
+           (scales.size() == 1 && (x.size() == 1 || x.size() == means.size())) ||
+           (means.size() == scales.size() && (x.size() == 1 || x.size() == means.size())));
     size_t size = std::max({x.size(), means.size(), scales.size()});
     Eigen::VectorXd result(size);
     const double ONE_OVER_SQRT_2PI{0.39894228040143267793994605993438};

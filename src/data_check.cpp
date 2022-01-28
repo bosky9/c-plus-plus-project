@@ -1,12 +1,13 @@
+/**
+ * @file data_check.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "data_check.hpp"
 
-#include "utilities.hpp"
-
-#include <iterator>
-#include <map>
-#include <memory>
-#include <numeric>
-#include <vector>
+#include <algorithm> // std::find
+#include <numeric>   //std::iota
 
 template<>
 utils::SingleDataFrame data_check<std::vector<double>>(const std::vector<double>& data,

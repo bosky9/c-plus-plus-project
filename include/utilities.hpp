@@ -1,18 +1,20 @@
+/**
+ * @file utilities.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
-#include "Eigen/Core"
-#include "families/family.hpp"
-#include "families/flat.hpp"
-#include "families/normal.hpp"
-#include "inference/bbvi.hpp"
+#include "Eigen/Core"          // Eigen::VectorXd
+#include "families/family.hpp" // Family
+#include "families/flat.hpp"   // Flat
+#include "families/normal.hpp" // Normal
+#include "inference/bbvi.hpp"  // BBVI
 
-#include <algorithm>
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <numeric>
-#include <string>
-#include <vector>
+#include <chrono> // std::chrono::milliseconds
+#include <string> // std::string
+#include <vector> // std::vector
 
 namespace utils {
 
@@ -45,8 +47,9 @@ DataFrame parse_csv(const std::string& filename);
  * @brief Create file to write perfomance results
  * @param test
  */
-std::string create_performance_file(std::string data, std::string method, size_t ar, size_t ma, size_t integ = 0,
-                                    std::string family = "Normal", std::optional<std::string> target = std::nullopt);
+std::string create_performance_file(const std::string& data, const std::string& method, size_t ar, size_t ma,
+                                    size_t integ = 0, const std::string& family = "Normal",
+                                    std::optional<std::string> target = std::nullopt);
 
 /**
  * @brief Save performance tests to csv file performance_results.csv
@@ -55,8 +58,8 @@ std::string create_performance_file(std::string data, std::string method, size_t
  * @time Elapsed time in milliseconds
  * @print If true prints also to stdout
  */
-void save_performance(std::string filename, std::string test_name, std::string method, std::chrono::milliseconds time,
-                      bool print = false);
+void save_performance(const std::string& filename, const std::string& test_name, const std::string& method,
+                      std::chrono::milliseconds time, bool print = false);
 
 /**
  * @brief Check if the class R of object is a subclass of T

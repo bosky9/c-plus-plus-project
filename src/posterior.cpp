@@ -1,3 +1,9 @@
+/**
+ * @file posterior.cpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #include "posterior.hpp"
 
 posterior::posterior_opt posterior::change_function_params(const posterior_wo_mb& function) {

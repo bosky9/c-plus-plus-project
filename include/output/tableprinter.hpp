@@ -1,14 +1,15 @@
+/**
+ * @file tableprinter.hpp
+ * @author Bodini Alessia, Boschi Federico, Cinquetti Ettore
+ * @date January, 2022
+ */
+
 #pragma once
 
-#include <cstdio>
-#include <iomanip>
-#include <list>
-#include <map>
-#include <sstream>
-#include <tuple>
-#include <vector>
-
-//@Todo: find a better way to implement key
+#include <list>   // std::list
+#include <map>    // std::map
+#include <tuple>  // std::tuple
+#include <vector> // std::vector
 
 template<typename T>
 struct is_map_str_int final {
@@ -50,8 +51,8 @@ public:
                           const std::string& sep = " ", const std::string& ul = "");
 
     /**
-     * \brief Appends every value of data map in a string; the value is taken using the @var _width key.
-     * \brief Width of every string is given by @var _width value.
+     * @brief Appends every value of data map in a string; the value is taken using the @var _width key.
+     * @brief Width of every string is given by @var _width value.
      * @tparam T: could be a map of str:double or a map of str:str
      * @param data: a map of keys (str) and values (double or string)
      * @return string, where all the values are appended together
