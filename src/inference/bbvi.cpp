@@ -41,9 +41,10 @@ BBVI::BBVI(const BBVI& bbvi)
 }
 
 BBVI::BBVI(BBVI&& bbvi) noexcept
-    : _neg_posterior{bbvi._neg_posterior}, _sims{bbvi._sims}, _printer{bbvi._printer}, _optimizer{bbvi._optimizer},
+    : _neg_posterior{std::move(bbvi._neg_posterior)}, _sims{bbvi._sims}, _printer{bbvi._printer},
+      _optimizer{std::move(bbvi._optimizer)},
       _iterations{bbvi._iterations}, _learning_rate{bbvi._learning_rate}, _record_elbo{bbvi._record_elbo},
-      _quiet_progress{bbvi._quiet_progress}, _approx_param_no{bbvi._approx_param_no} {
+      _quiet_progress{bbvi._quiet_progress}, _approx_param_no{std::move(bbvi._approx_param_no)} {
 
     _q.resize(bbvi._q.size());
     for (size_t i{0}; i < bbvi._q.size(); ++i)
@@ -52,15 +53,12 @@ BBVI::BBVI(BBVI&& bbvi) noexcept
     if (bbvi._optim != nullptr)
         _optim.reset(bbvi._optim.get());
 
-    bbvi._neg_posterior  = {};
     bbvi._sims           = 0;
     bbvi._printer        = false;
-    bbvi._optimizer      = "";
     bbvi._iterations     = 0;
     bbvi._learning_rate  = 0;
     bbvi._record_elbo    = false;
     bbvi._quiet_progress = true;
-    bbvi._approx_param_no.conservativeResize(0);
     bbvi._q.clear();
     bbvi._optim.reset();
 }
@@ -376,9 +374,7 @@ CBBVI::CBBVI(const std::function<double(const Eigen::VectorXd&, std::optional<si
 
 CBBVI::CBBVI(const CBBVI& cbbvi) = default;
 
-CBBVI::CBBVI(CBBVI&& cbbvi) noexcept : BBVI{std::move(cbbvi)}, _log_p_blanket{cbbvi._log_p_blanket} {
-    cbbvi._log_p_blanket = {};
-}
+CBBVI::CBBVI(CBBVI&& cbbvi) noexcept : BBVI{std::move(cbbvi)}, _log_p_blanket{std::move(cbbvi._log_p_blanket)} {}
 
 CBBVI& CBBVI::operator=(const CBBVI& cbbvi) {
     if (this == &cbbvi)
@@ -521,10 +517,7 @@ BBVIM::BBVIM(const std::function<double(const Eigen::VectorXd&, std::optional<si
 BBVIM::BBVIM(const BBVIM& bbvim) = default;
 
 BBVIM::BBVIM(BBVIM&& bbvim) noexcept
-    : BBVI{std::move(bbvim)}, _full_neg_posterior{bbvim._full_neg_posterior}, _mini_batch{bbvim._mini_batch} {
-    bbvim._full_neg_posterior = {};
-    bbvim._mini_batch         = 0;
-}
+    : BBVI{std::move(bbvim)}, _full_neg_posterior{std::move(bbvim._full_neg_posterior)}, _mini_batch{bbvim._mini_batch} {}
 
 BBVIM& BBVIM::operator=(const BBVIM& bbvim) {
     if (this == &bbvim)
