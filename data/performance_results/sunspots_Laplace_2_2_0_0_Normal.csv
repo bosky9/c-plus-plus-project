@@ -5,3 +5,6 @@ predict_is, Laplace, 3194
 fit, Laplace, 3997
 predict, Laplace, 14
 predict_is, Laplace, 3139
+fit, Laplace, 3572
+predict, Laplace, 7
+predict_is, Laplace, 3404

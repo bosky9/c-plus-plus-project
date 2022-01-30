@@ -338,7 +338,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
     assert(_latent_variables.get_estimation_method().value() == "BBVI" ||
            _latent_variables.get_estimation_method().value() == "M-H");
     if (_latent_variables.get_estimation_method().value() == "BBVI") {
-        std::vector<std::unique_ptr<Family>> q_vec = _latent_variables.get_z_approx_dist();
+        const std::vector<std::unique_ptr<Family>>& q_vec = _latent_variables.get_z_approx_dist();
         Eigen::MatrixXd output(q_vec.size(), nsims);
         Eigen::Index r = 0;
         for (auto& q : q_vec) {
@@ -349,7 +349,7 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
     } else {
         const std::vector<LatentVariable>& lvs = _latent_variables.get_z_list();
         size_t cols                            = 0;
-        if (!lvs.empty())
+        if (!lvs.empty() && lvs.at(0).get_sample().has_value())
             cols = lvs.at(0).get_sample().value().size();
         Eigen::MatrixXd chain(lvs.size(), cols);
         for (Eigen::Index i{0}; i < static_cast<Eigen::Index>(lvs.size()); ++i) {
@@ -360,13 +360,15 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
             chain.row(i) = lvs.at(i).get_sample().value();
         }
         // Equivalent of np.random.choice()
-        std::vector<size_t> ind;
+        std::vector<size_t> ind{};
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         std::default_random_engine generator(seed);
-        std::uniform_int_distribution<size_t> distribution{0, cols};
+        std::uniform_int_distribution<size_t> distribution{0, cols - 1};
         for (size_t n{0}; n < nsims; ++n)
             ind.push_back(distribution(generator));
         // Copy elision should work just fine
+        if (ind.size() == 1)
+            return chain(Eigen::all, ind.back());
         return chain(Eigen::all, ind);
     }
 }

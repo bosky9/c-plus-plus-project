@@ -51,14 +51,15 @@ target_sources(test_performance PRIVATE ${SRCS_LIST})
 target_link_libraries(test_performance PRIVATE Catch2::Catch2WithMain)
 
 # Add test exclusively for ARIMA (to check with Valgrind)
-add_executable(test_arima ${PROJECT_SOURCE_DIR}/test/arima/test_arima.cpp)
-target_sources(test_arima PRIVATE ${SRCS_LIST})
-target_link_libraries(test_arima PRIVATE Catch2::Catch2WithMain)
+add_executable(test_arima_sunspots ${PROJECT_SOURCE_DIR}/test/arima/test_arima_sunspots.cpp)
+target_sources(test_arima_sunspots PRIVATE ${SRCS_LIST})
+target_link_libraries(test_arima_sunspots PRIVATE Catch2::Catch2WithMain)
 
 include(CTest)
-add_test(AllTests tests)
-add_test(TestPerformance test_performance)
-add_test(TestArima test_arima)
+add_test(NAME AllTests COMMAND tests)
+add_test(NAME TestPerformance COMMAND test_performance)
+add_test(NAME TestSunspots COMMAND test_arima_sunspots)
+set_tests_properties(TestSunspots PROPERTIES TIMEOUT 30000)
 
 # Generate documentation with Doxygen with "make doc"
 find_package(Doxygen)

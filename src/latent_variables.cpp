@@ -35,21 +35,20 @@ LatentVariable::LatentVariable(std::string name, const Family& prior, const Fami
       _transform{prior.get_transform()}, _start{0.0}, _q{q.clone()} {}
 
 LatentVariable::LatentVariable(const LatentVariable& lv)
-    : _name{lv.get_name()}, _index{lv._index}, _prior{lv.get_prior_clone()->clone()},
-      _transform{lv._transform}, _start{lv.get_start()}, _q{lv.get_q_clone()}, _method{lv.get_method()},
-      _value{lv.get_value()}, _std{lv.get_std()}, _sample{lv.get_sample()} {}
+    : _name{lv._name}, _index{lv._index}, _prior{lv.get_prior_clone()}, _transform{lv._transform}, _start{lv._start},
+      _q{lv.get_q_clone()}, _method{lv._method}, _value{lv._value}, _std{lv._std}, _sample{lv._sample} {}
 
 LatentVariable::LatentVariable(LatentVariable&& lv) noexcept {
-    _name      = lv.get_name();
+    _name      = lv._name;
     _index     = lv._index;
     _prior     = lv.get_prior_clone();
     _transform = lv._transform;
-    _start     = lv.get_start();
+    _start     = lv._start;
     _q         = lv.get_q_clone();
-    _method    = lv.get_method();
-    _value     = lv.get_value();
-    _std       = lv.get_std();
-    _sample    = lv.get_sample();
+    _method    = lv._method;
+    _value     = lv._value;
+    _std       = lv._std;
+    _sample    = lv._sample;
     lv._name   = "";
     lv._index  = 0;
     lv._prior.reset();
@@ -65,36 +64,32 @@ LatentVariable::LatentVariable(LatentVariable&& lv) noexcept {
 LatentVariable& LatentVariable::operator=(const LatentVariable& lv) {
     if (this == &lv)
         return *this;
-    _name  = lv.get_name();
-    _index = lv._index;
-    _prior.reset();
+    _name      = lv._name;
+    _index     = lv._index;
     _prior     = lv.get_prior_clone();
     _transform = lv._transform;
-    _start     = lv.get_start();
-    _q.reset();
-    _q      = lv.get_q_clone();
-    _method = lv.get_method();
-    _value  = lv.get_value();
-    _std    = lv.get_std();
-    _sample = lv.get_sample();
+    _start     = lv._start;
+    _q         = lv.get_q_clone();
+    _method    = lv._method;
+    _value     = lv._value;
+    _std       = lv._std;
+    _sample    = lv._sample;
     return *this;
 }
 
 LatentVariable& LatentVariable::operator=(LatentVariable&& lv) noexcept {
-    _name  = lv.get_name();
-    _index = lv._index;
-    _prior.reset();
+    _name      = lv._name;
+    _index     = lv._index;
     _prior     = lv.get_prior_clone();
     _transform = lv._transform;
-    _start     = lv.get_start();
-    _q.reset();
-    _q        = lv.get_q_clone();
-    _method   = lv.get_method();
-    _value    = lv.get_value();
-    _std      = lv.get_std();
-    _sample   = lv.get_sample();
-    lv._name  = "";
-    lv._index = 0;
+    _start     = lv._start;
+    _q         = lv.get_q_clone();
+    _method    = lv._method;
+    _value     = lv._value;
+    _std       = lv._std;
+    _sample    = lv._sample;
+    lv._name   = "";
+    lv._index  = 0;
     lv._prior.reset();
     lv._transform = {};
     lv._start     = 0;

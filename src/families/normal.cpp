@@ -11,13 +11,13 @@
 #include "families/flat.hpp"       // Flat
 #include "multivariate_normal.hpp" // Mvn::random, Mvn::logpdf
 
-#include <cassert>                 // static_assert, assert
-#include <cmath>                   // log, pow, exp, round
-#include <memory>                  // std::unique_ptr, std::make_unique
-#include <string>                  // std::string, std::to_string
-#include <type_traits>             // std::is_same_v
-#include <utility>                 // std::pair
-#include <vector>                  // std::vector
+#include <cassert>     // static_assert, assert
+#include <cmath>       // log, pow, exp, round
+#include <memory>      // std::unique_ptr, std::make_unique
+#include <string>      // std::string, std::to_string
+#include <type_traits> // std::is_same_v
+#include <utility>     // std::pair
+#include <vector>      // std::vector
 
 Normal::Normal(double mu, double sigma, const std::string& transform)
     : Family{transform}, _mu0{mu}, _sigma0{sigma}, _param_no{2}, _covariance_prior{false} {}
@@ -48,11 +48,13 @@ std::vector<lv_to_build> Normal::build_latent_variables() const {
     return lvs_to_build;
 }
 
-Eigen::VectorXd Normal::draw_variable(double loc, double scale, [[maybe_unused]] double shape, [[maybe_unused]] double skew, size_t nsims) const {
+Eigen::VectorXd Normal::draw_variable(double loc, double scale, [[maybe_unused]] double shape,
+                                      [[maybe_unused]] double skew, size_t nsims) const {
     return Mvn::random(loc, scale, nsims);
 }
 
-Eigen::VectorXd Normal::draw_variable(const Eigen::VectorXd& loc, double scale, [[maybe_unused]] double shape, [[maybe_unused]] double skew, size_t nsims) const {
+Eigen::VectorXd Normal::draw_variable(const Eigen::VectorXd& loc, double scale, [[maybe_unused]] double shape,
+                                      [[maybe_unused]] double skew, size_t nsims) const {
     assert(static_cast<size_t>(loc.size()) == nsims &&
            "Vector of locations must be as long as the number of simulations");
     return Mvn::random(loc, scale, nsims);
@@ -134,7 +136,7 @@ Eigen::VectorXd Normal::vi_scale_score<Eigen::VectorXd>(const Eigen::VectorXd& x
 template<typename T>
 T Normal::vi_score(const T& x, uint8_t index) const {
     static_assert(std::is_same_v<T, double> || std::is_same_v<T, Eigen::VectorXd>,
-            "Variable must be a double or an Eigen::VectorXd");
+                  "Variable must be a double or an Eigen::VectorXd");
     assert((index == 0 || index == 1) && "Index is neither 0 nor 1");
 
     if (index == 0)
@@ -180,8 +182,7 @@ void Normal::set_sigma0(double sigma0) {
     _sigma0 = sigma0;
 }
 
-// Clone function
-// ------------------------------------------------------------------------------------------------------
+// Clone function ---------------------------------------------------------------------------------------------------
 
 std::unique_ptr<Family> Normal::clone() const {
     return std::make_unique<Normal>(*this);

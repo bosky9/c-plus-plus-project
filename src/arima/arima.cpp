@@ -468,23 +468,21 @@ Eigen::MatrixXd ARIMA::sim_prediction_bayes(size_t h, size_t simulations) const 
             Eigen::MatrixXd::Zero(static_cast<Eigen::Index>(simulations), static_cast<Eigen::Index>(h))};
 
     for (Eigen::Index n{0}; n < static_cast<Eigen::Index>(simulations); ++n) {
-        bool keep_drawing = true;
         Eigen::VectorXd t_z{draw_latent_variables(1).transpose().row(0)};
 
-        // THIS IS NOT A SOLUTION
+        /*
+        bool keep_drawing = true;
         while (keep_drawing) {
             if (std::abs(t_z[0]) > std::abs(t_z[1] * 1e10))
                 t_z = draw_latent_variables(1).transpose().row(0);
             else
                 keep_drawing = false;
-        }
-        // THIS IS NOT A SOLUTION (but ...)
+        }*/
 
         Eigen::VectorXd tz_copy{t_z};
         auto mu_Y{_model(t_z)};
         for (Eigen::Index i{0}; i < t_z.size(); ++i)
             t_z[i] = _latent_variables.get_z_list()[i].get_prior_transform()(t_z[i]);
-        // CHECK DRAW LATENT VARIABLES
         auto scale_shape_skew{get_scale_and_shape(t_z)};
 
         // Create arrays to iterate over

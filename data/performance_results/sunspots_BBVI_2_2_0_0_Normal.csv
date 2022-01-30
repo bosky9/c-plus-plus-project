@@ -9,3 +9,8 @@ predict, BBVI, 9
 predict_is, BBVI, 4137
 sample, BBVI, 126
 ppc, BBVI, 255
+fit, BBVI, 4553
+predict, BBVI, 0
+predict_is, BBVI, 4531
+sample, BBVI, 139
+ppc, BBVI, 281
