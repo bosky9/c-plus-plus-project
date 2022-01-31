@@ -1,0 +1,4 @@
+<map id="TSM" name="TSM">
+<area shape="rect" id="node1" title="Contains general time series methods to be inherited by models." alt="" coords="13,5,63,32"/>
+<area shape="rect" id="node2" href="$classARIMA.html" title="AutoRegressive Integrated Moving Average (ARIMA) models (inherits time series methods from the TSM pa..." alt="" coords="5,80,71,107"/>
+</map>

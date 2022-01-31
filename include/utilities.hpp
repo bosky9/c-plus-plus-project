@@ -69,8 +69,8 @@ void save_performance(const std::string& filename, const std::string& test_name,
  * @return If R is a subclass of T
  */
 template<typename T, typename R>
-bool isinstance(R* obj) {
-    return obj == dynamic_cast<T*>(obj);
+bool isinstance(const R* obj) {
+    return obj == dynamic_cast<const T*>(obj);
 }
 
 /**

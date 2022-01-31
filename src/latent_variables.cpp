@@ -200,6 +200,10 @@ std::unique_ptr<Family> LatentVariable::get_q_clone() const {
     return _q->clone();
 }
 
+const Family& LatentVariable::read_q() const {
+    return *_q;
+}
+
 void LatentVariable::change_q_param(uint8_t index, double value) {
     _q->vi_change_param(index, value);
 }
@@ -392,18 +396,11 @@ Eigen::VectorXd LatentVariables::get_z_values(bool transformed) const {
     return values;
 }
 
-std::vector<std::unique_ptr<Family>> LatentVariables::get_z_approx_dist() const {
-    std::vector<std::unique_ptr<Family>> dists;
-    std::transform(_z_list.begin(), _z_list.end(), std::back_inserter(dists),
-                   [](const LatentVariable& z) { return z.get_q_clone(); });
-    return dists;
-}
-
 std::vector<std::string> LatentVariables::get_z_approx_dist_names() const {
-    std::vector<std::unique_ptr<Family>> approx_dists = get_z_approx_dist();
+    const std::vector<LatentVariable>& lvs = get_z_list();
     std::vector<std::string> q_list;
-    std::transform(approx_dists.begin(), approx_dists.end(), std::back_inserter(q_list), [](auto& approx) {
-        return (utils::isinstance<Normal>(approx.get())) ? "Normal" : "Approximate distribution not detected";
+    std::transform(lvs.begin(), lvs.end(), std::back_inserter(q_list), [](auto& lv) {
+        return (utils::isinstance<Normal>(&lv.read_q())) ? "Normal" : "Approximate distribution not detected";
     });
     return q_list;
 }

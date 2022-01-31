@@ -31,7 +31,7 @@ inline void check_intervals_order(std::vector<std::vector<double>> predictions) 
 }
 } // namespace catch_utilities
 
-TEST_CASE("Test an ARIMA model with sunspot years data (plots included)", "[ARIMA]") {
+TEST_CASE("Test an ARIMA model with sunspot years data", "[ARIMA]") {
     utils::DataFrame data = utils::parse_csv("../data/sunspots.csv");
 
     /**

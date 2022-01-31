@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classFamily.html" title="Generic class for families of distributions." alt="" coords="5,31,71,57"/>
+<area shape="rect" id="node2" href="$classFlat.html" title="This class contains methods relating to the flat prior distribution for time series." alt="" coords="131,5,177,32"/>
+<area shape="rect" id="node3" href="$classNormal.html" title="Normal distribution for time series." alt="" coords="119,56,189,83"/>
+</map>

@@ -3,3 +3,5 @@
 /desktop.ini
 /build/
 /Testing/
+/cmake-build-debug/_deps/catch2-src/
+/bin/

@@ -338,11 +338,11 @@ Eigen::MatrixXd TSM::draw_latent_variables(size_t nsims) const {
     assert(_latent_variables.get_estimation_method().value() == "BBVI" ||
            _latent_variables.get_estimation_method().value() == "M-H");
     if (_latent_variables.get_estimation_method().value() == "BBVI") {
-        const std::vector<std::unique_ptr<Family>>& q_vec = _latent_variables.get_z_approx_dist();
-        Eigen::MatrixXd output(q_vec.size(), nsims);
+        const std::vector<LatentVariable>& lvs = _latent_variables.get_z_list();
+        Eigen::MatrixXd output(lvs.size(), nsims);
         Eigen::Index r = 0;
-        for (auto& q : q_vec) {
-            output.row(r) = q->draw_variable_local(nsims);
+        for (auto& lv : lvs) {
+            output.row(r) = lv.read_q().draw_variable_local(nsims);
             r++;
         }
         return output;

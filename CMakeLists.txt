@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(G++_FLAGS "-g --coverage -pg")
-set(CMAKE_CXX_FLAGS "${G++_FLAGS} -std=c++17 -O3 -Wall -Wextra -Wpedantic -Werror -fsanitize=undefined -fno-omit-frame-pointer -DWITHOUT_NUMPY")
+set(CMAKE_CXX_FLAGS "${G++_FLAGS} -std=c++17 -O3 -Wall -Wextra -Wpedantic -Werror -fsanitize=undefined -fno-omit-frame-pointer")
 set(DCMAKE_BUILD_TYPE "Debug")
 
 # Set Valgrind
@@ -28,14 +28,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 # Fetch sciplot library for plots
-FetchContent_Declare(sciplot_content
-        GIT_REPOSITORY https://github.com/sciplot/sciplot.git
-        GIT_TAG master)
-FetchContent_GetProperties(sciplot_content)
-if (NOT sciplot_content_POPULATED)
-    FetchContent_Populate(sciplot_content)
-endif ()
-include_directories(${sciplot_content_SOURCE_DIR})
+#FetchContent_Declare(sciplot_content
+#        GIT_REPOSITORY https://github.com/sciplot/sciplot.git
+#        GIT_TAG master)
+#FetchContent_GetProperties(sciplot_content)
+#if (NOT sciplot_content_POPULATED)
+#    FetchContent_Populate(sciplot_content)
+#endif ()
+#include_directories(${sciplot_content_SOURCE_DIR})
 
 # Perform tests
 add_executable(tests)

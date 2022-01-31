@@ -1,0 +1,8 @@
+<map id="Results" name="Results">
+<area shape="rect" id="node1" title=" " alt="" coords="297,5,367,32"/>
+<area shape="rect" id="node2" href="$classBBVIResults.html" title=" " alt="" coords="5,80,107,107"/>
+<area shape="rect" id="node3" href="$classBBVISSResults.html" title=" " alt="" coords="131,80,248,107"/>
+<area shape="rect" id="node4" href="$classLaplaceResults.html" title=" " alt="" coords="272,80,392,107"/>
+<area shape="rect" id="node5" href="$classMCMCResults.html" title=" " alt="" coords="416,80,528,107"/>
+<area shape="rect" id="node6" href="$classMLEResults.html" title=" " alt="" coords="553,80,650,107"/>
+</map>

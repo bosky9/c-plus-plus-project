@@ -115,7 +115,7 @@ To build the project you simply need to call `cmake` on the project folder and a
 executable *tests* will then be found inside the *bin* directory.
 
 ```
-cmake . -B build
+cmake -B build
 make -C build
 ```
 
@@ -127,14 +127,23 @@ To run all the test you just need to call the proper command:
 make test -C build
 ```
 
+To also activate _Valgrind_ you need to include the `memcheck` command in `ctest` from the build directory:
+
+```
+ctest -T memcheck -R testName
+```
+
+The `-R` let you specify a specific test to run with _Valgrind_ (we recommend using `TestSunposts`).
+
 #### Other Tests
 
 For formatting [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html) with the *.clang_format* file is used, while
-as static analyzer we used [cppcheck](https://cppcheck.sourceforge.io/).
+as static analyzers we used [cppcheck](https://cppcheck.sourceforge.io/)
+and [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/).
 
 ### Installation
 
-*Instructions for how to install your project's build artifacts*
+For moving the library in _bin_ folder:
 
 ```
 make install -C build
@@ -144,7 +153,7 @@ make install -C build
 
 ## Release Process
 
-The project was started in August 2021 and finished in December 2021.
+The project was started in August 2021 and finished in January 2022.
 
 ### Versioning
 
@@ -152,7 +161,7 @@ Currently only the first and current 1.0.0 version is available.
 
 ## Further Reading
 
-[Here]()'s a link the full report regarding this project.
+[Here](data/report.pdf)'s a link the full report regarding this project.
 
 ## License
 

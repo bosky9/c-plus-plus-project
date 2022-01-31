@@ -1,0 +1,6 @@
+<map id="ARIMA" name="ARIMA">
+<area shape="rect" id="node1" title="AutoRegressive Integrated Moving Average (ARIMA) models (inherits time series methods from the TSM pa..." alt="" coords="119,171,185,197"/>
+<area shape="rect" id="node2" href="$classTSM.html" title="Contains general time series methods to be inherited by models." alt="" coords="127,95,177,121"/>
+<area shape="rect" id="node3" href="$classLatentVariables.html" title="Class that represents a list of latent variables. Holds latent variable objects and contains method f..." alt="" coords="5,5,128,32"/>
+<area shape="rect" id="node4" href="$structutils_1_1SingleDataFrame.html" title="Struct that represents the internal data of a time&#45;series model." alt="" coords="152,5,323,32"/>
+</map>

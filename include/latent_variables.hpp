@@ -135,6 +135,17 @@ public:
      */
     [[nodiscard]] std::unique_ptr<Family> get_q_clone() const;
 
+    /**
+     * @brief Returns a const Family reference of _q
+     * @return Const Family reference of _q
+     */
+    const Family& read_q() const;
+
+    /**
+     * @brief Change parameters of _q
+     * @param index Parameter index
+     * @param value New value
+     */
     void change_q_param(uint8_t index, double value);
 
     /**
@@ -349,12 +360,6 @@ public:
      * @return  Latent variables' values
      */
     [[nodiscard]] Eigen::VectorXd get_z_values(bool transformed = false) const;
-
-    /**
-     * @brief Returns the approximate distributions of the latent variables
-     * @return Approximate distributions
-     */
-    [[nodiscard]] std::vector<std::unique_ptr<Family>> get_z_approx_dist() const;
 
     /**
      * @brief Returns the approximate distributions' names of the latent variables
